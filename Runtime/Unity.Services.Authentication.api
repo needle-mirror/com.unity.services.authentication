@@ -1,0 +1,47 @@
+// This file is generated. Do not modify by hand.
+// XML documentation file not found. To check if public methods have XML comments,
+// make sure the XML doc file is present and located next to the scraped dll
+namespace Unity.Services.Authentication
+{
+    public static class AuthenticationErrorCodes
+    {
+        public const int AccountAlreadyLinked = 10003;
+        public const int ClientInvalidUserState = 10000;
+        public const int ClientNoActiveSession = 10001;
+        public const int InvalidParameters = 10002;
+        public const int MinValue = 10000;
+    }
+
+    public class AuthenticationException : Unity.Services.Core.RequestFailedException
+    {
+        public AuthenticationException(int errorCode, string message) {}
+        public AuthenticationException(int errorCode, string message, System.Exception innerException) {}
+    }
+
+    public static class AuthenticationService
+    {
+        public static Unity.Services.Authentication.IAuthenticationService Instance { get; }
+    }
+
+    public interface IAuthenticationService
+    {
+        public event System.Action SignedIn;
+        public event System.Action SignedOut;
+        public event System.Action<Unity.Services.Core.RequestFailedException> SignInFailed;
+        public abstract string AccessToken { get; }
+        public abstract bool IsSignedIn { get; }
+        public abstract string PlayerId { get; }
+        public abstract void ApplicationUnpaused();
+        public abstract System.Threading.Tasks.Task LinkWithAppleAsync(string idToken);
+        public abstract System.Threading.Tasks.Task LinkWithFacebookAsync(string accessToken);
+        public abstract System.Threading.Tasks.Task LinkWithGoogleAsync(string idToken);
+        public abstract System.Threading.Tasks.Task LinkWithSteamAsync(string sessionTicket);
+        public abstract System.Threading.Tasks.Task SignInAnonymouslyAsync();
+        public abstract System.Threading.Tasks.Task SignInWithAppleAsync(string idToken);
+        public abstract System.Threading.Tasks.Task SignInWithFacebookAsync(string accessToken);
+        public abstract System.Threading.Tasks.Task SignInWithGoogleAsync(string idToken);
+        public abstract System.Threading.Tasks.Task SignInWithSessionTokenAsync();
+        public abstract System.Threading.Tasks.Task SignInWithSteamAsync(string sessionTicket);
+        public abstract void SignOut();
+    }
+}
