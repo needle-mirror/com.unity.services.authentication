@@ -1,0 +1,6 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xmlns="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:VisualElement class="main-container">
+        <ui:TextElement class="configure-text" text="There is no project configured." />
+        <ui:Button name="configure-project" class="configure-button" text="Configure project" display-tooltip-when-elided="true" />
+    </ui:VisualElement>
+</ui:UXML>

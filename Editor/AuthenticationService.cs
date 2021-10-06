@@ -29,6 +29,12 @@ namespace Unity.Services.Authentication.Editor
         public bool HasDashboard => false;
 
         /// <summary>
+        /// The enabler which allows the service to toggle on/off
+        /// Can be set to null, in which case there would be no toggle
+        /// </summary>
+        public IEditorGameServiceEnabler Enabler { get; } = null;
+
+        /// <summary>
         /// Getter for the formatted dashboard url
         /// If <see cref="HasDashboard"/> is false, this field only need return null or empty string
         /// </summary>
@@ -37,11 +43,5 @@ namespace Unity.Services.Authentication.Editor
         {
             return null;
         }
-
-        /// <summary>
-        /// The enabler which allows the service to toggle on/off
-        /// Can be set to null, in which case there would be no toggle
-        /// </summary>
-        public IEditorGameServiceEnabler Enabler { get; } = null;
     }
 }

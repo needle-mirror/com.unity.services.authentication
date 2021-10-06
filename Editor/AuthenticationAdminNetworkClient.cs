@@ -1,8 +1,6 @@
-using System;
 using System.Collections.Generic;
 using Unity.Services.Authentication.Editor.Models;
 using Unity.Services.Authentication.Utilities;
-using UnityEngine;
 
 namespace Unity.Services.Authentication.Editor
 {
@@ -21,11 +19,11 @@ namespace Unity.Services.Authentication.Editor
     class AuthenticationAdminNetworkClient : IAuthenticationAdminNetworkClient
     {
         const string k_ServicesGatewayStem = "/api/player-identity/v1/organizations/";
-        const string k_GetDefaultIdDomainStem = "/iddomains/default";
         const string k_TokenExchangeStem = "/api/auth/v1/genesis-token-exchange/unity";
 
         readonly string m_ServicesGatewayHost;
 
+        readonly string m_BaseIdDomainUrl;
         readonly string m_GetDefaultIdDomainUrl;
         readonly string m_TokenExchangeUrl;
 
@@ -45,8 +43,9 @@ namespace Unity.Services.Authentication.Editor
             m_OrganizationId = organizationId;
             m_ProjectId = projectId;
 
-            m_GetDefaultIdDomainUrl = servicesGatewayHost + k_ServicesGatewayStem + organizationId + k_GetDefaultIdDomainStem;
-            m_TokenExchangeUrl = servicesGatewayHost + k_TokenExchangeStem;
+            m_BaseIdDomainUrl = $"{m_ServicesGatewayHost}{k_ServicesGatewayStem}{m_OrganizationId}/iddomains";
+            m_GetDefaultIdDomainUrl = $"{m_BaseIdDomainUrl}/default";
+            m_TokenExchangeUrl = $"{m_ServicesGatewayHost}{k_TokenExchangeStem}";
             m_NetworkClient = networkClient;
 
             m_CommonPlayerIdentityHeaders = new Dictionary<string, string>
@@ -59,7 +58,7 @@ namespace Unity.Services.Authentication.Editor
 
         public IWebRequest<GetIdDomainResponse> GetDefaultIdDomain(string token)
         {
-            return m_NetworkClient.Get<GetIdDomainResponse>(m_GetDefaultIdDomainUrl, addTokenHeader(m_CommonPlayerIdentityHeaders, token));
+            return m_NetworkClient.Get<GetIdDomainResponse>(m_GetDefaultIdDomainUrl, AddTokenHeader(CreateCommonHeaders(), token));
         }
 
         public IWebRequest<TokenExchangeResponse> TokenExchange(string token)
@@ -71,76 +70,69 @@ namespace Unity.Services.Authentication.Editor
 
         public IWebRequest<IdProviderResponse> CreateIdProvider(CreateIdProviderRequest body, string idDomain, string token)
         {
-            return m_NetworkClient.PostJson<IdProviderResponse>(CreateIdProviderUrl(idDomain), body, addTokenHeader(m_CommonPlayerIdentityHeaders, token));
+            return m_NetworkClient.PostJson<IdProviderResponse>(GetIdProviderUrl(idDomain), body, AddTokenHeader(CreateCommonHeaders(), token));
         }
 
         public IWebRequest<ListIdProviderResponse> ListIdProvider(string idDomain, string token)
         {
-            return m_NetworkClient.Get<ListIdProviderResponse>(ListIdProviderUrl(idDomain), addTokenHeader(m_CommonPlayerIdentityHeaders, token));
+            return m_NetworkClient.Get<ListIdProviderResponse>(GetIdProviderUrl(idDomain), AddTokenHeader(CreateCommonHeaders(), token));
         }
 
         public IWebRequest<IdProviderResponse> UpdateIdProvider(UpdateIdProviderRequest body, string idDomain, string type, string token)
         {
-            return m_NetworkClient.Put<IdProviderResponse>(UpdateIdProviderUrl(idDomain, type), body, addTokenHeader(m_CommonPlayerIdentityHeaders, token));
+            return m_NetworkClient.Put<IdProviderResponse>(GetIdProviderTypeUrl(idDomain, type), body, AddTokenHeader(CreateCommonHeaders(), token));
         }
 
         public IWebRequest<IdProviderResponse> EnableIdProvider(string idDomain, string type, string token)
         {
-            return m_NetworkClient.Post<IdProviderResponse>(EnableIdProviderUrl(idDomain, type), addJsonHeader(addTokenHeader(m_CommonPlayerIdentityHeaders, token)));
+            return m_NetworkClient.Post<IdProviderResponse>(GetEnableIdProviderTypeUrl(idDomain, type), AddJsonHeader(AddTokenHeader(CreateCommonHeaders(), token)));
         }
 
         public IWebRequest<IdProviderResponse> DisableIdProvider(string idDomain, string type, string token)
         {
-            return m_NetworkClient.Post<IdProviderResponse>(DisableIdProviderUrl(idDomain, type), addJsonHeader(addTokenHeader(m_CommonPlayerIdentityHeaders, token)));
+            return m_NetworkClient.Post<IdProviderResponse>(GetDisableIdProviderTypeUrl(idDomain, type), AddJsonHeader(AddTokenHeader(CreateCommonHeaders(), token)));
         }
 
         public IWebRequest<IdProviderResponse> DeleteIdProvider(string idDomain, string type, string token)
         {
-            return m_NetworkClient.Delete<IdProviderResponse>(DeleteIdProviderUrl(idDomain, type), addTokenHeader(m_CommonPlayerIdentityHeaders, token));
+            return m_NetworkClient.Delete<IdProviderResponse>(GetIdProviderTypeUrl(idDomain, type), AddTokenHeader(CreateCommonHeaders(), token));
         }
 
-        Dictionary<string, string> addTokenHeader(Dictionary<string, string> d, string token)
+        Dictionary<string, string> CreateCommonHeaders()
         {
-            var headers = new Dictionary<string, string>(d);
-            headers.Add("Authorization", "Bearer "  + token);
+            return new Dictionary<string, string>(m_CommonPlayerIdentityHeaders);
+        }
+
+        Dictionary<string, string> AddTokenHeader(Dictionary<string, string> headers, string token)
+        {
+            headers.Add("Authorization", "Bearer " + token);
             return headers;
         }
 
-        Dictionary<string, string> addJsonHeader(Dictionary<string, string> d)
+        Dictionary<string, string> AddJsonHeader(Dictionary<string, string> headers)
         {
-            var headers = new Dictionary<string, string>(d);
             headers.Add("Content-Type", "application/json");
             return headers;
         }
 
-        string CreateIdProviderUrl(string idDomain)
+        string GetEnableIdProviderTypeUrl(string idDomain, string type)
         {
-            return m_ServicesGatewayHost + k_ServicesGatewayStem + m_OrganizationId + "/iddomains/" + idDomain + "/idps";
+            return $"{GetIdProviderTypeUrl(idDomain, type)}/enable";
         }
 
-        string ListIdProviderUrl(string idDomain)
+        string GetDisableIdProviderTypeUrl(string idDomain, string type)
         {
-            return m_ServicesGatewayHost + k_ServicesGatewayStem + m_OrganizationId + "/iddomains/" + idDomain + "/idps";
+            return $"{GetIdProviderTypeUrl(idDomain, type)}/disable";
         }
 
-        string UpdateIdProviderUrl(string idDomain, string type)
+        string GetIdProviderTypeUrl(string idDomain, string type)
         {
-            return m_ServicesGatewayHost + k_ServicesGatewayStem + m_OrganizationId + "/iddomains/" + idDomain + "/idps/" + type;
+            return $"{GetIdProviderUrl(idDomain)}/{type}";
         }
 
-        string DeleteIdProviderUrl(string idDomain, string type)
+        string GetIdProviderUrl(string idDomain)
         {
-            return m_ServicesGatewayHost + k_ServicesGatewayStem + m_OrganizationId + "/iddomains/" + idDomain + "/idps/" + type;
-        }
-
-        string EnableIdProviderUrl(string idDomain, string type)
-        {
-            return m_ServicesGatewayHost + k_ServicesGatewayStem + m_OrganizationId + "/iddomains/" + idDomain + "/idps/" + type + "/enable";
-        }
-
-        string DisableIdProviderUrl(string idDomain, string type)
-        {
-            return m_ServicesGatewayHost + k_ServicesGatewayStem + m_OrganizationId + "/iddomains/" + idDomain + "/idps/" + type + "/disable";
+            return $"{m_BaseIdDomainUrl}/{idDomain}/idps";
         }
     }
 }

@@ -4,6 +4,17 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-pre.6] - 2021-10-1
+### Added
+- Added Samples to Package Manager
+- Added `SignInWithExternalTokenAsync` and `LinkWithExternalTokenAsync` to `IAuthenticationService`.
+### Changed
+- Made `ExternalTokenRequest` class public.
+
+## [1.0.0-pre.5] - 2021-08-25
+### Added
+- Integrate with Package Manager under the Services tab filter and comply with the standard for the UI detail screen.
+
 ## [1.0.0-pre.4] - 2021-08-05
 ### Changed
 - Updated the `AuthenticationException` to base on `RequestFailedException`.

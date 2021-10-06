@@ -2,9 +2,12 @@
 
 This package provides a system for working with the Unity User Authentication Service (UAS), including log-in, player ID and access token retrieval, and session persistence.
 
+## Installation
+
+To install this package, make sure you [enable pre-release packages](https://docs.unity3d.com/2021.1/Documentation/Manual/class-PackageManager.html#advanced_preview) in the Unity Editor's Package Manager, and then follow the [installation instructions in the Unity User Manual](https://docs.unity3d.com/Documentation/Manual/upm-ui-install.html).
+
 ## Integration
 
-The Authentication SDK is currently available on the Package Manager by manually adding `com.unity.services.authentication` to the project package manifest.
 
 Once you have installed the Authentication package, you must link your Unity project to a Unity Cloud Project using the Services window.
 

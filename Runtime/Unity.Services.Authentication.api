@@ -33,15 +33,27 @@ namespace Unity.Services.Authentication
         public abstract string PlayerId { get; }
         public abstract void ApplicationUnpaused();
         public abstract System.Threading.Tasks.Task LinkWithAppleAsync(string idToken);
+        public abstract System.Threading.Tasks.Task LinkWithExternalTokenAsync(Unity.Services.Authentication.Models.ExternalTokenRequest externalToken);
         public abstract System.Threading.Tasks.Task LinkWithFacebookAsync(string accessToken);
         public abstract System.Threading.Tasks.Task LinkWithGoogleAsync(string idToken);
         public abstract System.Threading.Tasks.Task LinkWithSteamAsync(string sessionTicket);
         public abstract System.Threading.Tasks.Task SignInAnonymouslyAsync();
         public abstract System.Threading.Tasks.Task SignInWithAppleAsync(string idToken);
+        public abstract System.Threading.Tasks.Task SignInWithExternalTokenAsync(Unity.Services.Authentication.Models.ExternalTokenRequest externalToken);
         public abstract System.Threading.Tasks.Task SignInWithFacebookAsync(string accessToken);
         public abstract System.Threading.Tasks.Task SignInWithGoogleAsync(string idToken);
         public abstract System.Threading.Tasks.Task SignInWithSessionTokenAsync();
         public abstract System.Threading.Tasks.Task SignInWithSteamAsync(string sessionTicket);
         public abstract void SignOut();
+    }
+}
+
+namespace Unity.Services.Authentication.Models
+{
+    public class ExternalTokenRequest
+    {
+        [Newtonsoft.Json.JsonProperty(@"idProvider")] public string IdProvider;
+        [Newtonsoft.Json.JsonProperty(@"token")] public string Token;
+        [UnityEngine.Scripting.Preserve] public ExternalTokenRequest() {}
     }
 }

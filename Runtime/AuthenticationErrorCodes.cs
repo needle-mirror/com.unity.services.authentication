@@ -5,7 +5,7 @@ namespace Unity.Services.Authentication
 {
     /// <summary>
     /// AuthenticationErrorCodes lists the error codes to expect from <c>AuthenticationException</c> and failed events.
-    /// The error code range is: 10000 to 19999.
+    /// The error code range is: 10000 to 10999.
     /// </summary>
     public static class AuthenticationErrorCodes
     {

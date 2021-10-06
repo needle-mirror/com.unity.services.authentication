@@ -28,6 +28,7 @@
 
 .auth-id-providers-title {
     flex-direction: row;
+    margin-bottom: 10px;
 }
 
 .auth-button-container {
@@ -37,5 +38,5 @@
 }
 
 .auth-danger-button {
-    color: red;
+    background-color: #8B0000;
 }

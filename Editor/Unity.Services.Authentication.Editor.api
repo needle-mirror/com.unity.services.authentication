@@ -7,4 +7,34 @@ namespace Unity.Services.Authentication.Editor
     {
         public virtual string GetKey();
     }
+
+    public abstract class IdProviderCustomSettingsElement : UnityEngine.UIElements.VisualElement
+    {
+        protected System.Func<string> m_ServicesGatewayTokenCallback;
+        public event System.Action<Unity.Services.Authentication.Editor.IdProviderCustomSettingsElement, System.Exception> Error;
+        public event System.Action<Unity.Services.Authentication.Editor.IdProviderCustomSettingsElement, bool> Waiting;
+        public string ServiceGatewayToken { get; }
+        protected IdProviderCustomSettingsElement(System.Func<string> servicesGatewayTokenCallback) {}
+        public abstract void Refresh();
+    }
+
+    public class IdProviderOptions
+    {
+        public string ClientIdDisplayName { get; set; }
+        public string ClientSecretDisplayName { get; set; }
+        public Unity.Services.Authentication.Editor.IdProviderOptions.CreateCustomSettingsElementDelegate CustomSettingsElementCreator { get; set; }
+        public string DisplayName { get; set; }
+        public string IdProviderType { get; set; }
+        public bool NeedClientSecret { get; set; }
+        public IdProviderOptions() {}
+        public delegate Unity.Services.Authentication.Editor.IdProviderCustomSettingsElement CreateCustomSettingsElementDelegate(string idDomain, System.Func<string> servicesGatewayTokenCallback, bool skipConfirmation);
+    }
+
+    public static class IdProviderRegistry
+    {
+        public static System.Collections.Generic.IEnumerable<string> AllTypes { get; }
+        public static Unity.Services.Authentication.Editor.IdProviderOptions GetOptions(string idProviderType);
+        public static void Register(Unity.Services.Authentication.Editor.IdProviderOptions idProviderOptions);
+        public static void Unregister(string idProviderType);
+    }
 }

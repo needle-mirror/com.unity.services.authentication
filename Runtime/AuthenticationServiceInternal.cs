@@ -28,8 +28,8 @@ namespace Unity.Services.Authentication
         const string k_CacheKeySessionToken = "session_token";
 
         const string k_IdProviderApple = "apple.com";
-        const string k_IdProviderGoogle = "google.com";
         const string k_IdProviderFacebook = "facebook.com";
+        const string k_IdProviderGoogle = "google.com";
         const string k_IdProviderSteam = "steampowered.com";
 
         // NOTE: the REFRESH buffer should always have a larger value than the EXPIRY buffer,
@@ -171,77 +171,82 @@ namespace Unity.Services.Authentication
 
         public Task SignInWithAppleAsync(string idToken)
         {
-            return SignInWithExternalToken(new ExternalTokenRequest
+            return SignInWithExternalTokenAsync(new ExternalTokenRequest
             {
                 IdProvider = k_IdProviderApple,
                 Token = idToken
-            }).AsTask();
+            });
         }
 
         public Task LinkWithAppleAsync(string idToken)
         {
-            return LinkWithExternalToken(new ExternalTokenRequest
+            return LinkWithExternalTokenAsync(new ExternalTokenRequest
             {
                 IdProvider = k_IdProviderApple,
                 Token = idToken
-            }).AsTask();
+            });
         }
 
         public Task SignInWithGoogleAsync(string idToken)
         {
-            return SignInWithExternalToken(new ExternalTokenRequest
+            return SignInWithExternalTokenAsync(new ExternalTokenRequest
             {
                 IdProvider = k_IdProviderGoogle,
                 Token = idToken
-            }).AsTask();
+            });
         }
 
         public Task LinkWithGoogleAsync(string idToken)
         {
-            return LinkWithExternalToken(new ExternalTokenRequest
+            return LinkWithExternalTokenAsync(new ExternalTokenRequest
             {
                 IdProvider = k_IdProviderGoogle,
                 Token = idToken
-            }).AsTask();
+            });
         }
 
         public Task SignInWithFacebookAsync(string accessToken)
         {
-            return SignInWithExternalToken(new ExternalTokenRequest
+            return SignInWithExternalTokenAsync(new ExternalTokenRequest
             {
                 IdProvider = k_IdProviderFacebook,
                 Token = accessToken
-            }).AsTask();
+            });
         }
 
         public Task LinkWithFacebookAsync(string accessToken)
         {
-            return LinkWithExternalToken(new ExternalTokenRequest
+            return LinkWithExternalTokenAsync(new ExternalTokenRequest
             {
                 IdProvider = k_IdProviderFacebook,
                 Token = accessToken
-            }).AsTask();
+            });
         }
 
         public Task SignInWithSteamAsync(string sessionTicket)
         {
-            return SignInWithExternalToken(new ExternalTokenRequest
+            return SignInWithExternalTokenAsync(new ExternalTokenRequest
             {
                 IdProvider = k_IdProviderSteam,
                 Token = sessionTicket
-            }).AsTask();
+            });
         }
 
         public Task LinkWithSteamAsync(string sessionTicket)
         {
-            return LinkWithExternalToken(new ExternalTokenRequest
+            return LinkWithExternalTokenAsync(new ExternalTokenRequest
             {
                 IdProvider = k_IdProviderSteam,
                 Token = sessionTicket
-            }).AsTask();
+            });
         }
 
-        internal IAsyncOperation SignInWithExternalToken(ExternalTokenRequest externalToken)
+        public Task SignInWithExternalTokenAsync(ExternalTokenRequest externalToken)
+        {
+            return SignInWithExternalToken(externalToken).AsTask();
+        }
+
+        public IAsyncOperation SignInWithExternalToken(ExternalTokenRequest externalToken)
         {
             if (State == AuthenticationState.SignedOut)
             {
@@ -249,6 +254,11 @@ namespace Unity.Services.Authentication
             }
 
             return AlreadySignedInError();
+        }
+
+        public Task LinkWithExternalTokenAsync(ExternalTokenRequest externalToken)
+        {
+            return LinkWithExternalToken(externalToken).AsTask();
         }
 
         internal IAsyncOperation LinkWithExternalToken(ExternalTokenRequest externalToken)

@@ -1,4 +1,3 @@
-#if ENABLE_EDITOR_GAME_SERVICES
 using System;
 using UnityEditor;
 
@@ -17,4 +16,3 @@ namespace Unity.Services.Authentication.Editor
         }
     }
 }
-#endif

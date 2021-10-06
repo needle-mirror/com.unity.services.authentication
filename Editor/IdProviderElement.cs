@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Unity.Services.Authentication.Editor.Models;
 using Unity.Services.Core.Internal;
 using UnityEditor;
@@ -8,70 +7,13 @@ using UnityEngine.UIElements;
 
 namespace Unity.Services.Authentication.Editor
 {
-    class IdProviderOptions
-    {
-        public const string IdProviderApple = "apple.com";
-        public const string IdProviderGoogle = "google.com";
-        public const string IdProviderFacebook = "facebook.com";
-        public const string IdProviderSteam = "steampowered.com";
-
-        public string IdProviderType { get; set; }
-        public string DisplayName { get; set; }
-        public string ClientIdDisplayName { get; set; } = "Client ID";
-
-        public string ClientSecretDisplayName { get; set; } = "Client Secret";
-        public bool NeedClientSecret {get; set; }
-
-        static readonly Dictionary<string, IdProviderOptions> s_IdProviderOptions = new Dictionary<string, IdProviderOptions>
-        {
-            [IdProviderApple] = new IdProviderOptions
-            {
-                IdProviderType = IdProviderApple,
-                DisplayName = "Sign-in with Apple",
-                ClientIdDisplayName = "App ID",
-                NeedClientSecret = false
-            },
-            [IdProviderGoogle] = new IdProviderOptions
-            {
-                IdProviderType = IdProviderGoogle,
-                DisplayName = "Google",
-                ClientIdDisplayName = "Client ID",
-                NeedClientSecret = false
-            },
-            [IdProviderFacebook] = new IdProviderOptions
-            {
-                IdProviderType = IdProviderFacebook,
-                DisplayName = "Facebook",
-                ClientIdDisplayName = "App ID",
-                ClientSecretDisplayName = "App Secret",
-                NeedClientSecret = true
-            },
-            [IdProviderSteam] = new IdProviderOptions
-            {
-                IdProviderType = IdProviderSteam,
-                DisplayName = "Steam",
-                ClientIdDisplayName = "App ID",
-                ClientSecretDisplayName = "Key",
-                NeedClientSecret = true
-            }
-        };
-
-        public static IdProviderOptions GetOptions(string idProviderType)
-        {
-            if (!s_IdProviderOptions.ContainsKey(idProviderType))
-            {
-                return null;
-            }
-            return s_IdProviderOptions[idProviderType];
-        }
-    }
-
     class IdProviderElement : VisualElement
     {
         const string k_ElementUxml = "Packages/com.unity.services.authentication/Editor/UXML/IdProviderElement.uxml";
 
         string m_IdDomainId;
         IAuthenticationAdminClient m_AdminClient;
+
         IdProviderOptions m_Options;
 
         Foldout m_Container;
@@ -81,6 +23,8 @@ namespace Unity.Services.Authentication.Editor
         Button m_SaveButton;
         Button m_CancelButton;
         Button m_DeleteButton;
+
+        IdProviderCustomSettingsElement m_CustomSettingsElement;
 
         // Whether skip the confirmation window for tests/automation.
         bool m_SkipConfirmation;
@@ -115,27 +59,31 @@ namespace Unity.Services.Authentication.Editor
         /// </summary>
         public Button CancelButton => m_CancelButton;
 
-
         /// <summary>
         /// The button to delete the current ID provider.
         /// </summary>
         public Button DeleteButton => m_DeleteButton;
 
         /// <summary>
-        /// Event triggered when the <cref="IdProviderElement"/> starts or finishes waiting for an async operation.
+        /// The optional additional custom settings element for the ID provider.
+        /// </summary>
+        public IdProviderCustomSettingsElement CustomSettingsElement => m_CustomSettingsElement;
+
+        /// <summary>
+        /// Event triggered when the <see cref="IdProviderElement"/> starts or finishes waiting for an async operation.
         /// The first parameter of the callback is the sender.
         /// The second parameter is true if it starts waiting, and false if it finishes waiting.
         /// </summary>
         public event Action<IdProviderElement, bool> Waiting;
 
         /// <summary>
-        /// Event triggered when the current <cref="IdProviderElement"/> needs to be deleted by the container.
+        /// Event triggered when the current <see cref="IdProviderElement"/> needs to be deleted by the container.
         /// The parameter of the callback is the sender.
         /// </summary>
         public event Action<IdProviderElement> Deleted;
 
         /// <summary>
-        /// Event triggered when the current <cref="IdProviderElement"/> catches an error.
+        /// Event triggered when the current <see cref="IdProviderElement"/> catches an error.
         /// The first parameter of the callback is the sender.
         /// The second parameter is the exception caught by the element.
         /// </summary>
@@ -161,6 +109,14 @@ namespace Unity.Services.Authentication.Editor
             !string.IsNullOrEmpty(CurrentValue.ClientId) &&
             (!m_Options.NeedClientSecret || !string.IsNullOrEmpty(CurrentValue.ClientSecret));
 
+        /// <summary>
+        /// Configures the Id provider element
+        /// </summary>
+        /// <param name="idDomain"> The ID domain associated with the project </param>
+        /// <param name="adminClient"> API client to the Admin APIs of the Authentication service </param>
+        /// <param name="savedValue"> The value saved on the server side </param>
+        /// <param name="options"> The ID provider metadata that is used to render the settings UI </param>
+        /// <param name="skipConfirmation"> Whether to skip the confirmation window for tests/automation </param>
         public IdProviderElement(string idDomain, IAuthenticationAdminClient adminClient, IdProviderResponse savedValue, IdProviderOptions options, bool skipConfirmation = false)
         {
             m_IdDomainId = idDomain;
@@ -212,12 +168,32 @@ namespace Unity.Services.Authentication.Editor
                 m_DeleteButton.clicked += OnDeleteButtonClicked;
                 m_DeleteButton.SetEnabled(!savedValue.New);
 
+                if (options.CustomSettingsElementCreator != null)
+                {
+                    m_CustomSettingsElement = options.CustomSettingsElementCreator.Invoke(m_IdDomainId, () => m_AdminClient.ServicesGatewayToken, skipConfirmation);
+                    m_Container.Add(m_CustomSettingsElement);
+                    m_CustomSettingsElement.Waiting += OnAdditionalElementWaiting;
+                    m_CustomSettingsElement.Error += OnAdditionalElementError;
+                }
+
                 ResetCurrentValue();
                 Add(containerUI);
             }
             else
             {
                 throw new Exception("Asset not found: " + k_ElementUxml);
+            }
+        }
+
+        /// <summary>
+        /// Initialize the ID provider element in case any server side API call is needed.
+        /// Now the ID provider itself doesn't need additional API calls. It's up to the additional settings.
+        /// </summary>
+        public void Initialize()
+        {
+            if (!SavedValue.New)
+            {
+                m_CustomSettingsElement?.Refresh();
             }
         }
 
@@ -230,11 +206,13 @@ namespace Unity.Services.Authentication.Editor
             {
                 m_DeleteButton.SetEnabled(false);
                 m_DeleteButton.style.display = DisplayStyle.None;
+                m_CustomSettingsElement?.SetEnabled(false);
             }
             else
             {
                 m_DeleteButton.SetEnabled(true);
                 m_DeleteButton.style.display = DisplayStyle.Flex;
+                m_CustomSettingsElement?.SetEnabled(true);
             }
         }
 
@@ -262,7 +240,7 @@ namespace Unity.Services.Authentication.Editor
             switch (option)
             {
                 case 0:
-                    Waiting?.Invoke(this, true);
+                    InvokeWaiting(true);
 
                     if (SavedValue.New)
                     {
@@ -290,8 +268,8 @@ namespace Unity.Services.Authentication.Editor
         {
             if (asyncOp.Exception != null)
             {
-                Error?.Invoke(this, AuthenticationSettingsHelper.ExtractException(asyncOp.Exception));
-                Waiting?.Invoke(this, false);
+                InvokeError(asyncOp.Exception);
+                InvokeWaiting(false);
                 return;
             }
 
@@ -309,7 +287,10 @@ namespace Unity.Services.Authentication.Editor
             // Enable/disable is not changed
             ResetCurrentValue();
             RefreshButtons();
-            Waiting?.Invoke(this, false);
+            InvokeWaiting(false);
+
+            // Refresh the additional settings if necessary.
+            m_CustomSettingsElement?.Refresh();
         }
 
         void OnEnableDisableCompleted(IAsyncOperation<IdProviderResponse> asyncOp)
@@ -317,8 +298,8 @@ namespace Unity.Services.Authentication.Editor
             // Handle enable/disable exception
             if (asyncOp.Exception != null)
             {
-                Error?.Invoke(this, AuthenticationSettingsHelper.ExtractException(asyncOp.Exception));
-                Waiting?.Invoke(this, false);
+                InvokeError(asyncOp.Exception);
+                InvokeWaiting(false);
                 return;
             }
 
@@ -326,7 +307,7 @@ namespace Unity.Services.Authentication.Editor
             SavedValue = asyncOp.Result;
             ResetCurrentValue();
             RefreshButtons();
-            Waiting?.Invoke(this, false);
+            InvokeWaiting(false);
         }
 
         void OnCancelButtonClicked()
@@ -358,7 +339,7 @@ namespace Unity.Services.Authentication.Editor
             {
                 // Delete
                 case 0:
-                    Waiting?.Invoke(this, true);
+                    InvokeWaiting(true);
                     var asyncOp = m_AdminClient.DeleteIdProvider(m_IdDomainId, CurrentValue.Type);
                     asyncOp.Completed += OnDeleteCompleted;
                     break;
@@ -377,15 +358,15 @@ namespace Unity.Services.Authentication.Editor
         {
             if (asyncOp.Exception != null)
             {
-                Error?.Invoke(this, AuthenticationSettingsHelper.ExtractException(asyncOp.Exception));
-                Waiting?.Invoke(this, false);
+                InvokeError(asyncOp.Exception);
+                InvokeWaiting(false);
                 return;
             }
 
             // Simply trigger delete event to notify parent to remove the element from the list.
             Deleted?.Invoke(this);
             ResetCurrentValue();
-            Waiting?.Invoke(this, false);
+            InvokeWaiting(false);
         }
 
         int DisplayDialogComplex(string title, string message, string ok, string cancel, string alt)
@@ -394,6 +375,26 @@ namespace Unity.Services.Authentication.Editor
                 return 0;
 
             return EditorUtility.DisplayDialogComplex(title, message, ok, cancel, alt);
+        }
+
+        void OnAdditionalElementWaiting(IdProviderCustomSettingsElement sender, bool waiting)
+        {
+            InvokeWaiting(waiting);
+        }
+
+        void OnAdditionalElementError(IdProviderCustomSettingsElement sender, Exception error)
+        {
+            InvokeError(error);
+        }
+
+        void InvokeWaiting(bool waiting)
+        {
+            Waiting?.Invoke(this, waiting);
+        }
+
+        void InvokeError(Exception ex)
+        {
+            Error?.Invoke(this, AuthenticationSettingsHelper.ExtractException(ex));
         }
     }
 }

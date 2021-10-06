@@ -19,19 +19,18 @@ namespace Unity.Services.Authentication.Editor
 {
     static class AuthenticationAdminClientManager
     {
-        internal static IAuthenticationAdminClient Instance { get; set; } = AuthenticationAdminClient();
-
-        static IAuthenticationAdminClient AuthenticationAdminClient()
+        internal static IAuthenticationAdminClient Create()
         {
-            IDateTimeWrapper dateTime = new DateTimeWrapper();
-            INetworkingUtilities networkUtilities = new NetworkingUtilities(null);
-            string orgId = GetOrganizationId();
-            var networkClient = new AuthenticationAdminNetworkClient("https://services.unity.com",
-                orgId,
-                CloudProjectSettings.projectId,
-                networkUtilities);
+            if (!IsConfigured())
+                return null;
 
-            return new AuthenticationAdminClient(networkClient);
+            var networkClient = new AuthenticationAdminNetworkClient("https://services.unity.com", GetOrganizationId(), GetProjectId(), new NetworkingUtilities(null));
+            return new AuthenticationAdminClient(networkClient, new GenesisTokenProvider());
+        }
+
+        internal static bool IsConfigured()
+        {
+            return !string.IsNullOrEmpty(GetOrganizationId()) && !string.IsNullOrEmpty(GetProjectId());
         }
 
         // GetOrganizationId will gets the organization id associated with this Unity project.
@@ -40,21 +39,29 @@ namespace Unity.Services.Authentication.Editor
             // This is a temporary workaround to get the Genesis organization foreign key for non-DevX enhanced Unity versions.
             // When the eventual changes are backported into previous versions of Unity, this will no longer be necessary.
             Assembly assembly = Assembly.GetAssembly(typeof(EditorWindow));
-            var unityConnectInstance = assembly.CreateInstance("UnityEditor.Connect.UnityConnect", false, BindingFlags.NonPublic | BindingFlags.Instance, null, null, null, null); Type t = unityConnectInstance.GetType();
+            var unityConnectInstance = assembly.CreateInstance("UnityEditor.Connect.UnityConnect", false, BindingFlags.NonPublic | BindingFlags.Instance, null, null, null, null);
+            Type t = unityConnectInstance.GetType();
             var projectInfo = t.GetProperty("projectInfo").GetValue(unityConnectInstance, null);
 
             Type projectInfoType = projectInfo.GetType();
             return projectInfoType.GetProperty("organizationForeignKey").GetValue(projectInfo, null) as string;
         }
+
+        static string GetProjectId()
+        {
+            return CloudProjectSettings.projectId;
+        }
     }
 
     class AuthenticationAdminClient : IAuthenticationAdminClient
     {
+        readonly IAuthenticationAdminNetworkClient m_AuthenticationAdminNetworkClient;
+        readonly IGenesisTokenProvider m_GenesisTokenProvider;
         string m_IdDomain;
-        IAuthenticationAdminNetworkClient m_AuthenticationAdminNetworkClient;
+        string m_ServicesGatewayToken;
 
-        string m_servicesGatewayToken;
-        string m_genesisToken;
+        string GenesisToken => m_GenesisTokenProvider.Token;
+        public string ServicesGatewayToken => m_ServicesGatewayToken;
 
         internal enum ServiceCalled
         {
@@ -62,10 +69,10 @@ namespace Unity.Services.Authentication.Editor
             AuthenticationAdmin
         }
 
-        public AuthenticationAdminClient(IAuthenticationAdminNetworkClient networkClient, string genesisToken = "")
+        public AuthenticationAdminClient(IAuthenticationAdminNetworkClient networkClient, IGenesisTokenProvider genesisTokenProvider)
         {
             m_AuthenticationAdminNetworkClient = networkClient;
-            m_genesisToken = genesisToken;
+            m_GenesisTokenProvider = genesisTokenProvider;
         }
 
         public IAsyncOperation<string> GetIDDomain()
@@ -77,8 +84,7 @@ namespace Unity.Services.Authentication.Editor
                 getDefaultIdDomainRequest.Completed += request => HandleGetIdDomainAPICall(asyncOp, request);
             };
 
-            getGenesisToken();
-            var tokenAsyncOp = ExchangeToken(m_genesisToken);
+            var tokenAsyncOp = ExchangeToken();
             tokenAsyncOp.Completed += tokenAsyncOpResult => getIdDomainFunc(tokenAsyncOpResult?.Result);
             return asyncOp;
         }
@@ -89,11 +95,10 @@ namespace Unity.Services.Authentication.Editor
             Action<string> createIdProviderFunc = token =>
             {
                 var request = m_AuthenticationAdminNetworkClient.CreateIdProvider(body, iddomain, token);
-                request.Completed += req => HandleIdProviderResponseApiCall(asyncOp, req);
+                request.Completed += req => HandleAuthenticationAdminApiCall(asyncOp, req);
             };
 
-            getGenesisToken();
-            var tokenAsyncOp = ExchangeToken(m_genesisToken);
+            var tokenAsyncOp = ExchangeToken();
             tokenAsyncOp.Completed += tokenAsyncOpResult => createIdProviderFunc(tokenAsyncOpResult?.Result);
             return asyncOp;
         }
@@ -104,11 +109,10 @@ namespace Unity.Services.Authentication.Editor
             Action<string> listIdProviderFunc = token =>
             {
                 var request = m_AuthenticationAdminNetworkClient.ListIdProvider(iddomain, token);
-                request.Completed += req => HandleListIdProviderResponseApiCall(asyncOp, req);
+                request.Completed += req => HandleAuthenticationAdminApiCall(asyncOp, req);
             };
 
-            getGenesisToken();
-            var tokenAsyncOp = ExchangeToken(m_genesisToken);
+            var tokenAsyncOp = ExchangeToken();
             tokenAsyncOp.Completed += tokenAsyncOpResult => listIdProviderFunc(tokenAsyncOpResult?.Result);
             return asyncOp;
         }
@@ -119,11 +123,10 @@ namespace Unity.Services.Authentication.Editor
             Action<string> enableIdProviderFunc = token =>
             {
                 var request = m_AuthenticationAdminNetworkClient.UpdateIdProvider(body, iddomain, type, token);
-                request.Completed += req => HandleIdProviderResponseApiCall(asyncOp, req);
+                request.Completed += req => HandleAuthenticationAdminApiCall(asyncOp, req);
             };
 
-            getGenesisToken();
-            var tokenAsyncOp = ExchangeToken(m_genesisToken);
+            var tokenAsyncOp = ExchangeToken();
             tokenAsyncOp.Completed += tokenAsyncOpResult => enableIdProviderFunc(tokenAsyncOpResult?.Result);
             return asyncOp;
         }
@@ -134,11 +137,10 @@ namespace Unity.Services.Authentication.Editor
             Action<string> enableIdProviderFunc = token =>
             {
                 var request = m_AuthenticationAdminNetworkClient.EnableIdProvider(iddomain, type, token);
-                request.Completed += req => HandleIdProviderResponseApiCall(asyncOp, req);
+                request.Completed += req => HandleAuthenticationAdminApiCall(asyncOp, req);
             };
 
-            getGenesisToken();
-            var tokenAsyncOp = ExchangeToken(m_genesisToken);
+            var tokenAsyncOp = ExchangeToken();
             tokenAsyncOp.Completed += tokenAsyncOpResult => enableIdProviderFunc(tokenAsyncOpResult?.Result);
             return asyncOp;
         }
@@ -149,11 +151,10 @@ namespace Unity.Services.Authentication.Editor
             Action<string> disableIdProviderFunc = token =>
             {
                 var request = m_AuthenticationAdminNetworkClient.DisableIdProvider(iddomain, type, token);
-                request.Completed += req => HandleIdProviderResponseApiCall(asyncOp, req);
+                request.Completed += req => HandleAuthenticationAdminApiCall(asyncOp, req);
             };
 
-            getGenesisToken();
-            var tokenAsyncOp = ExchangeToken(m_genesisToken);
+            var tokenAsyncOp = ExchangeToken();
             tokenAsyncOp.Completed += tokenAsyncOpResult => disableIdProviderFunc(tokenAsyncOpResult?.Result);
             return asyncOp;
         }
@@ -164,24 +165,18 @@ namespace Unity.Services.Authentication.Editor
             Action<string> deleteIdProviderFunc = token =>
             {
                 var request = m_AuthenticationAdminNetworkClient.DeleteIdProvider(iddomain, type, token);
-                request.Completed += req => HandleIdProviderResponseApiCall(asyncOp, req);
+                request.Completed += req => HandleAuthenticationAdminApiCall(asyncOp, req);
             };
 
-            getGenesisToken();
-            var tokenAsyncOp = ExchangeToken(m_genesisToken);
+            var tokenAsyncOp = ExchangeToken();
             tokenAsyncOp.Completed += tokenAsyncOpResult => deleteIdProviderFunc(tokenAsyncOpResult?.Result);
             return asyncOp;
         }
 
-        public IdProviderResponse CloneIdProvider(IdProviderResponse x)
-        {
-            return x.Clone();
-        }
-
-        internal IAsyncOperation<string> ExchangeToken(string token)
+        internal IAsyncOperation<string> ExchangeToken()
         {
             var asyncOp = new AsyncOperation<string>();
-            var request = m_AuthenticationAdminNetworkClient.TokenExchange(token);
+            var request = m_AuthenticationAdminNetworkClient.TokenExchange(GenesisToken);
             request.Completed += req => HandleTokenExchange(asyncOp, req);
             return asyncOp;
         }
@@ -205,38 +200,18 @@ namespace Unity.Services.Authentication.Editor
             }
 
             var token = request?.ResponseBody?.Token;
-            m_servicesGatewayToken = token;
+            m_ServicesGatewayToken = token;
             asyncOp.Succeed(token);
         }
 
-        void HandleIdProviderResponseApiCall(AsyncOperation<IdProviderResponse> asyncOp, IWebRequest<IdProviderResponse> request)
+        void HandleAuthenticationAdminApiCall<T>(AsyncOperation<T> asyncOp, IWebRequest<T> request)
         {
             if (HandleError(asyncOp, request, ServiceCalled.AuthenticationAdmin))
             {
                 return;
             }
 
-            asyncOp.Succeed(request?.ResponseBody);
-        }
-
-        void HandleListIdProviderResponseApiCall(AsyncOperation<ListIdProviderResponse> asyncOp, IWebRequest<ListIdProviderResponse> request)
-        {
-            if (HandleError(asyncOp, request, ServiceCalled.AuthenticationAdmin))
-            {
-                return;
-            }
-
-            asyncOp.Succeed(request?.ResponseBody);
-        }
-
-        void HandleEmptyResponseApiCall(AsyncOperation<IdProviderResponse> asyncOp, IWebRequest<IdProviderResponse> request)
-        {
-            if (HandleError(asyncOp, request, ServiceCalled.AuthenticationAdmin))
-            {
-                return;
-            }
-
-            asyncOp.Succeed(request?.ResponseBody);
+            asyncOp.Succeed(request.ResponseBody);
         }
 
         internal bool HandleError<Q, T>(AsyncOperation<Q> asyncOp, IWebRequest<T> request, ServiceCalled sc)
@@ -282,14 +257,6 @@ namespace Unity.Services.Authentication.Editor
             }
 
             return true;
-        }
-
-        void getGenesisToken()
-        {
-            if (m_genesisToken == "")
-            {
-                m_genesisToken = CloudProjectSettings.accessToken;
-            }
         }
 
         static int MapErrorCodes(string serverErrorTitle)

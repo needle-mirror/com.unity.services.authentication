@@ -53,7 +53,9 @@ namespace Unity.Services.Authentication.Utilities
 
         public void ScheduleAction(Action action)
         {
-            m_Queue.Add(new ScheduledInvocation { Action = action, InvocationTime = DateTime.UtcNow });
+            // Set invocation time to default to make sure it runs in next frame.
+            // In some platforms the clock precision is low, it's possible that the time doesn't move forward between frames.
+            m_Queue.Add(new ScheduledInvocation { Action = action, InvocationTime = default });
         }
 
         public void ScheduleAction(Action action, int delaySeconds)
@@ -77,7 +79,7 @@ namespace Unity.Services.Authentication.Utilities
             for (var i = m_Queue.Count - 1; i >= 0; i--)
             {
                 var action = m_Queue[i];
-                if (action.InvocationTime < DateTime.UtcNow)
+                if (action.InvocationTime <= DateTime.UtcNow)
                 {
                     m_Queue.RemoveAt(i);
                     action.Action();

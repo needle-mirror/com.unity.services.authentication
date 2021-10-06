@@ -3,24 +3,13 @@ using Unity.Services.Core.Internal;
 
 namespace Unity.Services.Authentication.Editor
 {
-    static class IdProviderType
-    {
-        public const string Apple = "apple.com";
-        public const string Facebook = "facebook.com";
-        public const string Steam = "steampowered.com";
-        public const string Google = "google.com";
-
-        public static readonly string[] All =
-        {
-            Apple,
-            Facebook,
-            Google,
-            Steam
-        };
-    }
-
     interface IAuthenticationAdminClient
     {
+        /// <summary>
+        /// Get the services gateway token.
+        /// </summary>
+        string ServicesGatewayToken { get; }
+
         /// <summary>
         /// Get the ID domain associated with the project.
         /// </summary>

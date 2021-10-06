@@ -1,0 +1,9 @@
+.main-container {
+    padding:4px 4px 4px 8px;
+    flex-direction: row;
+    flex-grow: 1;
+}
+
+.configure-text {
+    padding-top:3px;
+}

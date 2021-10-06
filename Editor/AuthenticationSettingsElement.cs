@@ -176,7 +176,7 @@ namespace Unity.Services.Authentication.Editor
 
         void UpdateAddIdproviderList()
         {
-            var unusedIdProviders = new List<string>(IdProviderType.All);
+            var unusedIdProviders = new List<string>(IdProviderRegistry.AllTypes);
 
             foreach (var child in m_IdProviderListContainer.Children())
             {
@@ -230,7 +230,7 @@ namespace Unity.Services.Authentication.Editor
 
         void CreateIdProviderElement(IdProviderResponse idProvider)
         {
-            var options = IdProviderOptions.GetOptions(idProvider.Type);
+            var options = IdProviderRegistry.GetOptions(idProvider.Type);
             if (options == null)
             {
                 // the SDK doesn't support the ID provider type yet. Skip.
@@ -238,12 +238,15 @@ namespace Unity.Services.Authentication.Editor
             }
 
             var idProviderElement = new IdProviderElement(m_IdDomainId, m_AdminClient, idProvider, options, m_SkipConfirmation);
+
             m_IdProviderListContainer.Add(idProviderElement);
+
+            // Hook up events before calling Initialize.
             idProviderElement.Waiting += OnIdProviderWaiting;
             idProviderElement.Deleted += OnIdProviderDeleted;
             idProviderElement.Error += OnIdProviderError;
+            idProviderElement.Initialize();
 
-            m_IdProviderListContainer.Add(idProviderElement);
             UpdateAddIdproviderList();
         }
 
