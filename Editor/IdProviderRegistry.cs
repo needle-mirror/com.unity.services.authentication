@@ -13,13 +13,9 @@ namespace Unity.Services.Authentication.Editor
     /// It must implement several events in order for the <see cref="IdProviderElement"/> to hook up and update status.
     /// </summary>
     public abstract class IdProviderCustomSettingsElement : VisualElement
-    {   /// <summary>
-        /// The callback to get the service gateway token
-        /// </summary>
-        protected Func<string> m_ServicesGatewayTokenCallback;
-
+    {
         /// <summary>
-        /// Event triggered when the <see cref="IdProviderCustomSettingsElement"/> starts or finishes waiting for an async operation.
+        /// Event triggered when the <see cref="IdProviderCustomSettingsElement"/> starts or finishes waiting for a task.
         /// The first parameter of the callback is the sender.
         /// The second parameter is true if it starts waiting, and false if it finishes waiting.
         /// </summary>
@@ -33,6 +29,16 @@ namespace Unity.Services.Authentication.Editor
         public abstract event Action<IdProviderCustomSettingsElement, Exception> Error;
 
         /// <summary>
+        /// The property to get a service gateway token.
+        /// </summary>
+        public string GatewayToken => m_GatewayTokenCallback.Invoke();
+
+        /// <summary>
+        /// The callback to get the service gateway token
+        /// </summary>
+        protected Func<string> m_GatewayTokenCallback;
+
+        /// <summary>
         /// The constructor of the IdProviderCustomSettingsElement.
         /// </summary>
         /// <param name="servicesGatewayTokenCallback">
@@ -40,13 +46,8 @@ namespace Unity.Services.Authentication.Editor
         /// </param>
         protected IdProviderCustomSettingsElement(Func<string> servicesGatewayTokenCallback)
         {
-            m_ServicesGatewayTokenCallback = servicesGatewayTokenCallback;
+            m_GatewayTokenCallback = servicesGatewayTokenCallback;
         }
-
-        /// <summary>
-        /// The property to get a service gateway token.
-        /// </summary>
-        public string ServiceGatewayToken => m_ServicesGatewayTokenCallback.Invoke();
 
         /// <summary>
         /// The method for the custom settings section to refresh itself from the server side.

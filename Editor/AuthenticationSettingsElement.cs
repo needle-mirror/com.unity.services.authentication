@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Unity.Services.Authentication.Editor.Models;
-using Unity.Services.Core.Internal;
 using UnityEditor;
 using UnityEditor.UIElements;
-using UnityEngine;
 using UnityEngine.UIElements;
+using Logger = Unity.Services.Authentication.Utilities.Logger;
 
 namespace Unity.Services.Authentication.Editor
 {
@@ -32,7 +32,7 @@ namespace Unity.Services.Authentication.Editor
         VisualElement m_IdProviderListContainer;
 
         /// <summary>
-        /// The text to show when the settings is waitng for an async operation to finish.
+        /// The text to show when the settings is waiting for a task to finish.
         /// </summary>
         public TextElement WaitingTextElement => m_WaitingTextElement;
 
@@ -67,7 +67,7 @@ namespace Unity.Services.Authentication.Editor
         public VisualElement IdProviderListContainer => m_IdProviderListContainer;
 
         /// <summary>
-        /// Event triggered when the <cref="AuthenticationSettingsElement"/> starts or finishes waiting for an async operation.
+        /// Event triggered when the <cref="AuthenticationSettingsElement"/> starts or finishes waiting for a task.
         /// The first parameter of the callback is the sender.
         /// The second parameter is true if it starts waiting, and false if it finishes waiting.
         /// </summary>
@@ -116,62 +116,46 @@ namespace Unity.Services.Authentication.Editor
             }
         }
 
-        public void RefreshIdProviders()
+        public async void RefreshIdProviders()
         {
             ShowWaiting();
-            if (m_IdDomainId == null)
-            {
-                GetIdDomain();
-            }
-            else
-            {
-                ListIdProviders();
-            }
-        }
 
-        void GetIdDomain()
-        {
-            var asyncOp = m_AdminClient.GetIDDomain();
-            asyncOp.Completed += OnGetIdDomainCompleted;
-        }
-
-        void OnGetIdDomainCompleted(IAsyncOperation<string> asyncOp)
-        {
-            if (asyncOp.Exception != null)
+            try
             {
-                OnError(asyncOp.Exception);
-                return;
+                if (m_IdDomainId == null)
+                {
+                    await GetIdDomainAsync();
+                }
+
+                await ListIdProvidersAsync();
+            }
+            catch (Exception e)
+            {
+                OnError(e);
             }
 
-            m_IdDomainId = asyncOp.Result;
-            ListIdProviders();
+            HideWaiting();
         }
 
-        void ListIdProviders()
+        async Task GetIdDomainAsync()
         {
-            var asyncOp = m_AdminClient.ListIdProviders(m_IdDomainId);
-            asyncOp.Completed += OnListIdProvidersCompleted;
+            m_IdDomainId = await m_AdminClient.GetIDDomainAsync();
         }
 
-        void OnListIdProvidersCompleted(IAsyncOperation<ListIdProviderResponse> asyncOp)
+        async Task ListIdProvidersAsync()
         {
-            if (asyncOp.Exception != null)
-            {
-                OnError(asyncOp.Exception);
-                return;
-            }
             m_IdProviderListContainer.Clear();
+            var response = await m_AdminClient.ListIdProvidersAsync(m_IdDomainId);
 
-            if (asyncOp.Result?.Results != null)
+            if (response.Results != null)
             {
-                foreach (var provider in asyncOp.Result.Results)
+                foreach (var provider in response.Results)
                 {
                     CreateIdProviderElement(provider);
                 }
             }
 
             UpdateAddIdproviderList();
-            HideWaiting();
         }
 
         void UpdateAddIdproviderList()
@@ -188,10 +172,12 @@ namespace Unity.Services.Authentication.Editor
                 var idProviderElement = (IdProviderElement)child;
                 unusedIdProviders.Remove(idProviderElement.SavedValue.Type);
             }
+
             unusedIdProviders.Sort();
 
             m_AddIdProviderContainer.Clear();
             m_AddIdProviderTypeChoices = unusedIdProviders;
+
             if (unusedIdProviders.Count == 0)
             {
                 m_AddButton.SetEnabled(false);
@@ -203,6 +189,7 @@ namespace Unity.Services.Authentication.Editor
                     m_AddIdProviderType = new PopupField<string>(null, unusedIdProviders, 0);
                     m_AddIdProviderContainer.Add(m_AddIdProviderType);
                 }
+
                 m_AddButton.SetEnabled(true);
             }
         }
@@ -224,8 +211,7 @@ namespace Unity.Services.Authentication.Editor
 
             m_ErrorTextElement.style.display = DisplayStyle.Flex;
             m_ErrorTextElement.text = AuthenticationSettingsHelper.ExceptionToString(error);
-            Debug.LogError(error);
-            HideWaiting();
+            Logger.LogError(error);
         }
 
         void CreateIdProviderElement(IdProviderResponse idProvider)
@@ -271,6 +257,7 @@ namespace Unity.Services.Authentication.Editor
         void OnIdProviderError(IdProviderElement sender, Exception error)
         {
             OnError(error);
+            HideWaiting();
         }
 
         void ShowWaiting()

@@ -2,20 +2,23 @@ using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 using Unity.Services.Authentication.Models;
 using Unity.Services.Authentication.Utilities;
 using Unity.Services.Core.Environments.Internal;
-using Logger = Unity.Services.Authentication.Utilities.Logger;
 
 namespace Unity.Services.Authentication
 {
     interface IAuthenticationNetworkClient
     {
-        IWebRequest<WellKnownKeys> GetWellKnownKeys();
-        IWebRequest<SignInResponse> SignInAnonymously();
-        IWebRequest<SignInResponse> SignInWithSessionToken(string token);
-        IWebRequest<SignInResponse> SignInWithExternalToken(ExternalTokenRequest externalToken);
-        IWebRequest<SignInResponse> LinkWithExternalToken(string accessToken, ExternalTokenRequest externalToken);
+        Task<WellKnownKeys> GetWellKnownKeysAsync();
+        Task<SignInResponse> SignInAnonymouslyAsync();
+        Task<SignInResponse> SignInWithSessionTokenAsync(string token);
+        Task<SignInResponse> SignInWithExternalTokenAsync(ExternalTokenRequest externalToken);
+        Task<SignInResponse> LinkWithExternalTokenAsync(string accessToken, ExternalTokenRequest externalToken);
+        Task<SignInResponse> UnlinkExternalTokenAsync(string accessToken, UnlinkRequest request);
+        Task DeleteAccountAsync(string accessToken, string playerId);
+        Task<UserInfo> GetUserInfoAsync(string accessToken, string user);
     }
 
     class AuthenticationNetworkClient : IAuthenticationNetworkClient
@@ -25,12 +28,15 @@ namespace Unity.Services.Authentication
         const string k_SessionTokenUrlStem = "/authentication/session-token";
         const string k_ExternalTokenUrlStem = "/authentication/external-token";
         const string k_LinkExternalTokenUrlStem = "/authentication/link";
+        const string k_UnlinkExternalTokenUrlStem = "/authentication/unlink";
         const string k_OAuthUrlStem = "/oauth2/auth";
         const string k_OAuthTokenUrlStem = "/oauth2/token";
+        const string k_OauthRevokeStem = "/oauth2/revoke";
+        const string k_UsersUrlStem = "/users";
+
         const string k_OAuthScope = "openid offline unity.user identity.user";
         const string k_AuthResponseType = "code";
         const string k_ChallengeMethod = "S256";
-        const string k_OauthRevokeStem = "/oauth2/revoke";
 
         readonly INetworkingUtilities m_NetworkClient;
         readonly ICodeChallengeGenerator m_CodeChallengeGenerator;
@@ -40,9 +46,11 @@ namespace Unity.Services.Authentication
         readonly string m_SessionTokenUrl;
         readonly string m_ExternalTokenUrl;
         readonly string m_LinkExternalTokenUrl;
+        readonly string m_UnlinkExternalTokenUrl;
         readonly string m_OAuthUrl;
         readonly string m_OAuthTokenUrl;
         readonly string m_OAuthRevokeTokenUrl;
+        readonly string m_UsersUrl;
 
         readonly Dictionary<string, string> m_CommonHeaders;
 
@@ -55,7 +63,7 @@ namespace Unity.Services.Authentication
         /// </summary>
         IEnvironments m_EnvironmentComponent;
 
-        internal AuthenticationNetworkClient(string authenticationHost,
+        internal AuthenticationNetworkClient(string host,
                                              string projectId,
                                              IEnvironments environment,
                                              ICodeChallengeGenerator codeChallengeGenerator,
@@ -66,14 +74,16 @@ namespace Unity.Services.Authentication
 
             m_OAuthClientId = "default";
 
-            m_WellKnownUrl = authenticationHost + k_WellKnownUrlStem;
-            m_AnonymousUrl = authenticationHost + k_AnonymousUrlStem;
-            m_SessionTokenUrl = authenticationHost + k_SessionTokenUrlStem;
-            m_ExternalTokenUrl = authenticationHost + k_ExternalTokenUrlStem;
-            m_LinkExternalTokenUrl = authenticationHost + k_LinkExternalTokenUrlStem;
-            m_OAuthUrl = authenticationHost + k_OAuthUrlStem;
-            m_OAuthTokenUrl = authenticationHost + k_OAuthTokenUrlStem;
-            m_OAuthRevokeTokenUrl = authenticationHost + k_OauthRevokeStem;
+            m_WellKnownUrl = host + k_WellKnownUrlStem;
+            m_AnonymousUrl = host + k_AnonymousUrlStem;
+            m_SessionTokenUrl = host + k_SessionTokenUrlStem;
+            m_ExternalTokenUrl = host + k_ExternalTokenUrlStem;
+            m_LinkExternalTokenUrl = host + k_LinkExternalTokenUrlStem;
+            m_UnlinkExternalTokenUrl = host + k_UnlinkExternalTokenUrlStem;
+            m_OAuthUrl = host + k_OAuthUrlStem;
+            m_OAuthTokenUrl = host + k_OAuthTokenUrlStem;
+            m_OAuthRevokeTokenUrl = host + k_OauthRevokeStem;
+            m_UsersUrl = host + k_UsersUrlStem;
 
             m_EnvironmentComponent = environment;
 
@@ -85,9 +95,9 @@ namespace Unity.Services.Authentication
             };
         }
 
-        public IWebRequest<WellKnownKeys> GetWellKnownKeys()
+        public Task<WellKnownKeys> GetWellKnownKeysAsync()
         {
-            return m_NetworkClient.Get<WellKnownKeys>(m_WellKnownUrl);
+            return m_NetworkClient.GetAsync<WellKnownKeys>(m_WellKnownUrl);
         }
 
         public void SetOAuthClient(string oAuthClientId)
@@ -95,30 +105,50 @@ namespace Unity.Services.Authentication
             m_OAuthClientId = oAuthClientId;
         }
 
-        public IWebRequest<SignInResponse> SignInAnonymously()
+        public Task<SignInResponse> SignInAnonymouslyAsync()
         {
-            return m_NetworkClient.Post<SignInResponse>(m_AnonymousUrl, WithEnvironment(GetCommonHeaders()));
+            return m_NetworkClient.PostAsync<SignInResponse>(m_AnonymousUrl, WithEnvironment(GetCommonHeaders()));
         }
 
-        public IWebRequest<SignInResponse> SignInWithSessionToken(string token)
+        public Task<SignInResponse> SignInWithSessionTokenAsync(string token)
         {
-            return m_NetworkClient.PostJson<SignInResponse>(m_SessionTokenUrl, new SessionTokenRequest
+            return m_NetworkClient.PostJsonAsync<SignInResponse>(m_SessionTokenUrl, new SessionTokenRequest
             {
                 SessionToken = token
             }, WithEnvironment(GetCommonHeaders()));
         }
 
-        public IWebRequest<SignInResponse> SignInWithExternalToken(ExternalTokenRequest externalToken)
+        public Task<SignInResponse> SignInWithExternalTokenAsync(ExternalTokenRequest externalToken)
         {
-            return m_NetworkClient.PostJson<SignInResponse>(m_ExternalTokenUrl, externalToken, WithEnvironment(GetCommonHeaders()));
+            return m_NetworkClient.PostJsonAsync<SignInResponse>(m_ExternalTokenUrl, externalToken, WithEnvironment(GetCommonHeaders()));
         }
 
-        public IWebRequest<SignInResponse> LinkWithExternalToken(string accessToken, ExternalTokenRequest externalToken)
+        public Task<SignInResponse> LinkWithExternalTokenAsync(string accessToken, ExternalTokenRequest externalToken)
         {
-            return m_NetworkClient.PostJson<SignInResponse>(m_LinkExternalTokenUrl, externalToken, WithEnvironment(WithAccessToken(GetCommonHeaders(), accessToken)));
+            return m_NetworkClient.PostJsonAsync<SignInResponse>(m_LinkExternalTokenUrl, externalToken, WithEnvironment(WithAccessToken(GetCommonHeaders(), accessToken)));
         }
 
-        public IWebRequest<OAuthAuthCodeResponse> RequestAuthCode(string idToken)
+        public Task<SignInResponse> UnlinkExternalTokenAsync(string accessToken, UnlinkRequest request)
+        {
+            return m_NetworkClient.PostJsonAsync<SignInResponse>(m_UnlinkExternalTokenUrl, request, WithEnvironment(WithAccessToken(GetCommonHeaders(), accessToken)));
+        }
+
+        public Task DeleteAccountAsync(string accessToken, string playerId)
+        {
+            return m_NetworkClient.DeleteAsync(CreateUserRequestUrl(playerId), WithEnvironment(WithAccessToken(GetCommonHeaders(), accessToken)));
+        }
+
+        public Task<UserInfo> GetUserInfoAsync(string accessToken, string user)
+        {
+            return m_NetworkClient.GetAsync<UserInfo>(CreateUserRequestUrl(user), WithAccessToken(GetCommonHeaders(), accessToken));
+        }
+
+        string CreateUserRequestUrl(string user)
+        {
+            return $"{m_UsersUrl}/{user}";
+        }
+
+        public Task<OAuthAuthCodeResponse> RequestAuthCodeAsync(string idToken)
         {
             m_SessionChallengeCode = m_CodeChallengeGenerator.GenerateCode();
 
@@ -130,7 +160,7 @@ namespace Unity.Services.Authentication
                 $"code_challenge={S256EncodeChallenge(m_SessionChallengeCode)}&" +
                 $"code_challenge_method={k_ChallengeMethod}";
 
-            return m_NetworkClient.PostForm<OAuthAuthCodeResponse>(m_OAuthUrl, payload, m_CommonHeaders);
+            return m_NetworkClient.PostFormAsync<OAuthAuthCodeResponse>(m_OAuthUrl, payload, m_CommonHeaders);
         }
 
         string S256EncodeChallenge(string code)
@@ -151,63 +181,21 @@ namespace Unity.Services.Authentication
                 .Replace("=", "");
         }
 
-        public string ExtractAuthCode(IWebRequest<OAuthAuthCodeResponse> authCodeRequest)
-        {
-            try
-            {
-                var locationUri = new Uri(authCodeRequest.ResponseHeaders["Location"]);
-                return ExtractAuthCode(locationUri.ToString(), locationUri.Query);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError("Failed to extract auth code. " + ex.Message);
-                Logger.LogException(ex);
-                return null;
-            }
-        }
-
-        string ExtractAuthCode(string locationUri, string query)
-        {
-            var queryParams = HttpUtilities.ParseQueryString(query);
-
-            string code;
-            if (!queryParams.TryGetValue("code", out code))
-            {
-                Logger.LogError($"Failed to extract auth code. Query parameter 'code' is not found. Location: {locationUri}");
-            }
-
-            return code;
-        }
-
-        public IWebRequest<OAuthTokenResponse> RequestOAuthToken(string authCode)
+        public Task<OAuthTokenResponse> RequestOAuthTokenAsync(string authCode)
         {
             var payload = $"client_id={m_OAuthClientId}" +
                 "&grant_type=authorization_code" +
                 $"&code_verifier={m_SessionChallengeCode}" +
                 $"&code={authCode}";
 
-            return m_NetworkClient.PostForm<OAuthTokenResponse>(m_OAuthTokenUrl, payload, m_CommonHeaders);
+            return m_NetworkClient.PostFormAsync<OAuthTokenResponse>(m_OAuthTokenUrl, payload, m_CommonHeaders);
         }
 
-        public IWebRequest<OAuthTokenResponse> RefreshOAuthToken(string refreshToken)
-        {
-            var payload = "grant_type=refresh_token" +
-                $"&client_id={m_OAuthClientId}" +
-                $"&refresh_token={refreshToken}";
-
-            return m_NetworkClient.PostForm<OAuthTokenResponse>(m_OAuthTokenUrl, payload, m_CommonHeaders, 5);
-        }
-
-        public IWebRequest<OAuthTokenResponse> RevokeOAuthToken(string accessToken)
+        public Task<OAuthTokenResponse> RevokeOAuthTokenAsync(string accessToken)
         {
             var payload = $"client_id={m_OAuthClientId}&token={accessToken}";
 
-            return m_NetworkClient.PostForm<OAuthTokenResponse>(m_OAuthRevokeTokenUrl, payload, m_CommonHeaders);
-        }
-
-        public string ExtractAccessToken(IWebRequest<OAuthTokenResponse> authCodeRequest)
-        {
-            return authCodeRequest.ResponseBody.AccessToken;
+            return m_NetworkClient.PostFormAsync<OAuthTokenResponse>(m_OAuthRevokeTokenUrl, payload, m_CommonHeaders);
         }
 
         Dictionary<string, string> WithAccessToken(Dictionary<string, string> headers, string accessToken)

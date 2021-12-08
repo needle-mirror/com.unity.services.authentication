@@ -1,19 +1,14 @@
 using System;
 using System.Reflection;
-using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Unity.Services.Authentication.Editor.Models;
 using Unity.Services.Authentication.Models;
 using Unity.Services.Authentication.Utilities;
 using Unity.Services.Core;
-using Unity.Services.Core.Internal;
 using UnityEditor;
 using UnityEngine;
 using Logger = Unity.Services.Authentication.Utilities.Logger;
-
-[assembly: InternalsVisibleTo("Unity.Services.Authentication.Editor.Tests")]
-[assembly: InternalsVisibleTo("Unity.Services.Authentication.EditorTests")]
-[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")] // For Moq
 
 namespace Unity.Services.Authentication.Editor
 {
@@ -58,10 +53,9 @@ namespace Unity.Services.Authentication.Editor
         readonly IAuthenticationAdminNetworkClient m_AuthenticationAdminNetworkClient;
         readonly IGenesisTokenProvider m_GenesisTokenProvider;
         string m_IdDomain;
-        string m_ServicesGatewayToken;
 
         string GenesisToken => m_GenesisTokenProvider.Token;
-        public string ServicesGatewayToken => m_ServicesGatewayToken;
+        public string GatewayToken { get; internal set; }
 
         internal enum ServiceCalled
         {
@@ -75,188 +69,188 @@ namespace Unity.Services.Authentication.Editor
             m_GenesisTokenProvider = genesisTokenProvider;
         }
 
-        public IAsyncOperation<string> GetIDDomain()
+        public async Task<string> GetIDDomainAsync()
         {
-            var asyncOp = new AsyncOperation<string>();
-            Action<string> getIdDomainFunc = token =>
+            try
             {
-                var getDefaultIdDomainRequest = m_AuthenticationAdminNetworkClient.GetDefaultIdDomain(token);
-                getDefaultIdDomainRequest.Completed += request => HandleGetIdDomainAPICall(asyncOp, request);
-            };
+                if (string.IsNullOrEmpty(GatewayToken))
+                {
+                    await ExchangeTokenAsync();
+                }
 
-            var tokenAsyncOp = ExchangeToken();
-            tokenAsyncOp.Completed += tokenAsyncOpResult => getIdDomainFunc(tokenAsyncOpResult?.Result);
-            return asyncOp;
+                var response = await m_AuthenticationAdminNetworkClient.GetDefaultIdDomainAsync(GatewayToken);
+                m_IdDomain = response?.Id;
+                return m_IdDomain;
+            }
+            catch (WebRequestException e)
+            {
+                throw BuildException(e, ServiceCalled.AuthenticationAdmin);
+            }
         }
 
-        public IAsyncOperation<IdProviderResponse> CreateIdProvider(string iddomain, CreateIdProviderRequest body)
+        public async Task<IdProviderResponse> CreateIdProviderAsync(string idDomain, CreateIdProviderRequest body)
         {
-            var asyncOp = new AsyncOperation<IdProviderResponse>();
-            Action<string> createIdProviderFunc = token =>
+            try
             {
-                var request = m_AuthenticationAdminNetworkClient.CreateIdProvider(body, iddomain, token);
-                request.Completed += req => HandleAuthenticationAdminApiCall(asyncOp, req);
-            };
+                if (string.IsNullOrEmpty(GatewayToken))
+                {
+                    await ExchangeTokenAsync();
+                }
 
-            var tokenAsyncOp = ExchangeToken();
-            tokenAsyncOp.Completed += tokenAsyncOpResult => createIdProviderFunc(tokenAsyncOpResult?.Result);
-            return asyncOp;
+                var response = await m_AuthenticationAdminNetworkClient.CreateIdProviderAsync(body, idDomain, GatewayToken);
+                return response;
+            }
+            catch (WebRequestException e)
+            {
+                throw BuildException(e, ServiceCalled.AuthenticationAdmin);
+            }
         }
 
-        public IAsyncOperation<ListIdProviderResponse> ListIdProviders(string iddomain)
+        public async Task<ListIdProviderResponse> ListIdProvidersAsync(string idDomain)
         {
-            var asyncOp = new AsyncOperation<ListIdProviderResponse>();
-            Action<string> listIdProviderFunc = token =>
+            try
             {
-                var request = m_AuthenticationAdminNetworkClient.ListIdProvider(iddomain, token);
-                request.Completed += req => HandleAuthenticationAdminApiCall(asyncOp, req);
-            };
+                if (string.IsNullOrEmpty(GatewayToken))
+                {
+                    await ExchangeTokenAsync();
+                }
 
-            var tokenAsyncOp = ExchangeToken();
-            tokenAsyncOp.Completed += tokenAsyncOpResult => listIdProviderFunc(tokenAsyncOpResult?.Result);
-            return asyncOp;
+                var response = await m_AuthenticationAdminNetworkClient.ListIdProviderAsync(idDomain, GatewayToken);
+                return response;
+            }
+            catch (WebRequestException e)
+            {
+                throw BuildException(e, ServiceCalled.AuthenticationAdmin);
+            }
         }
 
-        public IAsyncOperation<IdProviderResponse> UpdateIdProvider(string iddomain, string type, UpdateIdProviderRequest body)
+        public async Task<IdProviderResponse> UpdateIdProviderAsync(string idDomain, string type, UpdateIdProviderRequest body)
         {
-            var asyncOp = new AsyncOperation<IdProviderResponse>();
-            Action<string> enableIdProviderFunc = token =>
+            try
             {
-                var request = m_AuthenticationAdminNetworkClient.UpdateIdProvider(body, iddomain, type, token);
-                request.Completed += req => HandleAuthenticationAdminApiCall(asyncOp, req);
-            };
+                if (string.IsNullOrEmpty(GatewayToken))
+                {
+                    await ExchangeTokenAsync();
+                }
 
-            var tokenAsyncOp = ExchangeToken();
-            tokenAsyncOp.Completed += tokenAsyncOpResult => enableIdProviderFunc(tokenAsyncOpResult?.Result);
-            return asyncOp;
+                var response = await m_AuthenticationAdminNetworkClient.UpdateIdProviderAsync(body, idDomain, type, GatewayToken);
+                return response;
+            }
+            catch (WebRequestException e)
+            {
+                throw BuildException(e, ServiceCalled.AuthenticationAdmin);
+            }
         }
 
-        public IAsyncOperation<IdProviderResponse> EnableIdProvider(string iddomain, string type)
+        public async Task<IdProviderResponse> EnableIdProviderAsync(string idDomain, string type)
         {
-            var asyncOp = new AsyncOperation<IdProviderResponse>();
-            Action<string> enableIdProviderFunc = token =>
+            try
             {
-                var request = m_AuthenticationAdminNetworkClient.EnableIdProvider(iddomain, type, token);
-                request.Completed += req => HandleAuthenticationAdminApiCall(asyncOp, req);
-            };
+                if (string.IsNullOrEmpty(GatewayToken))
+                {
+                    await ExchangeTokenAsync();
+                }
 
-            var tokenAsyncOp = ExchangeToken();
-            tokenAsyncOp.Completed += tokenAsyncOpResult => enableIdProviderFunc(tokenAsyncOpResult?.Result);
-            return asyncOp;
+                var response = await m_AuthenticationAdminNetworkClient.EnableIdProviderAsync(idDomain, type, GatewayToken);
+                return response;
+            }
+            catch (WebRequestException e)
+            {
+                throw BuildException(e, ServiceCalled.AuthenticationAdmin);
+            }
         }
 
-        public IAsyncOperation<IdProviderResponse> DisableIdProvider(string iddomain, string type)
+        public async Task<IdProviderResponse> DisableIdProviderAsync(string idDomain, string type)
         {
-            var asyncOp = new AsyncOperation<IdProviderResponse>();
-            Action<string> disableIdProviderFunc = token =>
+            try
             {
-                var request = m_AuthenticationAdminNetworkClient.DisableIdProvider(iddomain, type, token);
-                request.Completed += req => HandleAuthenticationAdminApiCall(asyncOp, req);
-            };
+                if (string.IsNullOrEmpty(GatewayToken))
+                {
+                    await ExchangeTokenAsync();
+                }
 
-            var tokenAsyncOp = ExchangeToken();
-            tokenAsyncOp.Completed += tokenAsyncOpResult => disableIdProviderFunc(tokenAsyncOpResult?.Result);
-            return asyncOp;
+                var response = await m_AuthenticationAdminNetworkClient.DisableIdProviderAsync(idDomain, type, GatewayToken);
+                return response;
+            }
+            catch (WebRequestException e)
+            {
+                throw BuildException(e, ServiceCalled.AuthenticationAdmin);
+            }
         }
 
-        public IAsyncOperation<IdProviderResponse> DeleteIdProvider(string iddomain, string type)
+        public async Task<IdProviderResponse> DeleteIdProviderAsync(string idDomain, string type)
         {
-            var asyncOp = new AsyncOperation<IdProviderResponse>();
-            Action<string> deleteIdProviderFunc = token =>
+            try
             {
-                var request = m_AuthenticationAdminNetworkClient.DeleteIdProvider(iddomain, type, token);
-                request.Completed += req => HandleAuthenticationAdminApiCall(asyncOp, req);
-            };
+                if (string.IsNullOrEmpty(GatewayToken))
+                {
+                    await ExchangeTokenAsync();
+                }
 
-            var tokenAsyncOp = ExchangeToken();
-            tokenAsyncOp.Completed += tokenAsyncOpResult => deleteIdProviderFunc(tokenAsyncOpResult?.Result);
-            return asyncOp;
+                var response = await m_AuthenticationAdminNetworkClient.DeleteIdProviderAsync(idDomain, type, GatewayToken);
+                return response;
+            }
+            catch (WebRequestException e)
+            {
+                throw BuildException(e, ServiceCalled.AuthenticationAdmin);
+            }
         }
 
-        internal IAsyncOperation<string> ExchangeToken()
+        internal async Task ExchangeTokenAsync()
         {
-            var asyncOp = new AsyncOperation<string>();
-            var request = m_AuthenticationAdminNetworkClient.TokenExchange(GenesisToken);
-            request.Completed += req => HandleTokenExchange(asyncOp, req);
-            return asyncOp;
+            try
+            {
+                var response = await m_AuthenticationAdminNetworkClient.ExchangeTokenAsync(GenesisToken);
+                GatewayToken = response.Token;
+            }
+            catch (WebRequestException e)
+            {
+                throw BuildException(e, ServiceCalled.TokenExchange);
+            }
         }
 
-        void HandleGetIdDomainAPICall(AsyncOperation<string> asyncOp, IWebRequest<GetIdDomainResponse> request)
+        internal RequestFailedException BuildException(WebRequestException exception, ServiceCalled service)
         {
-            if (HandleError(asyncOp, request, ServiceCalled.AuthenticationAdmin))
+            if (exception.NetworkError)
             {
-                return;
+                return AuthenticationException.Create(CommonErrorCodes.TransportError, "Network Error: " + exception.Message);
             }
 
-            m_IdDomain = request?.ResponseBody?.Id;
-            asyncOp.Succeed(request?.ResponseBody?.Id);
-        }
-
-        void HandleTokenExchange(AsyncOperation<string> asyncOp, IWebRequest<TokenExchangeResponse> request)
-        {
-            if (HandleError(asyncOp, request, ServiceCalled.TokenExchange))
+            if (exception.DeserializationError)
             {
-                return;
+                return AuthenticationException.Create(CommonErrorCodes.Unknown, "Deserialization Error: " + exception.Message);
             }
 
-            var token = request?.ResponseBody?.Token;
-            m_ServicesGatewayToken = token;
-            asyncOp.Succeed(token);
-        }
-
-        void HandleAuthenticationAdminApiCall<T>(AsyncOperation<T> asyncOp, IWebRequest<T> request)
-        {
-            if (HandleError(asyncOp, request, ServiceCalled.AuthenticationAdmin))
-            {
-                return;
-            }
-
-            asyncOp.Succeed(request.ResponseBody);
-        }
-
-        internal bool HandleError<Q, T>(AsyncOperation<Q> asyncOp, IWebRequest<T> request, ServiceCalled sc)
-        {
-            if (!request.RequestFailed)
-            {
-                return false;
-            }
-
-            if (request.NetworkError)
-            {
-                asyncOp.Fail(AuthenticationException.Create(CommonErrorCodes.TransportError, "Network Error: " + request.ErrorMessage));
-                return true;
-            }
-            Logger.LogError("Error message: " + request.ErrorMessage);
+            Logger.LogError($"Error message: {exception.Message}");
 
             try
             {
-                switch (sc)
+                switch (service)
                 {
                     case ServiceCalled.TokenExchange:
-                        var tokenExchangeErrorResponse = JsonConvert.DeserializeObject<TokenExchangeErrorResponse>(request.ErrorMessage);
-                        asyncOp.Fail(AuthenticationException.Create(MapErrorCodes(tokenExchangeErrorResponse.Name), tokenExchangeErrorResponse.Message));
-                        break;
+                        var tokenExchangeErrorResponse = JsonConvert.DeserializeObject<TokenExchangeErrorResponse>(exception.Message);
+                        return AuthenticationException.Create(MapErrorCodes(tokenExchangeErrorResponse.Name), tokenExchangeErrorResponse.Message);
                     case ServiceCalled.AuthenticationAdmin:
-                        var authenticationAdminErrorResponse = JsonConvert.DeserializeObject<AuthenticationErrorResponse>(request.ErrorMessage);
-                        asyncOp.Fail(AuthenticationException.Create(MapErrorCodes(authenticationAdminErrorResponse.Title), authenticationAdminErrorResponse.Detail));
-                        break;
+                        var authenticationAdminErrorResponse = JsonConvert.DeserializeObject<AuthenticationErrorResponse>(exception.Message);
+                        if (authenticationAdminErrorResponse.Status == 401)
+                        {
+                            GatewayToken = null;
+                        }
+                        return AuthenticationException.Create(MapErrorCodes(authenticationAdminErrorResponse.Title), authenticationAdminErrorResponse.Detail);
                     default:
-                        asyncOp.Fail(AuthenticationException.Create(CommonErrorCodes.Unknown, "Unknown error"));
-                        break;
+                        return AuthenticationException.Create(CommonErrorCodes.Unknown, "Unknown error");
                 }
             }
             catch (JsonException ex)
             {
                 Logger.LogException(ex);
-                asyncOp.Fail(AuthenticationException.Create(CommonErrorCodes.Unknown, "Failed to deserialize server response: " + request.ErrorMessage, ex));
+                return AuthenticationException.Create(CommonErrorCodes.Unknown, "Failed to deserialize server response: " + exception.Message, ex);
             }
             catch (Exception ex)
             {
                 Logger.LogException(ex);
-                asyncOp.Fail(AuthenticationException.Create(CommonErrorCodes.Unknown, "Unknown error deserializing server response: " + request.ErrorMessage, ex));
+                return AuthenticationException.Create(CommonErrorCodes.Unknown, "Unknown error deserializing server response: " + exception.Message, ex);
             }
-
-            return true;
         }
 
         static int MapErrorCodes(string serverErrorTitle)
@@ -269,7 +263,8 @@ namespace Unity.Services.Authentication.Editor
                     // This happens when either the token is invalid or the token has expired.
                     return CommonErrorCodes.InvalidToken;
             }
-            Debug.LogWarning("Unknown server error: " + serverErrorTitle);
+
+            Logger.LogWarning("Unknown server error: " + serverErrorTitle);
             return CommonErrorCodes.Unknown;
         }
     }

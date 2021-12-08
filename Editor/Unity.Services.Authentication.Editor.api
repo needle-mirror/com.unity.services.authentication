@@ -10,10 +10,10 @@ namespace Unity.Services.Authentication.Editor
 
     public abstract class IdProviderCustomSettingsElement : UnityEngine.UIElements.VisualElement
     {
-        protected System.Func<string> m_ServicesGatewayTokenCallback;
+        protected System.Func<string> m_GatewayTokenCallback;
         public event System.Action<Unity.Services.Authentication.Editor.IdProviderCustomSettingsElement, System.Exception> Error;
         public event System.Action<Unity.Services.Authentication.Editor.IdProviderCustomSettingsElement, bool> Waiting;
-        public string ServiceGatewayToken { get; }
+        public string GatewayToken { get; }
         protected IdProviderCustomSettingsElement(System.Func<string> servicesGatewayTokenCallback) {}
         public abstract void Refresh();
     }

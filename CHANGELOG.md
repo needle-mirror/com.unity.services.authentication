@@ -4,7 +4,87 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [1.0.0-pre.6] - 2021-10-1
+## [1.0.0-pre.37] - 2021-12-08
+
+## [1.0.0-pre.36] - 2021-12-07
+
+## [1.0.0-pre.35] - 2021-12-06
+
+## [1.0.0-pre.34] - 2021-12-05
+
+## [1.0.0-pre.33] - 2021-12-04
+
+## [1.0.0-pre.32] - 2021-12-03
+Adding profile support. Profiles allow managing multiple accounts at the same time by isolating the session token persistence.
+- Added `Profile` property to `IAuthenticationService` to access the current profile.
+- Added `SwitchProfile` to `IAuthenticationService` to change the current profile.
+- Added `ClientInvalidProfile` error code to `AuthenticationErrorCodes` used when entering an invalid profile name.
+- Added `SetProfile` extension method to `InitializationOptions`.
+
+## [1.0.0-pre.31] - 2021-12-02
+
+## [1.0.0-pre.30] - 2021-12-01
+
+## [1.0.0-pre.29] - 2021-11-29
+
+## [1.0.0-pre.28] - 2021-11-28
+
+## [1.0.0-pre.27] - 2021-11-27
+
+## [1.0.0-pre.26] - 2021-11-26
+- Added `DeleteAccountAsync` to `IAuthenticationService`.
+- Added `AccountLinkLimitExceeded` and `ClientUnlinkExternalIdNotFound` error codes to `AuthenticationErrorCodes`.
+- Error code `AccountLinkLimitExceeded` is used when the current player's account has reached the limit of links for the provider when using a link operation.
+- Error code `ClientUnlinkExternalIdNotFound` is sent when no matching external id is found in the player's `UserInfo` when using an unlink operation.
+
+## [1.0.0-pre.25] - 2021-11-24
+
+## [1.0.0-pre.24] - 2021-11-23
+
+## [1.0.0-pre.23] - 2021-11-22
+
+## [1.0.0-pre.22] - 2021-11-21
+
+## [1.0.0-pre.21] - 2021-11-20
+
+## [1.0.0-pre.20] - 2021-11-19
+- Added `UserInfo` property to `IAuthenticationService`.
+- Added `UnlinkAppleAsync` function to `IAuthenticationService`.
+- Added `UnlinkFacebookAsync` function to `IAuthenticationService`.
+- Added `UnlinkGoogleAsync` function to `IAuthenticationService`.
+- Added `UnlinkSteamAsync` function to `IAuthenticationService`.
+
+## [1.0.0-pre.16] - 2021-11-13
+
+## [1.0.0-pre.15] - 2021-11-12
+
+## [1.0.0-pre.14] - 2021-11-11
+- Added `IsAuthorized` property.
+- Added `SessionTokenExists` property.
+- Added `GetUserInfoAsync` to `IAuthenticationService`
+
+## [1.0.0-pre.13] - 2021-11-09
+
+## [1.0.0-pre.12] - 2021-11-07
+
+## [1.0.0-pre.11] - 2021-11-06
+
+## [1.0.0-pre.10] - 2021-11-05
+
+## [1.0.0-pre.9] - 2021-11-04
+
+## [1.0.0-pre.8] - 2021-11-03
+### Added
+- Added `IsExpired` property.
+- Added `Expired` event.
+- Added `ClearSessionToken` function
+
+## [1.0.0-pre.7] - 2021-10-20
+### Changed
+- Updated UI Samples
+- Updated the core SDK dependency to latest version.
+
+## [1.0.0-pre.6] - 2021-10-01
 ### Added
 - Added Samples to Package Manager
 - Added `SignInWithExternalTokenAsync` and `LinkWithExternalTokenAsync` to `IAuthenticationService`.

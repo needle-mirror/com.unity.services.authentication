@@ -1,12 +1,12 @@
 {
   "name": "com.unity.services.authentication",
   "displayName": "Authentication",
-  "version": "1.0.0-pre.6",
+  "version": "1.0.0-pre.37",
   "unity": "2019.4",
   "description": "A client-side SDK for managing the signing-in of a player to the Unity User Authentication Service (UAS) and the provision of associated identifiers and tokens for use by other packages and services. \n\nInitial features include: \n▪ Anonymous login \n▪ Automatic access token refresh during session \n\nNote: this is still in development.",
   "dependencies": {
     "com.unity.nuget.newtonsoft-json": "2.0.0",
-    "com.unity.services.core": "1.1.0-pre.9",
+    "com.unity.services.core": "1.1.0-pre.41",
     "com.unity.modules.unitywebrequest": "1.0.0"
   },
   "type": "library",
@@ -27,23 +27,18 @@
     {
       "displayName": "UI Example",
       "description": "Example scripts and UI elements demonstrating the Authentication package.",
-      "path": "Samples~/UI Example"
-    },
-    {
-      "displayName": "Code Example",
-      "description": "Basic example scripts demonstrating how to interact with Authentication package API's.",
-      "path": "Samples~/Code Example"
+      "path": "Samples~"
     }
   ],
   "relatedPackages": {
-    "com.unity.services.authentication.tests": "1.0.0-pre.6"
+    "com.unity.services.authentication.tests": "1.0.0-pre.37"
   },
   "upmCi": {
-    "footprint": "6bd8b22aa458b898024921ff6d49b9ea90055fa2"
+    "footprint": "6d53141505b9f3d743237c045cf222f0ba34bf1a"
   },
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/operate-services-sdk.git",
     "type": "git",
-    "revision": "ec86ebdb63416f941b0b55ed6bcd374ae54e4507"
+    "revision": "6ed255db18cc7d8145518e103a61c0d72785f5fa"
   }
 }

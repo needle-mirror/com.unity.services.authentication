@@ -1,4 +1,3 @@
-using System;
 using Unity.Services.Core.Editor;
 
 namespace Unity.Services.Authentication.Editor

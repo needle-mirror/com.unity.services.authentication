@@ -1,9 +1,10 @@
 using System;
+using System.Threading.Tasks;
 using Unity.Services.Authentication.Editor.Models;
-using Unity.Services.Core.Internal;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
+using Logger = Unity.Services.Authentication.Utilities.Logger;
 
 namespace Unity.Services.Authentication.Editor
 {
@@ -11,23 +12,25 @@ namespace Unity.Services.Authentication.Editor
     {
         const string k_ElementUxml = "Packages/com.unity.services.authentication/Editor/UXML/IdProviderElement.uxml";
 
-        string m_IdDomainId;
-        IAuthenticationAdminClient m_AdminClient;
+        /// <summary>
+        /// Event triggered when the <see cref="IdProviderElement"/> starts or finishes waiting for a task.
+        /// The first parameter of the callback is the sender.
+        /// The second parameter is true if it starts waiting, and false if it finishes waiting.
+        /// </summary>
+        public event Action<IdProviderElement, bool> Waiting;
 
-        IdProviderOptions m_Options;
+        /// <summary>
+        /// Event triggered when the current <see cref="IdProviderElement"/> needs to be deleted by the container.
+        /// The parameter of the callback is the sender.
+        /// </summary>
+        public event Action<IdProviderElement> Deleted;
 
-        Foldout m_Container;
-        Toggle m_Enabled;
-        TextField m_ClientId;
-        TextField m_ClientSecret;
-        Button m_SaveButton;
-        Button m_CancelButton;
-        Button m_DeleteButton;
-
-        IdProviderCustomSettingsElement m_CustomSettingsElement;
-
-        // Whether skip the confirmation window for tests/automation.
-        bool m_SkipConfirmation;
+        /// <summary>
+        /// Event triggered when the current <see cref="IdProviderElement"/> catches an error.
+        /// The first parameter of the callback is the sender.
+        /// The second parameter is the exception caught by the element.
+        /// </summary>
+        public event Action<IdProviderElement, Exception> Error;
 
         /// <summary>
         /// The foldout container to show or hide the ID provider details.
@@ -70,26 +73,6 @@ namespace Unity.Services.Authentication.Editor
         public IdProviderCustomSettingsElement CustomSettingsElement => m_CustomSettingsElement;
 
         /// <summary>
-        /// Event triggered when the <see cref="IdProviderElement"/> starts or finishes waiting for an async operation.
-        /// The first parameter of the callback is the sender.
-        /// The second parameter is true if it starts waiting, and false if it finishes waiting.
-        /// </summary>
-        public event Action<IdProviderElement, bool> Waiting;
-
-        /// <summary>
-        /// Event triggered when the current <see cref="IdProviderElement"/> needs to be deleted by the container.
-        /// The parameter of the callback is the sender.
-        /// </summary>
-        public event Action<IdProviderElement> Deleted;
-
-        /// <summary>
-        /// Event triggered when the current <see cref="IdProviderElement"/> catches an error.
-        /// The first parameter of the callback is the sender.
-        /// The second parameter is the exception caught by the element.
-        /// </summary>
-        public event Action<IdProviderElement, Exception> Error;
-
-        /// <summary>
         /// The value saved on the server side.
         /// </summary>
         public IdProviderResponse SavedValue { get; set; }
@@ -108,6 +91,24 @@ namespace Unity.Services.Authentication.Editor
         public bool IsValid =>
             !string.IsNullOrEmpty(CurrentValue.ClientId) &&
             (!m_Options.NeedClientSecret || !string.IsNullOrEmpty(CurrentValue.ClientSecret));
+
+        string m_IdDomainId;
+        IAuthenticationAdminClient m_AdminClient;
+
+        IdProviderOptions m_Options;
+
+        Foldout m_Container;
+        Toggle m_Enabled;
+        TextField m_ClientId;
+        TextField m_ClientSecret;
+        Button m_SaveButton;
+        Button m_CancelButton;
+        Button m_DeleteButton;
+
+        IdProviderCustomSettingsElement m_CustomSettingsElement;
+
+        // Whether skip the confirmation window for tests/automation.
+        bool m_SkipConfirmation;
 
         /// <summary>
         /// Configures the Id provider element
@@ -170,7 +171,7 @@ namespace Unity.Services.Authentication.Editor
 
                 if (options.CustomSettingsElementCreator != null)
                 {
-                    m_CustomSettingsElement = options.CustomSettingsElementCreator.Invoke(m_IdDomainId, () => m_AdminClient.ServicesGatewayToken, skipConfirmation);
+                    m_CustomSettingsElement = options.CustomSettingsElementCreator.Invoke(m_IdDomainId, () => m_AdminClient.GatewayToken, skipConfirmation);
                     m_Container.Add(m_CustomSettingsElement);
                     m_CustomSettingsElement.Waiting += OnAdditionalElementWaiting;
                     m_CustomSettingsElement.Error += OnAdditionalElementError;
@@ -240,74 +241,67 @@ namespace Unity.Services.Authentication.Editor
             switch (option)
             {
                 case 0:
-                    InvokeWaiting(true);
-
-                    if (SavedValue.New)
-                    {
-                        var asyncOp = m_AdminClient.CreateIdProvider(m_IdDomainId, new CreateIdProviderRequest(CurrentValue));
-                        asyncOp.Completed += OnSaveCompleted;
-                    }
-                    else
-                    {
-                        var body = new UpdateIdProviderRequest(CurrentValue);
-                        var asyncOp = m_AdminClient.UpdateIdProvider(m_IdDomainId, CurrentValue.Type, body);
-                        asyncOp.Completed += OnSaveCompleted;
-                    }
+                    Save();
                     break;
 
                 case 1:
                     break;
 
                 default:
-                    Debug.LogError("Unrecognized option.");
+                    Logger.LogError("Unrecognized option.");
                     break;
             }
         }
 
-        void OnSaveCompleted(IAsyncOperation<IdProviderResponse> asyncOp)
+        async void Save()
         {
-            if (asyncOp.Exception != null)
+            InvokeWaiting(true);
+
+            try
             {
-                InvokeError(asyncOp.Exception);
-                InvokeWaiting(false);
-                return;
+                if (SavedValue.New)
+                {
+                    SavedValue = await m_AdminClient.CreateIdProviderAsync(m_IdDomainId, new CreateIdProviderRequest(CurrentValue));
+                }
+                else
+                {
+                    SavedValue = await m_AdminClient.UpdateIdProviderAsync(m_IdDomainId, CurrentValue.Type, new UpdateIdProviderRequest(CurrentValue));
+                }
+
+                await UpdateStateAsync();
+                OnSaveCompleted();
+            }
+            catch (Exception e)
+            {
+                InvokeError(e);
             }
 
-            SavedValue = asyncOp.Result;
+            InvokeWaiting(false);
+        }
 
-            // Check enable/disable status
+        async Task UpdateStateAsync()
+        {
             if (SavedValue.Disabled != CurrentValue.Disabled)
             {
                 SavedValue.ClientSecret = CurrentValue.ClientSecret;
-                asyncOp = CurrentValue.Disabled ? m_AdminClient.DisableIdProvider(m_IdDomainId, CurrentValue.Type) : m_AdminClient.EnableIdProvider(m_IdDomainId, CurrentValue.Type);
-                asyncOp.Completed += OnEnableDisableCompleted;
-                return;
-            }
+                var task = CurrentValue.Disabled ? m_AdminClient.DisableIdProviderAsync(m_IdDomainId, CurrentValue.Type) : m_AdminClient.EnableIdProviderAsync(m_IdDomainId, CurrentValue.Type);
+                var response = await task;
 
+                // Only reset current value when no exception
+                SavedValue = response;
+                ResetCurrentValue();
+                RefreshButtons();
+            }
+        }
+
+        void OnSaveCompleted()
+        {
             // Enable/disable is not changed
             ResetCurrentValue();
             RefreshButtons();
-            InvokeWaiting(false);
 
             // Refresh the additional settings if necessary.
             m_CustomSettingsElement?.Refresh();
-        }
-
-        void OnEnableDisableCompleted(IAsyncOperation<IdProviderResponse> asyncOp)
-        {
-            // Handle enable/disable exception
-            if (asyncOp.Exception != null)
-            {
-                InvokeError(asyncOp.Exception);
-                InvokeWaiting(false);
-                return;
-            }
-
-            // Only reset current value when no exception
-            SavedValue = asyncOp.Result;
-            ResetCurrentValue();
-            RefreshButtons();
-            InvokeWaiting(false);
         }
 
         void OnCancelButtonClicked()
@@ -317,9 +311,11 @@ namespace Unity.Services.Authentication.Editor
                 // It's a new ID provider and it hasn't been saved to the server yet.
                 // Simply trigger delete event to notify parent to remove the element from the list.
                 Deleted?.Invoke(this);
-                return;
             }
-            ResetCurrentValue();
+            else
+            {
+                ResetCurrentValue();
+            }
         }
 
         void ResetCurrentValue()
@@ -339,9 +335,7 @@ namespace Unity.Services.Authentication.Editor
             {
                 // Delete
                 case 0:
-                    InvokeWaiting(true);
-                    var asyncOp = m_AdminClient.DeleteIdProvider(m_IdDomainId, CurrentValue.Type);
-                    asyncOp.Completed += OnDeleteCompleted;
+                    Delete();
                     break;
 
                 // Cancel
@@ -349,23 +343,26 @@ namespace Unity.Services.Authentication.Editor
                     break;
 
                 default:
-                    Debug.LogError("Unrecognized option.");
+                    Logger.LogError("Unrecognized option.");
                     break;
             }
         }
 
-        void OnDeleteCompleted(IAsyncOperation<IdProviderResponse> asyncOp)
+        async void Delete()
         {
-            if (asyncOp.Exception != null)
+            InvokeWaiting(true);
+
+            try
             {
-                InvokeError(asyncOp.Exception);
-                InvokeWaiting(false);
-                return;
+                await m_AdminClient.DeleteIdProviderAsync(m_IdDomainId, CurrentValue.Type);
+                Deleted?.Invoke(this);
+                ResetCurrentValue();
+            }
+            catch (Exception e)
+            {
+                InvokeError(e);
             }
 
-            // Simply trigger delete event to notify parent to remove the element from the list.
-            Deleted?.Invoke(this);
-            ResetCurrentValue();
             InvokeWaiting(false);
         }
 

@@ -6,11 +6,11 @@ namespace Unity.Services.Authentication
     {
         IAuthenticationService m_AuthenticationService;
 
+        public string AccessToken => m_AuthenticationService.AccessToken;
+
         public AccessTokenComponent(IAuthenticationService service)
         {
             m_AuthenticationService = service;
         }
-
-        public string AccessToken => m_AuthenticationService.AccessToken;
     }
 }

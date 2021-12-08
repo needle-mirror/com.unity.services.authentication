@@ -1,48 +1,47 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
-using UnityEngine;
-
-[assembly: InternalsVisibleTo("Unity.Services.Authentication.Editor")]
-[assembly: InternalsVisibleTo("Unity.Services.Utilities.Tests")]
+using Unity.Services.Core.Scheduler.Internal;
 
 namespace Unity.Services.Authentication.Utilities
 {
     interface INetworkingUtilities
     {
-        IWebRequest<T> Get<T>(string url, IDictionary<string, string> headers = null, int maximumAttempts = 1);
+        Task<T> GetAsync<T>(string url, IDictionary<string, string> headers = null, int maximumAttempts = 1);
 
-        IWebRequest<T> PostJson<T>(string url, object payload, IDictionary<string, string> headers = null,
+        Task<T> PostJsonAsync<T>(string url, object payload, IDictionary<string, string> headers = null,
             int maximumAttempts = 1);
 
-        IWebRequest<T> PostForm<T>(string url, string payload, IDictionary<string, string> headers = null,
+        Task<T> PostFormAsync<T>(string url, string payload, IDictionary<string, string> headers = null,
             int maximumAttempts = 1);
 
-        IWebRequest<T> Post<T>(string url, IDictionary<string, string> headers = null, int maximumAttempts = 1);
+        Task<T> PostAsync<T>(string url, IDictionary<string, string> headers = null, int maximumAttempts = 1);
 
-        IWebRequest<T> Put<T>(string url,  object payload, IDictionary<string, string> headers = null, int maximumAttempts = 1);
+        Task<T> PutAsync<T>(string url, object payload, IDictionary<string, string> headers = null, int maximumAttempts = 1);
 
-        IWebRequest<T> Delete<T>(string url, IDictionary<string, string> headers = null, int maximumAttempts = 1);
+        Task DeleteAsync(string url, IDictionary<string, string> headers = null, int maximumAttempts = 1);
+
+        Task<T> DeleteAsync<T>(string url, IDictionary<string, string> headers = null, int maximumAttempts = 1);
     }
 
     class NetworkingUtilities : INetworkingUtilities
     {
-        readonly IScheduler m_Scheduler;
-
-        public NetworkingUtilities(IScheduler scheduler)
-        {
-            m_Scheduler = scheduler;
-        }
+        readonly IActionScheduler m_Scheduler;
 
         /// <summary>
         /// The max redirect to follow. By default it's set to 0 and returns the raw 3xx response with a location header.
         /// </summary>
         public int RedirectLimit { get; set; }
 
-        public IWebRequest<T> Get<T>(string url, IDictionary<string, string> headers = null, int maximumAttempts = 1)
+        public NetworkingUtilities(IActionScheduler scheduler)
         {
-            var request = new WebRequest<T>(m_Scheduler,
+            m_Scheduler = scheduler;
+        }
+
+        public Task<T> GetAsync<T>(string url, IDictionary<string, string> headers = null, int maximumAttempts = 1)
+        {
+            var request = new WebRequest(m_Scheduler,
                 WebRequestVerb.Get,
                 url,
                 headers,
@@ -51,21 +50,19 @@ namespace Unity.Services.Authentication.Utilities
                 RedirectLimit,
                 maximumAttempts);
 
-            if (m_Scheduler == null)
+            if (ThreadHelper.IsMainThread || m_Scheduler == null)
             {
-                request.Send();
+                return request.SendAsync<T>();
             }
             else
             {
-                m_Scheduler.ScheduleAction(request.Send);
+                return ScheduleWebRequest<T>(request);
             }
-
-            return request;
         }
 
-        public IWebRequest<T> Post<T>(string url, IDictionary<string, string> headers = null, int maximumAttempts = 1)
+        public Task<T> PostAsync<T>(string url, IDictionary<string, string> headers = null, int maximumAttempts = 1)
         {
-            var request = new WebRequest<T>(m_Scheduler,
+            var request = new WebRequest(m_Scheduler,
                 WebRequestVerb.Post,
                 url,
                 headers,
@@ -74,23 +71,21 @@ namespace Unity.Services.Authentication.Utilities
                 RedirectLimit,
                 maximumAttempts);
 
-            if (m_Scheduler == null)
+            if (ThreadHelper.IsMainThread || m_Scheduler == null)
             {
-                request.Send();
+                return request.SendAsync<T>();
             }
             else
             {
-                m_Scheduler.ScheduleAction(request.Send);
+                return ScheduleWebRequest<T>(request);
             }
-
-            return request;
         }
 
-        public IWebRequest<T> PostJson<T>(string url, object payload, IDictionary<string, string> headers = null, int maximumAttempts = 1)
+        public Task<T> PostJsonAsync<T>(string url, object payload, IDictionary<string, string> headers = null, int maximumAttempts = 1)
         {
             var jsonPayload = JsonConvert.SerializeObject(payload);
 
-            var request = new WebRequest<T>(m_Scheduler,
+            var request = new WebRequest(m_Scheduler,
                 WebRequestVerb.Post,
                 url,
                 headers,
@@ -99,21 +94,19 @@ namespace Unity.Services.Authentication.Utilities
                 RedirectLimit,
                 maximumAttempts);
 
-            if (m_Scheduler == null)
+            if (ThreadHelper.IsMainThread || m_Scheduler == null)
             {
-                request.Send();
+                return request.SendAsync<T>();
             }
             else
             {
-                m_Scheduler.ScheduleAction(request.Send);
+                return ScheduleWebRequest<T>(request);
             }
-
-            return request;
         }
 
-        public IWebRequest<T> PostForm<T>(string url, string payload, IDictionary<string, string> headers = null, int maximumAttempts = 1)
+        public Task<T> PostFormAsync<T>(string url, string payload, IDictionary<string, string> headers = null, int maximumAttempts = 1)
         {
-            var request = new WebRequest<T>(m_Scheduler,
+            var request = new WebRequest(m_Scheduler,
                 WebRequestVerb.Post,
                 url,
                 headers,
@@ -122,23 +115,21 @@ namespace Unity.Services.Authentication.Utilities
                 RedirectLimit,
                 maximumAttempts);
 
-            if (m_Scheduler == null)
+            if (ThreadHelper.IsMainThread || m_Scheduler == null)
             {
-                request.Send();
+                return request.SendAsync<T>();
             }
             else
             {
-                m_Scheduler.ScheduleAction(request.Send);
+                return ScheduleWebRequest<T>(request);
             }
-
-            return request;
         }
 
-        public IWebRequest<T> Put<T>(string url, object payload, IDictionary<string, string> headers = null, int maximumAttempts = 1)
+        public Task<T> PutAsync<T>(string url, object payload, IDictionary<string, string> headers = null, int maximumAttempts = 1)
         {
             var jsonPayload = JsonConvert.SerializeObject(payload);
 
-            var request = new WebRequest<T>(m_Scheduler,
+            var request = new WebRequest(m_Scheduler,
                 WebRequestVerb.Put,
                 url,
                 headers,
@@ -147,21 +138,19 @@ namespace Unity.Services.Authentication.Utilities
                 RedirectLimit,
                 maximumAttempts);
 
-            if (m_Scheduler == null)
+            if (ThreadHelper.IsMainThread || m_Scheduler == null)
             {
-                request.Send();
+                return request.SendAsync<T>();
             }
             else
             {
-                m_Scheduler.ScheduleAction(request.Send);
+                return ScheduleWebRequest<T>(request);
             }
-
-            return request;
         }
 
-        public IWebRequest<T> Delete<T>(string url, IDictionary<string, string> headers = null, int maximumAttempts = 1)
+        public Task DeleteAsync(string url, IDictionary<string, string> headers = null, int maximumAttempts = 1)
         {
-            var request = new WebRequest<T>(m_Scheduler,
+            var request = new WebRequest(m_Scheduler,
                 WebRequestVerb.Delete,
                 url,
                 headers,
@@ -170,16 +159,74 @@ namespace Unity.Services.Authentication.Utilities
                 RedirectLimit,
                 maximumAttempts);
 
-            if (m_Scheduler == null)
+            if (ThreadHelper.IsMainThread || m_Scheduler == null)
             {
-                request.Send();
+                return request.SendAsync();
             }
             else
             {
-                m_Scheduler.ScheduleAction(request.Send);
+                return ScheduleWebRequest(request);
             }
+        }
 
-            return request;
+        public Task<T> DeleteAsync<T>(string url, IDictionary<string, string> headers = null, int maximumAttempts = 1)
+        {
+            var request = new WebRequest(m_Scheduler,
+                WebRequestVerb.Delete,
+                url,
+                headers,
+                string.Empty,
+                string.Empty,
+                RedirectLimit,
+                maximumAttempts);
+
+            if (ThreadHelper.IsMainThread || m_Scheduler == null)
+            {
+                return request.SendAsync<T>();
+            }
+            else
+            {
+                return ScheduleWebRequest<T>(request);
+            }
+        }
+
+        Task ScheduleWebRequest(WebRequest request)
+        {
+            var tcs = new TaskCompletionSource<object>();
+
+            m_Scheduler.ScheduleAction(async() =>
+            {
+                try
+                {
+                    await request.SendAsync();
+                    tcs.SetResult(null);
+                }
+                catch (Exception e)
+                {
+                    tcs.SetException(e);
+                }
+            });
+
+            return tcs.Task;
+        }
+
+        Task<T> ScheduleWebRequest<T>(WebRequest request)
+        {
+            var tcs = new TaskCompletionSource<T>();
+
+            m_Scheduler.ScheduleAction(async() =>
+            {
+                try
+                {
+                    tcs.SetResult(await request.SendAsync<T>());
+                }
+                catch (Exception e)
+                {
+                    tcs.SetException(e);
+                }
+            });
+
+            return tcs.Task;
         }
     }
 }

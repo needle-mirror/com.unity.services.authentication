@@ -21,5 +21,8 @@ namespace Unity.Services.Authentication.Models
 
         [JsonProperty("expiresIn")]
         public int ExpiresIn;
+
+        [JsonProperty("user")]
+        public UserInfo UserInfo;
     }
 }

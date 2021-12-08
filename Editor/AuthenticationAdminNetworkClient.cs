@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Unity.Services.Authentication.Editor.Models;
 using Unity.Services.Authentication.Utilities;
 
@@ -6,14 +7,14 @@ namespace Unity.Services.Authentication.Editor
 {
     interface IAuthenticationAdminNetworkClient
     {
-        IWebRequest<TokenExchangeResponse> TokenExchange(string token);
-        IWebRequest<GetIdDomainResponse> GetDefaultIdDomain(string token);
-        IWebRequest<IdProviderResponse> CreateIdProvider(CreateIdProviderRequest body, string idDomain, string token);
-        IWebRequest<ListIdProviderResponse> ListIdProvider(string idDomain, string token);
-        IWebRequest<IdProviderResponse> UpdateIdProvider(UpdateIdProviderRequest body, string idDomain, string type, string token);
-        IWebRequest<IdProviderResponse> EnableIdProvider(string idDomain, string type, string token);
-        IWebRequest<IdProviderResponse> DisableIdProvider(string idDomain, string type, string token);
-        IWebRequest<IdProviderResponse> DeleteIdProvider(string idDomain, string type, string token);
+        Task<TokenExchangeResponse> ExchangeTokenAsync(string token);
+        Task<GetIdDomainResponse> GetDefaultIdDomainAsync(string token);
+        Task<IdProviderResponse> CreateIdProviderAsync(CreateIdProviderRequest body, string idDomain, string token);
+        Task<ListIdProviderResponse> ListIdProviderAsync(string idDomain, string token);
+        Task<IdProviderResponse> UpdateIdProviderAsync(UpdateIdProviderRequest body, string idDomain, string type, string token);
+        Task<IdProviderResponse> EnableIdProviderAsync(string idDomain, string type, string token);
+        Task<IdProviderResponse> DisableIdProviderAsync(string idDomain, string type, string token);
+        Task<IdProviderResponse> DeleteIdProviderAsync(string idDomain, string type, string token);
     }
 
     class AuthenticationAdminNetworkClient : IAuthenticationAdminNetworkClient
@@ -28,7 +29,6 @@ namespace Unity.Services.Authentication.Editor
         readonly string m_TokenExchangeUrl;
 
         readonly string m_OrganizationId;
-        readonly string m_ProjectId;
 
         readonly INetworkingUtilities m_NetworkClient;
 
@@ -41,8 +41,6 @@ namespace Unity.Services.Authentication.Editor
         {
             m_ServicesGatewayHost = servicesGatewayHost;
             m_OrganizationId = organizationId;
-            m_ProjectId = projectId;
-
             m_BaseIdDomainUrl = $"{m_ServicesGatewayHost}{k_ServicesGatewayStem}{m_OrganizationId}/iddomains";
             m_GetDefaultIdDomainUrl = $"{m_BaseIdDomainUrl}/default";
             m_TokenExchangeUrl = $"{m_ServicesGatewayHost}{k_TokenExchangeStem}";
@@ -56,46 +54,46 @@ namespace Unity.Services.Authentication.Editor
             };
         }
 
-        public IWebRequest<GetIdDomainResponse> GetDefaultIdDomain(string token)
+        public Task<GetIdDomainResponse> GetDefaultIdDomainAsync(string token)
         {
-            return m_NetworkClient.Get<GetIdDomainResponse>(m_GetDefaultIdDomainUrl, AddTokenHeader(CreateCommonHeaders(), token));
+            return m_NetworkClient.GetAsync<GetIdDomainResponse>(m_GetDefaultIdDomainUrl, AddTokenHeader(CreateCommonHeaders(), token));
         }
 
-        public IWebRequest<TokenExchangeResponse> TokenExchange(string token)
+        public Task<TokenExchangeResponse> ExchangeTokenAsync(string token)
         {
             var body = new TokenExchangeRequest();
             body.Token = token;
-            return m_NetworkClient.PostJson<TokenExchangeResponse>(m_TokenExchangeUrl, body);
+            return m_NetworkClient.PostJsonAsync<TokenExchangeResponse>(m_TokenExchangeUrl, body);
         }
 
-        public IWebRequest<IdProviderResponse> CreateIdProvider(CreateIdProviderRequest body, string idDomain, string token)
+        public Task<IdProviderResponse> CreateIdProviderAsync(CreateIdProviderRequest body, string idDomain, string token)
         {
-            return m_NetworkClient.PostJson<IdProviderResponse>(GetIdProviderUrl(idDomain), body, AddTokenHeader(CreateCommonHeaders(), token));
+            return m_NetworkClient.PostJsonAsync<IdProviderResponse>(GetIdProviderUrl(idDomain), body, AddTokenHeader(CreateCommonHeaders(), token));
         }
 
-        public IWebRequest<ListIdProviderResponse> ListIdProvider(string idDomain, string token)
+        public Task<ListIdProviderResponse> ListIdProviderAsync(string idDomain, string token)
         {
-            return m_NetworkClient.Get<ListIdProviderResponse>(GetIdProviderUrl(idDomain), AddTokenHeader(CreateCommonHeaders(), token));
+            return m_NetworkClient.GetAsync<ListIdProviderResponse>(GetIdProviderUrl(idDomain), AddTokenHeader(CreateCommonHeaders(), token));
         }
 
-        public IWebRequest<IdProviderResponse> UpdateIdProvider(UpdateIdProviderRequest body, string idDomain, string type, string token)
+        public Task<IdProviderResponse> UpdateIdProviderAsync(UpdateIdProviderRequest body, string idDomain, string type, string token)
         {
-            return m_NetworkClient.Put<IdProviderResponse>(GetIdProviderTypeUrl(idDomain, type), body, AddTokenHeader(CreateCommonHeaders(), token));
+            return m_NetworkClient.PutAsync<IdProviderResponse>(GetIdProviderTypeUrl(idDomain, type), body, AddTokenHeader(CreateCommonHeaders(), token));
         }
 
-        public IWebRequest<IdProviderResponse> EnableIdProvider(string idDomain, string type, string token)
+        public Task<IdProviderResponse> EnableIdProviderAsync(string idDomain, string type, string token)
         {
-            return m_NetworkClient.Post<IdProviderResponse>(GetEnableIdProviderTypeUrl(idDomain, type), AddJsonHeader(AddTokenHeader(CreateCommonHeaders(), token)));
+            return m_NetworkClient.PostAsync<IdProviderResponse>(GetEnableIdProviderTypeUrl(idDomain, type), AddJsonHeader(AddTokenHeader(CreateCommonHeaders(), token)));
         }
 
-        public IWebRequest<IdProviderResponse> DisableIdProvider(string idDomain, string type, string token)
+        public Task<IdProviderResponse> DisableIdProviderAsync(string idDomain, string type, string token)
         {
-            return m_NetworkClient.Post<IdProviderResponse>(GetDisableIdProviderTypeUrl(idDomain, type), AddJsonHeader(AddTokenHeader(CreateCommonHeaders(), token)));
+            return m_NetworkClient.PostAsync<IdProviderResponse>(GetDisableIdProviderTypeUrl(idDomain, type), AddJsonHeader(AddTokenHeader(CreateCommonHeaders(), token)));
         }
 
-        public IWebRequest<IdProviderResponse> DeleteIdProvider(string idDomain, string type, string token)
+        public Task<IdProviderResponse> DeleteIdProviderAsync(string idDomain, string type, string token)
         {
-            return m_NetworkClient.Delete<IdProviderResponse>(GetIdProviderTypeUrl(idDomain, type), AddTokenHeader(CreateCommonHeaders(), token));
+            return m_NetworkClient.DeleteAsync<IdProviderResponse>(GetIdProviderTypeUrl(idDomain, type), AddTokenHeader(CreateCommonHeaders(), token));
         }
 
         Dictionary<string, string> CreateCommonHeaders()

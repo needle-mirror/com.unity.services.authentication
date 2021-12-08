@@ -6,16 +6,18 @@ namespace Unity.Services.Authentication
     public static class AuthenticationErrorCodes
     {
         public const int AccountAlreadyLinked = 10003;
+        public const int AccountLinkLimitExceeded = 10004;
+        public const int ClientInvalidProfile = 10006;
         public const int ClientInvalidUserState = 10000;
         public const int ClientNoActiveSession = 10001;
+        public const int ClientUnlinkExternalIdNotFound = 10005;
         public const int InvalidParameters = 10002;
         public const int MinValue = 10000;
     }
 
     public class AuthenticationException : Unity.Services.Core.RequestFailedException
     {
-        public AuthenticationException(int errorCode, string message) {}
-        public AuthenticationException(int errorCode, string message, System.Exception innerException) {}
+        public static Unity.Services.Core.RequestFailedException Create(int errorCode, string message, System.Exception innerException = default(System.Exception));
     }
 
     public static class AuthenticationService
@@ -25,13 +27,21 @@ namespace Unity.Services.Authentication
 
     public interface IAuthenticationService
     {
+        public event System.Action Expired;
         public event System.Action SignedIn;
         public event System.Action SignedOut;
         public event System.Action<Unity.Services.Core.RequestFailedException> SignInFailed;
         public abstract string AccessToken { get; }
+        public abstract bool IsAuthorized { get; }
+        public abstract bool IsExpired { get; }
         public abstract bool IsSignedIn { get; }
         public abstract string PlayerId { get; }
-        public abstract void ApplicationUnpaused();
+        public abstract string Profile { get; }
+        public abstract bool SessionTokenExists { get; }
+        public abstract Unity.Services.Authentication.Models.UserInfo UserInfo { get; }
+        public abstract void ClearSessionToken();
+        public abstract System.Threading.Tasks.Task DeleteAccountAsync();
+        public abstract System.Threading.Tasks.Task<Unity.Services.Authentication.Models.UserInfo> GetUserInfoAsync();
         public abstract System.Threading.Tasks.Task LinkWithAppleAsync(string idToken);
         public abstract System.Threading.Tasks.Task LinkWithExternalTokenAsync(Unity.Services.Authentication.Models.ExternalTokenRequest externalToken);
         public abstract System.Threading.Tasks.Task LinkWithFacebookAsync(string accessToken);
@@ -45,15 +55,48 @@ namespace Unity.Services.Authentication
         public abstract System.Threading.Tasks.Task SignInWithSessionTokenAsync();
         public abstract System.Threading.Tasks.Task SignInWithSteamAsync(string sessionTicket);
         public abstract void SignOut();
+        public abstract void SwitchProfile(string profile);
+        public abstract System.Threading.Tasks.Task UnlinkAppleAsync();
+        public abstract System.Threading.Tasks.Task UnlinkFacebookAsync();
+        public abstract System.Threading.Tasks.Task UnlinkGoogleAsync();
+        public abstract System.Threading.Tasks.Task UnlinkSteamAsync();
+    }
+
+    [System.Runtime.CompilerServices.Extension] public static class ProfileOptionsExtensions
+    {
+        [System.Runtime.CompilerServices.Extension] public static Unity.Services.Core.InitializationOptions SetProfile(Unity.Services.Core.InitializationOptions options, string profile);
     }
 }
 
 namespace Unity.Services.Authentication.Models
 {
+    public class ExternalId
+    {
+        [Newtonsoft.Json.JsonProperty(@"externalId")] public string ExtId;
+        [Newtonsoft.Json.JsonProperty(@"providerId")] public string ProviderId;
+        [UnityEngine.Scripting.Preserve] public ExternalId() {}
+    }
+
     public class ExternalTokenRequest
     {
         [Newtonsoft.Json.JsonProperty(@"idProvider")] public string IdProvider;
         [Newtonsoft.Json.JsonProperty(@"token")] public string Token;
         [UnityEngine.Scripting.Preserve] public ExternalTokenRequest() {}
+    }
+
+    public class UnlinkRequest
+    {
+        [Newtonsoft.Json.JsonProperty(@"externalId")] public string ExternalId;
+        [Newtonsoft.Json.JsonProperty(@"idProvider")] public string IdProvider;
+        [UnityEngine.Scripting.Preserve] public UnlinkRequest() {}
+    }
+
+    public class UserInfo
+    {
+        [Newtonsoft.Json.JsonProperty(@"createdAt")] public string CreatedAt;
+        [Newtonsoft.Json.JsonProperty(@"externalIds")] public System.Collections.Generic.List<Unity.Services.Authentication.Models.ExternalId> ExternalIds;
+        [Newtonsoft.Json.JsonProperty(@"id")] public string Id;
+        [Newtonsoft.Json.JsonProperty(@"idDomain")] public string IdDomain;
+        [UnityEngine.Scripting.Preserve] public UserInfo() {}
     }
 }

@@ -9,21 +9,12 @@ namespace Unity.Services.Authentication
     public class AuthenticationException : RequestFailedException
     {
         /// <summary>
-        /// Constructor of the AuthenticationException with the error code.
-        /// </summary>
-        /// <param name="errorCode">The error code for AuthenticationException.</param>
-        /// <param name="message">A message describing the error.</param>
-        public AuthenticationException(int errorCode, string message) : base(errorCode, message)
-        {
-        }
-
-        /// <summary>
         /// Constructor of the AuthenticationException with the error code, a message, and inner exception.
         /// </summary>
         /// <param name="errorCode">The error code for AuthenticationException.</param>
         /// <param name="message">The additional message that helps to debug the error.</param>
         /// <param name="innerException">The inner exception reference.</param>
-        public AuthenticationException(int errorCode, string message, Exception innerException)
+        AuthenticationException(int errorCode, string message, Exception innerException = null)
             : base(errorCode, message, innerException)
         {
         }
@@ -33,7 +24,7 @@ namespace Unity.Services.Authentication
         /// If the errorCode is less than AuthenticationErrorCodes.MinValue it creates a <see cref="RequestFailedException"/>.
         /// Otherwise it creates an <see cref="AuthenticationException"/>
         /// </summary>
-        internal static RequestFailedException Create(int errorCode, string message, Exception innerException = null)
+        public static RequestFailedException Create(int errorCode, string message, Exception innerException = null)
         {
             if (errorCode < AuthenticationErrorCodes.MinValue)
             {

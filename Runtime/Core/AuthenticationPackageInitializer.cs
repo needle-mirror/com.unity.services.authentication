@@ -1,8 +1,10 @@
 using System.Threading.Tasks;
 using Unity.Services.Authentication.Internal;
 using Unity.Services.Authentication.Utilities;
-using Unity.Services.Core.Internal;
+using Unity.Services.Core.Configuration.Internal;
 using Unity.Services.Core.Environments.Internal;
+using Unity.Services.Core.Internal;
+using Unity.Services.Core.Scheduler.Internal;
 using UnityEngine;
 
 namespace Unity.Services.Authentication
@@ -17,17 +19,25 @@ namespace Unity.Services.Authentication
 
         public Task Initialize(CoreRegistry registry)
         {
+            var settings = new AuthenticationSettings();
+            var scheduler = registry.GetServiceComponent<IActionScheduler>();
+            var projectId = registry.GetServiceComponent<ICloudProjectId>();
+            var projectConfiguration = registry.GetServiceComponent<IProjectConfiguration>();
+            var profile = new Profile(projectConfiguration.GetString(ProfileOptionsExtensions.ProfileKey, "default"));
             var dateTime = new DateTimeWrapper();
-            var networkUtilities = new NetworkingUtilities(Scheduler.Instance);
+            var networkUtilities = new NetworkingUtilities(scheduler);
             var networkClient = new AuthenticationNetworkClient(k_UasHost,
-                Application.cloudProjectId,
+                projectId.GetCloudProjectId(),
                 registry.GetServiceComponent<IEnvironments>(),
                 new CodeChallengeGenerator(),
                 networkUtilities);
-            var authenticationService = new AuthenticationServiceInternal(networkClient,
+            var authenticationService = new AuthenticationServiceInternal(
+                settings,
+                networkClient,
+                profile,
                 new JwtDecoder(dateTime),
-                new PlayerPrefsCache("unity.services.authentication"),
-                Scheduler.Instance,
+                new AuthenticationCache(projectId, profile),
+                scheduler,
                 dateTime);
 
             AuthenticationService.Instance = authenticationService;
@@ -42,6 +52,9 @@ namespace Unity.Services.Authentication
         {
             CoreRegistry.Instance.RegisterPackage(new AuthenticationPackageInitializer())
                 .DependsOn<IEnvironments>()
+                .DependsOn<IActionScheduler>()
+                .DependsOn<ICloudProjectId>()
+                .DependsOn<IProjectConfiguration>()
                 .ProvidesComponent<IPlayerId>()
                 .ProvidesComponent<IAccessToken>();
         }

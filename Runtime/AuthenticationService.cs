@@ -1,6 +1,4 @@
-using System;
 using Unity.Services.Core;
-using UnityEngine;
 
 namespace Unity.Services.Authentication
 {

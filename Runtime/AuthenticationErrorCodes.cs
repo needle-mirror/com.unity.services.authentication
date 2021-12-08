@@ -36,5 +36,22 @@ namespace Unity.Services.Authentication
         /// The error returned when a player tries to link a social account that is already linked with another player.
         /// </summary>
         public const int AccountAlreadyLinked = 10003;
+
+        /// <summary>
+        /// The error returned when a player tries to link a social account but this player has already reached the limit of links for that account type.
+        /// Social accounts linking are typically limited to one link per type per player.
+        /// </summary>
+        public const int AccountLinkLimitExceeded = 10004;
+
+        /// <summary>
+        /// The error returned when a player tries to unlink a social account but no external id for that provider is found for the account.
+        /// This could be because the user info has not been loaded.
+        /// </summary>
+        public const int ClientUnlinkExternalIdNotFound = 10005;
+
+        /// <summary>
+        /// The error returned when a player tries to switch profile but the profile name is invalid.
+        /// </summary>
+        public const int ClientInvalidProfile = 10006;
     }
 }

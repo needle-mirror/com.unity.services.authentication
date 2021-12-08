@@ -31,11 +31,6 @@ namespace Unity.Services.Authentication.Editor
         /// <inheritdoc/>
         protected override VisualElement GenerateServiceDetailUI()
         {
-            if (!AuthenticationAdminClientManager.IsConfigured())
-            {
-                return new ConfigureProjectElement();
-            }
-
             var adminClient = AuthenticationAdminClientManager.Create();
             var settingsElement = new AuthenticationSettingsElement(adminClient, CloudProjectSettings.projectId);
             settingsElement.RefreshIdProviders();
