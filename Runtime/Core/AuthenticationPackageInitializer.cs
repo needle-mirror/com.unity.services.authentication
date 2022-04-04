@@ -1,48 +1,65 @@
 using System.Threading.Tasks;
 using Unity.Services.Authentication.Internal;
-using Unity.Services.Authentication.Utilities;
 using Unity.Services.Core.Configuration.Internal;
 using Unity.Services.Core.Environments.Internal;
 using Unity.Services.Core.Internal;
 using Unity.Services.Core.Scheduler.Internal;
+using Unity.Services.Core.Telemetry.Internal;
 using UnityEngine;
 
 namespace Unity.Services.Authentication
 {
     class AuthenticationPackageInitializer : IInitializablePackage
     {
-#if AUTHENTICATION_TESTING_STAGING_UAS
-        const string k_UasHost = "https://api.stg.identity.corp.unity3d.com";
+#if UNITY_SERVICES_STAGING || AUTHENTICATION_TESTING_STAGING_UAS
+        const string k_UasHost = "https://player-auth-stg.services.api.unity.com";
 #else
-        const string k_UasHost = "https://api.prd.identity.corp.unity3d.com";
+        const string k_UasHost = "https://player-auth.services.api.unity.com";
 #endif
 
         public Task Initialize(CoreRegistry registry)
         {
             var settings = new AuthenticationSettings();
             var scheduler = registry.GetServiceComponent<IActionScheduler>();
+            var environment = registry.GetServiceComponent<IEnvironments>();
             var projectId = registry.GetServiceComponent<ICloudProjectId>();
             var projectConfiguration = registry.GetServiceComponent<IProjectConfiguration>();
-            var profile = new Profile(projectConfiguration.GetString(ProfileOptionsExtensions.ProfileKey, "default"));
+            var profile = new ProfileComponent(projectConfiguration.GetString(AuthenticationExtensions.ProfileKey, "default"));
             var dateTime = new DateTimeWrapper();
-            var networkUtilities = new NetworkingUtilities(scheduler);
+            var metricsFactory = registry.GetServiceComponent<IMetricsFactory>();
+            var metrics = new AuthenticationMetrics(metricsFactory);
+            var jwtDecoder = new JwtDecoder(dateTime);
+            var cache = new AuthenticationCache(projectId, profile);
+            var accessToken = new AccessTokenComponent();
+            var environmentId = new EnvironmentIdComponent();
+            var playerId = new PlayerIdComponent(cache);
+            var sessionToken = new SessionTokenComponent(cache);
+            var wellKnownKeys = new WellKnownKeysComponent();
+            var networkHandler = new NetworkHandler();
             var networkClient = new AuthenticationNetworkClient(k_UasHost,
-                projectId.GetCloudProjectId(),
-                registry.GetServiceComponent<IEnvironments>(),
-                new CodeChallengeGenerator(),
-                networkUtilities);
+                projectId,
+                environment,
+                networkHandler,
+                accessToken);
             var authenticationService = new AuthenticationServiceInternal(
                 settings,
                 networkClient,
                 profile,
-                new JwtDecoder(dateTime),
-                new AuthenticationCache(projectId, profile),
+                jwtDecoder,
+                cache,
                 scheduler,
-                dateTime);
+                dateTime,
+                metrics,
+                accessToken,
+                environmentId,
+                playerId,
+                sessionToken,
+                wellKnownKeys);
 
             AuthenticationService.Instance = authenticationService;
-            registry.RegisterServiceComponent<IPlayerId>(new PlayerIdComponent(authenticationService));
-            registry.RegisterServiceComponent<IAccessToken>(new AccessTokenComponent(authenticationService));
+            registry.RegisterServiceComponent<IAccessToken>(authenticationService.AccessTokenComponent);
+            registry.RegisterServiceComponent<IEnvironmentId>(authenticationService.EnvironmentIdComponent);
+            registry.RegisterServiceComponent<IPlayerId>(authenticationService.PlayerIdComponent);
 
             return Task.CompletedTask;
         }
@@ -55,8 +72,10 @@ namespace Unity.Services.Authentication
                 .DependsOn<IActionScheduler>()
                 .DependsOn<ICloudProjectId>()
                 .DependsOn<IProjectConfiguration>()
+                .DependsOn<IMetricsFactory>()
                 .ProvidesComponent<IPlayerId>()
-                .ProvidesComponent<IAccessToken>();
+                .ProvidesComponent<IAccessToken>()
+                .ProvidesComponent<IEnvironmentId>();
         }
     }
 }

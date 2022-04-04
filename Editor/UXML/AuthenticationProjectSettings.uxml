@@ -3,9 +3,9 @@
         <ui:TextElement text="Please wait..." class="auth-progress"/>
         <ui:TextElement text="" class="auth-error"/>
         <ui:VisualElement class="auth-id-providers-title">
-            <ui:TextElement text="ID Providers" class="auth-id-providers-text"/>
+            <ui:TextElement text="Identity Providers" class="auth-id-providers-text"/>
             <ui:VisualElement class="auth-button-container">
-                <ui:VisualElement name="id-provider-type" />
+                <ui:VisualElement name="id-provider-type" class="auth-id-provider-type" />
                 <ui:Button name="id-provider-add" text="Add" display-tooltip-when-elided="true" />
                 <ui:Button name="id-provider-refresh" text="Refresh" display-tooltip-when-elided="true" />
             </ui:VisualElement>

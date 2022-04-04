@@ -26,7 +26,7 @@ namespace Unity.Services.Authentication.Samples
         [SerializeField]
         Button m_ClearSessionButton;
         [SerializeField]
-        Button m_GetUserInfoButton;
+        Button m_GetPlayerInfoButton;
 
         [SerializeField]
         InputField m_TokenInputField;
@@ -39,13 +39,13 @@ namespace Unity.Services.Authentication.Samples
         [SerializeField]
         Text m_ExceptionText;
         [SerializeField]
-        Text m_UserInfoText;
+        Text m_PlayerInfoText;
 
-        public async void OnClickSignInAnonymously() => await SignInAnonouslyAsync();
+        public async void OnClickSignInAnonymously() => await SignInAnonymouslyAsync();
         public async void OnClickSignInFacebook() => await SignInWithFacebookAsync(m_TokenInputField.text);
         public async void OnClickLinkFacebook() => await LinkWithFacebookAsync(m_TokenInputField.text);
         public async void OnClickUnlinkFacebook() => await UnlinkFacebookAsync();
-        public async void OnClickGetUserInfo() => await GetUserInfoAsync();
+        public async void OnClickGetPlayerInfo() => await GetPlayerInfoAsync();
         public void OnClickSignOut() => SignOut();
         public void OnClickClearSessionToken() => ClearSessionToken();
 
@@ -90,7 +90,7 @@ namespace Unity.Services.Authentication.Samples
         /// <summary>
         /// Signs in anonymously: uses the session token to login to an existing account if it exists, otherwise creates an account and caches the session token.
         /// </summary>
-        async Task SignInAnonouslyAsync()
+        async Task SignInAnonymouslyAsync()
         {
             try
             {
@@ -107,8 +107,8 @@ namespace Unity.Services.Authentication.Samples
         }
 
         /// <summary>
-        /// When the player triggers the Facebook login by signing in or by creating a new user profile,
-        /// and you have received the Facebook access token, call the following API to authenticate the user
+        /// When the player triggers the Facebook login by signing in or by creating a new player profile,
+        /// and you have received the Facebook access token, call the following API to authenticate the player
         /// </summary>
         /// <param name="accessToken">The facebook user access token.</param>
         async Task SignInWithFacebookAsync(string accessToken)
@@ -130,7 +130,7 @@ namespace Unity.Services.Authentication.Samples
         /// <summary>
         /// When the player wants to upgrade from being anonymous to creating a Facebook social account and sign in using Facebook,
         /// the game should prompt the player to trigger the Facebook login and get the access token from Facebook.
-        /// Then, call the following API to link the user to the Facebook Access token
+        /// Then, call the following API to link the player to the Facebook Access token
         /// </summary>
         /// <param name="accessToken">The facebook user access token.</param>
         async Task LinkWithFacebookAsync(string accessToken)
@@ -158,7 +158,7 @@ namespace Unity.Services.Authentication.Samples
         /// <summary>
         /// The player can be offered to unlink his facebook account.
         /// The game should call this api.
-        /// Unlinking requires the facebook user info to be present.
+        /// Unlinking requires the facebook player info to be present.
         /// </summary>
         async Task UnlinkFacebookAsync()
         {
@@ -206,51 +206,51 @@ namespace Unity.Services.Authentication.Samples
         }
 
         /// <summary>
-        /// Retrieves the user info, including the linked external ids.
+        /// Retrieves the player info, including the external ids.
         /// </summary>
-        async Task GetUserInfoAsync()
+        async Task GetPlayerInfoAsync()
         {
             try
             {
-                await AuthenticationService.Instance.GetUserInfoAsync();
+                await AuthenticationService.Instance.GetPlayerInfoAsync();
                 UpdateUI();
-                SetStatus("Obtained UserInfo!");
+                SetStatus("Obtained PlayerInfo!");
             }
             catch (Exception ex)
             {
                 Debug.LogException(ex);
-                SetStatus("Failed to get UserInfo!");
+                SetStatus("Failed to get PlayerInfo!");
                 SetException(ex);
             }
         }
 
         /// <summary>
-        /// Returns User info string if the player is authorized
+        /// Returns Player info string if the player is authorized
         /// </summary>
-        /// <returns>the user info summary text.</returns>
-        string GetUserInfoText()
+        /// <returns>the player info summary text.</returns>
+        string GetPlayerInfoText()
         {
-            var userInfo = AuthenticationService.Instance.UserInfo;
+            var playerInfo = AuthenticationService.Instance.PlayerInfo;
 
-            if (string.IsNullOrEmpty(userInfo?.CreatedAt))
+
+            if (playerInfo?.CreatedAt == null)
                 return string.Empty;
 
-            var dateTime = DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt64(userInfo.CreatedAt));
+            var dateTime = DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt64(playerInfo.CreatedAt));
 
             var builder = new StringBuilder();
 
             builder.AppendLine($"CreatedAt: {dateTime.LocalDateTime}");
-            builder.AppendLine($"IdDomain: {userInfo.IdDomain}");
-            builder.AppendLine($"Id: {userInfo.Id}");
+            builder.AppendLine($"Id: {playerInfo.Id}");
             builder.AppendLine();
 
-            if (userInfo.ExternalIds != null && userInfo.ExternalIds.Count > 0)
+            if (playerInfo.Identities?.Count > 0)
             {
                 builder.AppendLine($"External Ids:");
 
-                foreach (var externalId in userInfo.ExternalIds)
+                foreach (var externalId in playerInfo.Identities)
                 {
-                    builder.AppendLine($"{externalId.ProviderId}: {externalId.ExtId}");
+                    builder.AppendLine($"{externalId.TypeId}: {externalId.UserId}");
                 }
             }
 
@@ -271,8 +271,8 @@ namespace Unity.Services.Authentication.Samples
             m_ClearSessionButton.interactable = !isSignedIn;
             m_LinkFacebookButton.interactable = isSignedIn;
             m_UnlinkFacebookButton.interactable = isSignedIn;
-            m_GetUserInfoButton.interactable = isSignedIn;
-            m_UserInfoText.text = isSignedIn ? GetUserInfoText() : "";
+            m_GetPlayerInfoButton.interactable = isSignedIn;
+            m_PlayerInfoText.text = isSignedIn ? GetPlayerInfoText() : "";
             SetException(null);
         }
 

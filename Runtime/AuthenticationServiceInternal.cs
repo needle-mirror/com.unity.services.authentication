@@ -3,25 +3,15 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Unity.Services.Authentication.Models;
-using Unity.Services.Authentication.Utilities;
 using Unity.Services.Core;
 using Unity.Services.Core.Scheduler.Internal;
 using UnityEngine;
-using Logger = Unity.Services.Authentication.Utilities.Logger;
 
 namespace Unity.Services.Authentication
 {
     class AuthenticationServiceInternal : IAuthenticationService
     {
-        const string k_CacheKeySessionToken = "session_token";
-
-        const string k_IdProviderApple = "apple.com";
-        const string k_IdProviderFacebook = "facebook.com";
-        const string k_IdProviderGoogle = "google.com";
-        const string k_IdProviderSteam = "steampowered.com";
         const string k_ProfileRegex = @"^[a-zA-Z0-9_-]{1,30}$";
-
         public event Action<RequestFailedException> SignInFailed;
         public event Action SignedIn;
         public event Action SignedOut;
@@ -38,31 +28,36 @@ namespace Unity.Services.Authentication
 
         public bool IsExpired => State == AuthenticationState.Expired;
 
-        public bool SessionTokenExists => !string.IsNullOrEmpty(ReadSessionToken());
+        public bool SessionTokenExists => !string.IsNullOrEmpty(SessionTokenComponent.SessionToken);
 
         public string Profile => m_Profile.Current;
-        public string AccessToken { get; private set; }
+        public string AccessToken => AccessTokenComponent.AccessToken;
 
-        public string PlayerId { get; internal set; }
-        public UserInfo UserInfo { get; internal set; }
+        public string PlayerId => PlayerIdComponent.PlayerId;
+        public PlayerInfo PlayerInfo { get; internal set; }
 
-        internal DateTime AccessTokenExpiryTime { get; set; }
         internal long? ExpirationActionId { get; set; }
         internal long? RefreshActionId { get; set; }
 
-        internal AuthenticationState State { get; set; }
-        internal WellKnownKeys WellKnownKeys { get; set; }
+        internal AccessTokenComponent AccessTokenComponent { get; }
+        internal EnvironmentIdComponent EnvironmentIdComponent { get; }
+        internal PlayerIdComponent PlayerIdComponent { get; }
+        internal SessionTokenComponent SessionTokenComponent { get; }
+        internal WellKnownKeysComponent WellKnownKeysComponent { get; }
 
-        readonly IAuthenticationSettings m_Settings;
-        readonly IAuthenticationNetworkClient m_NetworkClient;
+        internal AuthenticationState State { get; set; }
+        internal IAuthenticationSettings Settings { get; }
+        internal IAuthenticationNetworkClient NetworkClient { get; set; }
+
         readonly IProfile m_Profile;
         readonly IJwtDecoder m_JwtDecoder;
         readonly IAuthenticationCache m_Cache;
-
         readonly IActionScheduler m_Scheduler;
         readonly IDateTimeWrapper m_DateTime;
+        readonly IAuthenticationMetrics m_Metrics;
 
         internal event Action<AuthenticationState, AuthenticationState> StateChanged;
+
 
         internal AuthenticationServiceInternal(IAuthenticationSettings settings,
                                                IAuthenticationNetworkClient networkClient,
@@ -70,213 +65,174 @@ namespace Unity.Services.Authentication
                                                IJwtDecoder jwtDecoder,
                                                IAuthenticationCache cache,
                                                IActionScheduler scheduler,
-                                               IDateTimeWrapper dateTime)
+                                               IDateTimeWrapper dateTime,
+                                               IAuthenticationMetrics metrics,
+                                               AccessTokenComponent accessToken,
+                                               EnvironmentIdComponent environmentId,
+                                               PlayerIdComponent playerId,
+                                               SessionTokenComponent sessionToken,
+                                               WellKnownKeysComponent wellKnownKeys)
         {
-            m_Settings = settings;
-            m_NetworkClient = networkClient;
+            Settings = settings;
+            NetworkClient = networkClient;
+
             m_Profile = profile;
             m_JwtDecoder = jwtDecoder;
             m_Cache = cache;
             m_Scheduler = scheduler;
             m_DateTime = dateTime;
+            m_Metrics = metrics;
+
+            AccessTokenComponent = accessToken;
+            EnvironmentIdComponent = environmentId;
+            PlayerIdComponent = playerId;
+            SessionTokenComponent = sessionToken;
+            WellKnownKeysComponent = wellKnownKeys;
 
             State = AuthenticationState.SignedOut;
             MigrateCache();
+
+            Expired += () => m_Metrics.SendExpiredSessionMetric();
         }
 
-        public Task SignInAnonymouslyAsync()
+        public Task SignInAnonymouslyAsync(SignInOptions options = null)
         {
             if (State == AuthenticationState.SignedOut || State == AuthenticationState.Expired)
             {
                 if (SessionTokenExists)
                 {
-                    return SignInWithSessionTokenAsync();
+                    var sessionToken = SessionTokenComponent.SessionToken;
+
+                    if (string.IsNullOrEmpty(sessionToken))
+                    {
+                        var exception = BuildClientSessionTokenNotExistsException();
+                        SendSignInFailedEvent(exception);
+                        return Task.FromException(exception);
+                    }
+
+                    Logger.LogVerbose("Continuing existing session with cached token.");
+
+                    return HandleSignInRequestAsync(() => NetworkClient.SignInWithSessionTokenAsync(sessionToken));
                 }
 
-                // I am a first-time anonymous user.
-                return StartSigningInAsync(m_NetworkClient.SignInAnonymouslyAsync());
-            }
-            else
-            {
-                return Task.FromException(BuildClientInvalidStateException());
-            }
-        }
-
-        public Task SignInWithSessionTokenAsync()
-        {
-            if (State == AuthenticationState.SignedOut || State == AuthenticationState.Expired)
-            {
-                var sessionToken = ReadSessionToken();
-
-                if (string.IsNullOrEmpty(sessionToken))
+                // Default behavior is to create an account.
+                if (options?.CreateAccount ?? true)
                 {
-                    return Task.FromException(BuildClientSessionTokenNotExistsException());
+                    return HandleSignInRequestAsync(NetworkClient.SignInAnonymouslyAsync);
                 }
-
-                Logger.LogVerbose("Continuing existing session with cached token.");
-
-                return StartSigningInAsync(m_NetworkClient.SignInWithSessionTokenAsync(sessionToken));
+                else
+                {
+                    var exception = BuildClientSessionTokenNotExistsException();
+                    SendSignInFailedEvent(exception);
+                    return Task.FromException(exception);
+                }
             }
             else
             {
-                return Task.FromException(BuildClientInvalidStateException());
+                var exception = BuildClientInvalidStateException();
+                SendSignInFailedEvent(exception);
+                return Task.FromException(exception);
             }
         }
 
-        public Task SignInWithAppleAsync(string idToken)
+        public Task SignInWithAppleAsync(string idToken, SignInOptions options = null)
         {
-            return SignInWithExternalTokenAsync(new ExternalTokenRequest
+            return SignInWithExternalTokenAsync(IdProviderKeys.Apple, new SignInWithExternalTokenRequest
             {
-                IdProvider = k_IdProviderApple,
-                Token = idToken
+                IdProvider = IdProviderKeys.Apple,
+                Token = idToken,
+                SignInOnly = !options?.CreateAccount ?? false
             });
         }
 
-        public Task LinkWithAppleAsync(string idToken)
+        public Task LinkWithAppleAsync(string idToken, LinkOptions options = null)
         {
-            return LinkWithExternalTokenAsync(new ExternalTokenRequest
+            return LinkWithExternalTokenAsync(IdProviderKeys.Apple, new LinkWithExternalTokenRequest
             {
-                IdProvider = k_IdProviderApple,
-                Token = idToken
+                IdProvider = IdProviderKeys.Apple,
+                Token = idToken,
+                ForceLink = options?.ForceLink ?? false
             });
         }
 
         public Task UnlinkAppleAsync()
         {
-            return UnlinkExternalTokenAsync(k_IdProviderApple);
+            return UnlinkExternalTokenAsync(IdProviderKeys.Apple);
         }
 
-        public Task SignInWithGoogleAsync(string idToken)
+        public Task SignInWithGoogleAsync(string idToken, SignInOptions options = null)
         {
-            return SignInWithExternalTokenAsync(new ExternalTokenRequest
+            return SignInWithExternalTokenAsync(IdProviderKeys.Google, new SignInWithExternalTokenRequest
             {
-                IdProvider = k_IdProviderGoogle,
-                Token = idToken
+                IdProvider = IdProviderKeys.Google,
+                Token = idToken,
+                SignInOnly = !options?.CreateAccount ?? false
             });
         }
 
-        public Task LinkWithGoogleAsync(string idToken)
+        public Task LinkWithGoogleAsync(string idToken, LinkOptions options = null)
         {
-            return LinkWithExternalTokenAsync(new ExternalTokenRequest
+            return LinkWithExternalTokenAsync(IdProviderKeys.Google, new LinkWithExternalTokenRequest
             {
-                IdProvider = k_IdProviderGoogle,
-                Token = idToken
+                IdProvider = IdProviderKeys.Google,
+                Token = idToken,
+                ForceLink = options?.ForceLink ?? false
             });
         }
 
         public Task UnlinkGoogleAsync()
         {
-            return UnlinkExternalTokenAsync(k_IdProviderGoogle);
+            return UnlinkExternalTokenAsync(IdProviderKeys.Google);
         }
 
-        public Task SignInWithFacebookAsync(string accessToken)
+        public Task SignInWithFacebookAsync(string accessToken, SignInOptions options = null)
         {
-            return SignInWithExternalTokenAsync(new ExternalTokenRequest
+            return SignInWithExternalTokenAsync(IdProviderKeys.Facebook, new SignInWithExternalTokenRequest
             {
-                IdProvider = k_IdProviderFacebook,
-                Token = accessToken
+                IdProvider = IdProviderKeys.Facebook,
+                Token = accessToken,
+                SignInOnly = !options?.CreateAccount ?? false
             });
         }
 
-        public Task LinkWithFacebookAsync(string accessToken)
+        public Task LinkWithFacebookAsync(string accessToken, LinkOptions options = null)
         {
-            return LinkWithExternalTokenAsync(new ExternalTokenRequest
+            return LinkWithExternalTokenAsync(IdProviderKeys.Facebook, new LinkWithExternalTokenRequest
             {
-                IdProvider = k_IdProviderFacebook,
-                Token = accessToken
+                IdProvider = IdProviderKeys.Facebook,
+                Token = accessToken,
+                ForceLink = options?.ForceLink ?? false
             });
         }
 
         public Task UnlinkFacebookAsync()
         {
-            return UnlinkExternalTokenAsync(k_IdProviderFacebook);
+            return UnlinkExternalTokenAsync(IdProviderKeys.Facebook);
         }
 
-        public Task SignInWithSteamAsync(string sessionTicket)
+        public Task SignInWithSteamAsync(string sessionTicket, SignInOptions options = null)
         {
-            return SignInWithExternalTokenAsync(new ExternalTokenRequest
+            return SignInWithExternalTokenAsync(IdProviderKeys.Steam, new SignInWithExternalTokenRequest
             {
-                IdProvider = k_IdProviderSteam,
-                Token = sessionTicket
+                IdProvider = IdProviderKeys.Steam,
+                Token = sessionTicket,
+                SignInOnly = !options?.CreateAccount ?? false
             });
         }
 
-        public Task LinkWithSteamAsync(string sessionTicket)
+        public Task LinkWithSteamAsync(string sessionTicket, LinkOptions options = null)
         {
-            return LinkWithExternalTokenAsync(new ExternalTokenRequest
+            return LinkWithExternalTokenAsync(IdProviderKeys.Steam, new LinkWithExternalTokenRequest
             {
-                IdProvider = k_IdProviderSteam,
-                Token = sessionTicket
+                IdProvider = IdProviderKeys.Steam,
+                Token = sessionTicket,
+                ForceLink = options?.ForceLink ?? false
             });
         }
 
         public Task UnlinkSteamAsync()
         {
-            return UnlinkExternalTokenAsync(k_IdProviderSteam);
-        }
-
-        public Task SignInWithExternalTokenAsync(ExternalTokenRequest externalToken)
-        {
-            if (State == AuthenticationState.SignedOut || State == AuthenticationState.Expired)
-            {
-                return StartSigningInAsync(m_NetworkClient.SignInWithExternalTokenAsync(externalToken));
-            }
-            else
-            {
-                return Task.FromException(BuildClientInvalidStateException());
-            }
-        }
-
-        public async Task LinkWithExternalTokenAsync(ExternalTokenRequest request)
-        {
-            if (IsAuthorized)
-            {
-                try
-                {
-                    var response = await m_NetworkClient.LinkWithExternalTokenAsync(AccessToken, request);
-                    UserInfo?.AddExternalId(response.UserInfo?.ExternalIds?.FirstOrDefault(x => x.ProviderId == request.IdProvider));
-                }
-                catch (WebRequestException e)
-                {
-                    throw BuildServerException(e);
-                }
-            }
-            else
-            {
-                throw BuildClientInvalidStateException();
-            }
-        }
-
-        public async Task UnlinkExternalTokenAsync(string providerId)
-        {
-            if (IsAuthorized)
-            {
-                var externalId = UserInfo?.GetExternalId(providerId);
-
-                if (externalId == null)
-                {
-                    throw BuildClientUnlinkExternalIdNotFoundException();
-                }
-
-                try
-                {
-                    await m_NetworkClient.UnlinkExternalTokenAsync(AccessToken, new UnlinkRequest
-                    {
-                        IdProvider = providerId,
-                        ExternalId = externalId
-                    });
-
-                    UserInfo.RemoveExternalId(providerId);
-                }
-                catch (WebRequestException e)
-                {
-                    throw BuildServerException(e);
-                }
-            }
-            else
-            {
-                throw BuildClientInvalidStateException();
-            }
+            return UnlinkExternalTokenAsync(IdProviderKeys.Steam);
         }
 
         public async Task DeleteAccountAsync()
@@ -285,9 +241,8 @@ namespace Unity.Services.Authentication
             {
                 try
                 {
-                    await m_NetworkClient.DeleteAccountAsync(AccessToken, PlayerId);
-                    SignOut();
-                    ClearSessionToken();
+                    await NetworkClient.DeleteAccountAsync(PlayerId);
+                    SignOut(true);
                 }
                 catch (WebRequestException e)
                 {
@@ -300,25 +255,27 @@ namespace Unity.Services.Authentication
             }
         }
 
-        public void SignOut()
+        public void SignOut(bool clearCredentials = false)
         {
-            if (State != AuthenticationState.SignedOut)
+            AccessTokenComponent.Clear();
+            PlayerInfo = null;
+
+            if (clearCredentials)
             {
-                AccessToken = null;
-                AccessTokenExpiryTime = default;
-                PlayerId = null;
-                UserInfo = null;
-                CancelScheduledRefresh();
-                CancelScheduledExpiration();
-                ChangeState(AuthenticationState.SignedOut);
+                SessionTokenComponent.Clear();
+                PlayerIdComponent.Clear();
             }
+
+            CancelScheduledRefresh();
+            CancelScheduledExpiration();
+            ChangeState(AuthenticationState.SignedOut);
         }
 
         public void SwitchProfile(string profile)
         {
             if (State == AuthenticationState.SignedOut)
             {
-                if (Regex.Match(profile, k_ProfileRegex).Success)
+                if (!string.IsNullOrEmpty(profile) && Regex.Match(profile, k_ProfileRegex).Success)
                 {
                     m_Profile.Current = profile;
                 }
@@ -337,10 +294,7 @@ namespace Unity.Services.Authentication
         {
             if (State == AuthenticationState.SignedOut)
             {
-                if (SessionTokenExists)
-                {
-                    m_Cache.DeleteKey(k_CacheKeySessionToken);
-                }
+                SessionTokenComponent.Clear();
             }
             else
             {
@@ -348,14 +302,15 @@ namespace Unity.Services.Authentication
             }
         }
 
-        public async Task<UserInfo> GetUserInfoAsync()
+        public async Task<PlayerInfo> GetPlayerInfoAsync()
         {
             if (IsAuthorized)
             {
                 try
                 {
-                    UserInfo = await m_NetworkClient.GetUserInfoAsync(AccessToken, PlayerId);
-                    return UserInfo;
+                    var response = await NetworkClient.GetPlayerInfoAsync(PlayerId);
+                    PlayerInfo = new PlayerInfo(response);
+                    return PlayerInfo;
                 }
                 catch (WebRequestException e)
                 {
@@ -368,28 +323,75 @@ namespace Unity.Services.Authentication
             }
         }
 
-        internal async Task GetWellKnownKeysAsync(int attempt = 0)
+        internal async Task GetWellKnownKeysAsync()
         {
-            while (attempt < m_Settings.WellKnownKeysMaxAttempt)
+            var response = await NetworkClient.GetWellKnownKeysAsync();
+            WellKnownKeysComponent.Keys = response.Keys;
+        }
+
+        internal Task SignInWithExternalTokenAsync(string idProvider, SignInWithExternalTokenRequest request, bool enableRefresh = true)
+        {
+            if (State == AuthenticationState.SignedOut || State == AuthenticationState.Expired)
+            {
+                return HandleSignInRequestAsync(() => NetworkClient.SignInWithExternalTokenAsync(idProvider, request), enableRefresh);
+            }
+            else
+            {
+                var exception = BuildClientInvalidStateException();
+                SendSignInFailedEvent(exception);
+                return Task.FromException(exception);
+            }
+        }
+
+        internal async Task LinkWithExternalTokenAsync(string idProvider, LinkWithExternalTokenRequest request)
+        {
+            if (IsAuthorized)
             {
                 try
                 {
-                    WellKnownKeys = await m_NetworkClient.GetWellKnownKeysAsync();
-                    return;
+                    var response = await NetworkClient.LinkWithExternalTokenAsync(idProvider, request);
+                    PlayerInfo?.AddExternalIdentity(response.User?.ExternalIds?.FirstOrDefault(x => x.ProviderId == request.IdProvider));
                 }
                 catch (WebRequestException e)
                 {
-                    Logger.LogWarning($"Well-known keys request failed (attempt: {attempt + 1}): {e.ResponseCode}, {e.Message}");
-
-                    if (attempt < m_Settings.WellKnownKeysMaxAttempt - 1)
-                    {
-                        attempt++;
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    throw BuildServerException(e);
                 }
+            }
+            else
+            {
+                throw BuildClientInvalidStateException();
+            }
+        }
+
+        internal async Task UnlinkExternalTokenAsync(string idProvider)
+        {
+            if (IsAuthorized)
+            {
+                var externalId = PlayerInfo?.GetIdentityId(idProvider);
+
+                if (externalId == null)
+                {
+                    throw BuildClientUnlinkExternalIdNotFoundException();
+                }
+
+                try
+                {
+                    await NetworkClient.UnlinkExternalTokenAsync(idProvider, new UnlinkRequest
+                    {
+                        IdProvider = idProvider,
+                        ExternalId = externalId
+                    });
+
+                    PlayerInfo.RemoveIdentity(idProvider);
+                }
+                catch (WebRequestException e)
+                {
+                    throw BuildServerException(e);
+                }
+            }
+            else
+            {
+                throw BuildClientInvalidStateException();
             }
         }
 
@@ -402,7 +404,7 @@ namespace Unity.Services.Authentication
                     return Task.CompletedTask;
                 }
 
-                var sessionToken = ReadSessionToken();
+                var sessionToken = SessionTokenComponent.SessionToken;
 
                 if (string.IsNullOrEmpty(sessionToken))
                 {
@@ -415,18 +417,20 @@ namespace Unity.Services.Authentication
             return Task.CompletedTask;
         }
 
-        internal string ReadSessionToken()
-        {
-            return m_Cache.GetString(k_CacheKeySessionToken) ?? string.Empty;
-        }
-
-        internal async Task StartSigningInAsync(Task<SignInResponse> signInRequest)
+        internal async Task HandleSignInRequestAsync(Func<Task<SignInResponse>> signInRequest, bool enableRefresh = true)
         {
             try
             {
                 ChangeState(AuthenticationState.SigningIn);
-                await Task.WhenAll(signInRequest, WellKnownKeys == null? GetWellKnownKeysAsync() : Task.CompletedTask);
-                CompleteSignIn(await signInRequest);
+                var wellKnownKeysTask = WellKnownKeysComponent.Keys == null ? GetWellKnownKeysAsync() : Task.CompletedTask;
+                var signinRequestTask = signInRequest();
+                await Task.WhenAll(signinRequestTask, wellKnownKeysTask);
+                CompleteSignIn(await signinRequestTask, enableRefresh);
+            }
+            catch (RequestFailedException e)
+            {
+                SendSignInFailedEvent(e);
+                throw;
             }
             catch (WebRequestException e)
             {
@@ -442,7 +446,7 @@ namespace Unity.Services.Authentication
 
             try
             {
-                var response = await m_NetworkClient.SignInWithSessionTokenAsync(sessionToken);
+                var response = await NetworkClient.SignInWithSessionTokenAsync(sessionToken);
                 CompleteSignIn(response);
             }
             catch (RequestFailedException)
@@ -461,36 +465,51 @@ namespace Unity.Services.Authentication
                 {
                     Logger.LogWarning("Failed to refresh access token due to network error or internal server error, will retry later.");
                     ChangeState(AuthenticationState.Authorized);
-                    ScheduleRefresh(m_Settings.RefreshAttemptFrequency);
+                    ScheduleRefresh(Settings.RefreshAttemptFrequency);
                 }
             }
         }
 
-        internal void CompleteSignIn(SignInResponse response)
+        internal void CompleteSignIn(SignInResponse response, bool enableRefresh = true)
         {
             try
             {
-                var accessTokenDecoded = m_JwtDecoder.Decode<AccessToken>(response.IdToken, WellKnownKeys);
+                var accessTokenDecoded = m_JwtDecoder.Decode<AccessToken>(response.IdToken, WellKnownKeysComponent?.Keys);
                 if (accessTokenDecoded == null)
                 {
                     throw AuthenticationException.Create(CommonErrorCodes.InvalidToken, "Failed to decode and verify access token.");
                 }
                 else
                 {
-                    AccessToken = response.IdToken;
-                    PlayerId = response.UserId;
-                    UserInfo = response.UserInfo;
-                    m_Cache.SetString(k_CacheKeySessionToken, response.SessionToken);
+                    AccessTokenComponent.AccessToken = response.IdToken;
 
-                    var refreshTime = response.ExpiresIn - m_Settings.AccessTokenRefreshBuffer;
-                    var expiryTime = response.ExpiresIn - m_Settings.AccessTokenExpiryBuffer;
+                    if (accessTokenDecoded.Audience != null)
+                    {
+                        EnvironmentIdComponent.EnvironmentId = accessTokenDecoded.Audience.FirstOrDefault(s => s.StartsWith("envId:"))?.Substring(6);
+                    }
 
-                    AccessTokenExpiryTime = m_DateTime.UtcNow.AddSeconds(expiryTime);
+                    PlayerInfo = response.User != null ? new PlayerInfo(response.User) : new PlayerInfo(response.UserId);
 
-                    ScheduleRefresh(refreshTime);
+                    PlayerIdComponent.PlayerId = response.UserId;
+                    SessionTokenComponent.SessionToken = response.SessionToken;
+
+                    var refreshTime = response.ExpiresIn - Settings.AccessTokenRefreshBuffer;
+                    var expiryTime = response.ExpiresIn - Settings.AccessTokenExpiryBuffer;
+
+                    AccessTokenComponent.ExpiryTime = m_DateTime.UtcNow.AddSeconds(expiryTime);
+
+                    if (enableRefresh)
+                    {
+                        ScheduleRefresh(refreshTime);
+                    }
+
                     ScheduleExpiration(expiryTime);
                     ChangeState(AuthenticationState.Authorized);
                 }
+            }
+            catch (AuthenticationException)
+            {
+                throw;
             }
             catch (Exception e)
             {
@@ -502,7 +521,7 @@ namespace Unity.Services.Authentication
         {
             CancelScheduledRefresh();
 
-            if (m_DateTime.UtcNow.AddSeconds(delay) < AccessTokenExpiryTime)
+            if (m_DateTime.UtcNow.AddSeconds(delay) < AccessTokenComponent.ExpiryTime)
             {
                 Logger.LogVerbose($"Scheduling refresh in {delay} seconds.");
                 RefreshActionId = m_Scheduler.ScheduleAction(ExecuteScheduledRefresh, delay);
@@ -550,8 +569,7 @@ namespace Unity.Services.Authentication
 
         internal void Expire()
         {
-            AccessToken = null;
-            AccessTokenExpiryTime = default;
+            AccessTokenComponent.Clear();
             CancelScheduledRefresh();
             CancelScheduledExpiration();
             ChangeState(AuthenticationState.Expired);
@@ -561,7 +579,7 @@ namespace Unity.Services.Authentication
         {
             try
             {
-                m_Cache.Migrate(k_CacheKeySessionToken);
+                SessionTokenComponent.Migrate();
             }
             catch (Exception e)
             {
@@ -614,7 +632,7 @@ namespace Unity.Services.Authentication
 
         /// <summary>
         /// Returns an exception with <c>ClientInvalidUserState</c> error
-        /// when the user is in an invalid state.
+        /// when the player is in an invalid state.
         /// </summary>
         /// <returns>The exception that represents the error.</returns>
         RequestFailedException BuildClientInvalidStateException()
@@ -637,7 +655,7 @@ namespace Unity.Services.Authentication
                     errorMessage = "Invalid state for this operation. The player session has expired.";
                     break;
             }
-
+            m_Metrics.SendClientInvalidStateExceptionMetric();
             return AuthenticationException.Create(AuthenticationErrorCodes.ClientInvalidUserState, errorMessage);
         }
 
@@ -653,24 +671,26 @@ namespace Unity.Services.Authentication
 
         /// <summary>
         /// Returns an exception with <c>UnlinkExternalIdNotFound</c> error
-        /// when the user is calling <c>Unlink*</c> method but there is no external id found for the provider.
+        /// when the player is calling <c>Unlink*</c> method but there is no external id found for the provider.
         /// </summary>
         /// <returns>The exception that represents the error.</returns>
         RequestFailedException BuildClientUnlinkExternalIdNotFoundException()
         {
-            return AuthenticationException.Create(AuthenticationErrorCodes.ClientUnlinkExternalIdNotFound, "No external id was found to unlink from the provider. Use GetUserInfoAsync to load the linked external ids.");
+            m_Metrics.SendUnlinkExternalIdNotFoundExceptionMetric();
+            return AuthenticationException.Create(AuthenticationErrorCodes.ClientUnlinkExternalIdNotFound, "No external id was found to unlink from the provider. Use GetPlayerInfoAsync to load the linked external ids.");
         }
 
         /// <summary>
         /// Returns an exception with <c>ClientNoActiveSession</c> error
-        /// when the user is calling <c>SignInWithSessionToken</c> methods while there is no session token stored.
+        /// when the player is calling <c>SignInAnonymously</c> methods while there is no session token stored.
         /// </summary>
         /// <returns>The exception that represents the error.</returns>
         RequestFailedException BuildClientSessionTokenNotExistsException()
         {
             // At this point, the contents of the cache are invalid, and we don't want future
-            // SignInAnonymously or SignInWithSessionToken to read the current contents of the key.
-            m_Cache.DeleteKey(k_CacheKeySessionToken);
+            m_Metrics.SendClientSessionTokenNotExistsExceptionMetric();
+            // SignInAnonymously to read the current contents of the key.
+            SessionTokenComponent.Clear();
             return AuthenticationException.Create(AuthenticationErrorCodes.ClientNoActiveSession, "There is no cached session token.");
         }
 
@@ -685,13 +705,23 @@ namespace Unity.Services.Authentication
 
             if (exception.NetworkError)
             {
+                m_Metrics.SendNetworkErrorMetric();
                 return AuthenticationException.Create(CommonErrorCodes.TransportError, $"Network Error: {exception.Message}", exception);
             }
 
             try
             {
                 var errorResponse = JsonConvert.DeserializeObject<AuthenticationErrorResponse>(exception.Message);
-                return AuthenticationException.Create(MapErrorCodes(errorResponse.Title), errorResponse.Detail, exception);
+
+                var errorCode = MapErrorCodes(errorResponse.Title);
+
+                if (errorCode == AuthenticationErrorCodes.InvalidSessionToken)
+                {
+                    SessionTokenComponent.Clear();
+                    Logger.LogError($"The session token is invalid and has been cleared. The associated account is no longer accessible through this login method.");
+                }
+
+                return AuthenticationException.Create(errorCode, errorResponse.Detail, exception);
             }
             catch (JsonException e)
             {
@@ -715,8 +745,10 @@ namespace Unity.Services.Authentication
                     return AuthenticationErrorCodes.AccountLinkLimitExceeded;
                 case "INVALID_PARAMETERS":
                     return AuthenticationErrorCodes.InvalidParameters;
+                case "INVALID_SESSION_TOKEN":
+                    return AuthenticationErrorCodes.InvalidSessionToken;
                 case "PERMISSION_DENIED":
-                    // This is the server side response when the third party token is invalid to sign-in or link a user.
+                    // This is the server side response when the third party token is invalid to sign-in or link a player.
                     // Also map to AuthenticationErrorCodes.InvalidParameters since it's basically an invalid parameter.
                     // Include the request/API context in case it has a different meaning in the future.
                     return AuthenticationErrorCodes.InvalidParameters;

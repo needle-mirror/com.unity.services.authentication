@@ -5,19 +5,25 @@ namespace Unity.Services.Authentication
 {
     public static class AuthenticationErrorCodes
     {
-        public const int AccountAlreadyLinked = 10003;
-        public const int AccountLinkLimitExceeded = 10004;
-        public const int ClientInvalidProfile = 10006;
-        public const int ClientInvalidUserState = 10000;
-        public const int ClientNoActiveSession = 10001;
-        public const int ClientUnlinkExternalIdNotFound = 10005;
-        public const int InvalidParameters = 10002;
-        public const int MinValue = 10000;
+        public static readonly int AccountAlreadyLinked;
+        public static readonly int AccountLinkLimitExceeded;
+        public static readonly int ClientInvalidProfile;
+        public static readonly int ClientInvalidUserState;
+        public static readonly int ClientNoActiveSession;
+        public static readonly int ClientUnlinkExternalIdNotFound;
+        public static readonly int InvalidParameters;
+        public static readonly int InvalidSessionToken;
+        public static readonly int MinValue;
     }
 
-    public class AuthenticationException : Unity.Services.Core.RequestFailedException
+    public sealed class AuthenticationException : Unity.Services.Core.RequestFailedException
     {
         public static Unity.Services.Core.RequestFailedException Create(int errorCode, string message, System.Exception innerException = default(System.Exception));
+    }
+
+    [System.Runtime.CompilerServices.Extension] public static class AuthenticationExtensions
+    {
+        [System.Runtime.CompilerServices.Extension] public static Unity.Services.Core.InitializationOptions SetProfile(Unity.Services.Core.InitializationOptions options, string profile);
     }
 
     public static class AuthenticationService
@@ -36,25 +42,22 @@ namespace Unity.Services.Authentication
         public abstract bool IsExpired { get; }
         public abstract bool IsSignedIn { get; }
         public abstract string PlayerId { get; }
+        public abstract Unity.Services.Authentication.PlayerInfo PlayerInfo { get; }
         public abstract string Profile { get; }
         public abstract bool SessionTokenExists { get; }
-        public abstract Unity.Services.Authentication.Models.UserInfo UserInfo { get; }
         public abstract void ClearSessionToken();
         public abstract System.Threading.Tasks.Task DeleteAccountAsync();
-        public abstract System.Threading.Tasks.Task<Unity.Services.Authentication.Models.UserInfo> GetUserInfoAsync();
-        public abstract System.Threading.Tasks.Task LinkWithAppleAsync(string idToken);
-        public abstract System.Threading.Tasks.Task LinkWithExternalTokenAsync(Unity.Services.Authentication.Models.ExternalTokenRequest externalToken);
-        public abstract System.Threading.Tasks.Task LinkWithFacebookAsync(string accessToken);
-        public abstract System.Threading.Tasks.Task LinkWithGoogleAsync(string idToken);
-        public abstract System.Threading.Tasks.Task LinkWithSteamAsync(string sessionTicket);
-        public abstract System.Threading.Tasks.Task SignInAnonymouslyAsync();
-        public abstract System.Threading.Tasks.Task SignInWithAppleAsync(string idToken);
-        public abstract System.Threading.Tasks.Task SignInWithExternalTokenAsync(Unity.Services.Authentication.Models.ExternalTokenRequest externalToken);
-        public abstract System.Threading.Tasks.Task SignInWithFacebookAsync(string accessToken);
-        public abstract System.Threading.Tasks.Task SignInWithGoogleAsync(string idToken);
-        public abstract System.Threading.Tasks.Task SignInWithSessionTokenAsync();
-        public abstract System.Threading.Tasks.Task SignInWithSteamAsync(string sessionTicket);
-        public abstract void SignOut();
+        public abstract System.Threading.Tasks.Task<Unity.Services.Authentication.PlayerInfo> GetPlayerInfoAsync();
+        public abstract System.Threading.Tasks.Task LinkWithAppleAsync(string idToken, Unity.Services.Authentication.LinkOptions options = default(Unity.Services.Authentication.LinkOptions));
+        public abstract System.Threading.Tasks.Task LinkWithFacebookAsync(string accessToken, Unity.Services.Authentication.LinkOptions options = default(Unity.Services.Authentication.LinkOptions));
+        public abstract System.Threading.Tasks.Task LinkWithGoogleAsync(string idToken, Unity.Services.Authentication.LinkOptions options = default(Unity.Services.Authentication.LinkOptions));
+        public abstract System.Threading.Tasks.Task LinkWithSteamAsync(string sessionTicket, Unity.Services.Authentication.LinkOptions options = default(Unity.Services.Authentication.LinkOptions));
+        public abstract System.Threading.Tasks.Task SignInAnonymouslyAsync(Unity.Services.Authentication.SignInOptions options = default(Unity.Services.Authentication.SignInOptions));
+        public abstract System.Threading.Tasks.Task SignInWithAppleAsync(string idToken, Unity.Services.Authentication.SignInOptions options = default(Unity.Services.Authentication.SignInOptions));
+        public abstract System.Threading.Tasks.Task SignInWithFacebookAsync(string accessToken, Unity.Services.Authentication.SignInOptions options = default(Unity.Services.Authentication.SignInOptions));
+        public abstract System.Threading.Tasks.Task SignInWithGoogleAsync(string idToken, Unity.Services.Authentication.SignInOptions options = default(Unity.Services.Authentication.SignInOptions));
+        public abstract System.Threading.Tasks.Task SignInWithSteamAsync(string sessionTicket, Unity.Services.Authentication.SignInOptions options = default(Unity.Services.Authentication.SignInOptions));
+        public abstract void SignOut(bool clearCredentials = False);
         public abstract void SwitchProfile(string profile);
         public abstract System.Threading.Tasks.Task UnlinkAppleAsync();
         public abstract System.Threading.Tasks.Task UnlinkFacebookAsync();
@@ -62,41 +65,32 @@ namespace Unity.Services.Authentication
         public abstract System.Threading.Tasks.Task UnlinkSteamAsync();
     }
 
-    [System.Runtime.CompilerServices.Extension] public static class ProfileOptionsExtensions
+    public sealed class Identity
     {
-        [System.Runtime.CompilerServices.Extension] public static Unity.Services.Core.InitializationOptions SetProfile(Unity.Services.Core.InitializationOptions options, string profile);
-    }
-}
-
-namespace Unity.Services.Authentication.Models
-{
-    public class ExternalId
-    {
-        [Newtonsoft.Json.JsonProperty(@"externalId")] public string ExtId;
-        [Newtonsoft.Json.JsonProperty(@"providerId")] public string ProviderId;
-        [UnityEngine.Scripting.Preserve] public ExternalId() {}
+        public string TypeId;
+        public string UserId;
     }
 
-    public class ExternalTokenRequest
+    public sealed class LinkOptions
     {
-        [Newtonsoft.Json.JsonProperty(@"idProvider")] public string IdProvider;
-        [Newtonsoft.Json.JsonProperty(@"token")] public string Token;
-        [UnityEngine.Scripting.Preserve] public ExternalTokenRequest() {}
+        public bool ForceLink { get; set; }
+        public LinkOptions() {}
     }
 
-    public class UnlinkRequest
+    public sealed class PlayerInfo
     {
-        [Newtonsoft.Json.JsonProperty(@"externalId")] public string ExternalId;
-        [Newtonsoft.Json.JsonProperty(@"idProvider")] public string IdProvider;
-        [UnityEngine.Scripting.Preserve] public UnlinkRequest() {}
+        public System.Nullable<System.DateTime> CreatedAt { get; }
+        public string Id { get; }
+        public System.Collections.Generic.List<Unity.Services.Authentication.Identity> Identities { get; }
+        public string GetAppleId();
+        public string GetFacebookId();
+        public string GetGoogleId();
+        public string GetSteamId();
     }
 
-    public class UserInfo
+    public sealed class SignInOptions
     {
-        [Newtonsoft.Json.JsonProperty(@"createdAt")] public string CreatedAt;
-        [Newtonsoft.Json.JsonProperty(@"externalIds")] public System.Collections.Generic.List<Unity.Services.Authentication.Models.ExternalId> ExternalIds;
-        [Newtonsoft.Json.JsonProperty(@"id")] public string Id;
-        [Newtonsoft.Json.JsonProperty(@"idDomain")] public string IdDomain;
-        [UnityEngine.Scripting.Preserve] public UserInfo() {}
+        public bool CreateAccount { get; set; }
+        public SignInOptions() {}
     }
 }

@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using Unity.Services.Authentication.Models;
 using Unity.Services.Core;
 
 namespace Unity.Services.Authentication
@@ -75,9 +74,9 @@ namespace Unity.Services.Authentication
         bool SessionTokenExists { get; }
 
         /// <summary>
-        /// Returns the current player's user info, including linked external ids.
+        /// Returns the current player's info, including linked identities.
         /// </summary>
-        UserInfo UserInfo { get; }
+        PlayerInfo PlayerInfo { get; }
 
         /// <summary>
         /// Signs in the current player anonymously. No credentials are required and the session is confined to the current device.
@@ -85,6 +84,7 @@ namespace Unity.Services.Authentication
         /// <remarks>
         /// If a player has signed in previously with a session token stored on the device, they are signed back in regardless of if they're an anonymous player or not.
         /// </remarks>
+        /// <param name="options">Options for the operation</param>
         /// <returns>Task for the operation</returns>
         /// <exception cref="AuthenticationException">
         /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
@@ -100,33 +100,14 @@ namespace Unity.Services.Authentication
         /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.Unknown"/> if the API call failed due to unexpected response from the server. Check Unity logs for more debugging information.</description></item>
         /// </list>
         /// </exception>
-        Task SignInAnonymouslyAsync();
-
-        /// <summary>
-        /// Sign in the current player with the session token stored on the device.
-        /// </summary>
-        /// <returns>Task for the operation</returns>
-        /// <exception cref="AuthenticationException">
-        /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
-        /// <list type="bullet">
-        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.ClientNoActiveSession"/> if the player does not a persisted session token.</description></item>
-        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.ClientInvalidUserState"/> if the player has already signed in or a sign-in operation is in progress.</description></item>
-        /// </list>
-        /// </exception>
-        /// <exception cref="RequestFailedException">
-        /// The task fails with the exception when the task cannot complete successfully.
-        /// <list type="bullet">
-        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.InvalidToken"/> if the server side returned an invalid access token. </description></item>
-        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.TransportError"/> if the API call failed due to network error. Check Unity logs for more debugging information.</description></item>
-        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.Unknown"/> if the API call failed due to unexpected response from the server. Check Unity logs for more debugging information.</description></item>
-        /// </list>
-        /// </exception>
-        Task SignInWithSessionTokenAsync();
+        Task SignInAnonymouslyAsync(SignInOptions options = null);
 
         /// <summary>
         /// Sign in using Apple's ID token.
+        /// If no options are used, this will create an account if none exist.
         /// </summary>
         /// <param name="idToken">Apple's ID token</param>
+        /// <param name="options">Options for the operation</param>
         /// <returns>Task for the operation</returns>
         /// <exception cref="AuthenticationException">
         /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
@@ -143,12 +124,13 @@ namespace Unity.Services.Authentication
         /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.Unknown"/> if the API call failed due to unexpected response from the server. Check Unity logs for more debugging information.</description></item>
         /// </list>
         /// </exception>
-        Task SignInWithAppleAsync(string idToken);
+        Task SignInWithAppleAsync(string idToken, SignInOptions options = null);
 
         /// <summary>
         /// Link the current player with the Apple account using Apple's ID token.
         /// </summary>
         /// <param name="idToken">Apple's ID token</param>
+        /// <param name="options">Options for the link operations.</param>
         /// <returns>Task for the operation</returns>
         /// <exception cref="AuthenticationException">
         /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
@@ -167,7 +149,7 @@ namespace Unity.Services.Authentication
         /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.Unknown"/> if the API call failed due to unexpected response from the server. Check Unity logs for more debugging information.</description></item>
         /// </list>
         /// </exception>
-        Task LinkWithAppleAsync(string idToken);
+        Task LinkWithAppleAsync(string idToken, LinkOptions options = null);
 
         /// <summary>
         /// Unlinks the Apple account from the current player account.
@@ -177,7 +159,7 @@ namespace Unity.Services.Authentication
         /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
         /// <list type="bullet">
         /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.ClientInvalidUserState"/> if the player has not authorized to perform this operation.</description></item>
-        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.ClientUnlinkExternalIdNotFound"/> if the player's UserInfo does not have a matching external id.</description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.ClientUnlinkExternalIdNotFound"/> if the player's PlayerInfo does not have a matching external id.</description></item>
         /// </list>
         /// </exception>
         /// <exception cref="RequestFailedException">
@@ -192,8 +174,10 @@ namespace Unity.Services.Authentication
 
         /// <summary>
         /// Sign in using Google's ID token.
+        /// If no options are used, this will create an account if none exist.
         /// </summary>
         /// <param name="idToken">Google's ID token</param>
+        /// <param name="options">Options for the operation</param>
         /// <returns>Task for the operation</returns>
         /// <exception cref="AuthenticationException">
         /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
@@ -210,12 +194,13 @@ namespace Unity.Services.Authentication
         /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.Unknown"/> if the API call failed due to unexpected response from the server. Check Unity logs for more debugging information.</description></item>
         /// </list>
         /// </exception>
-        Task SignInWithGoogleAsync(string idToken);
+        Task SignInWithGoogleAsync(string idToken, SignInOptions options = null);
 
         /// <summary>
         /// Link the current player with the Google account using Google's ID token.
         /// </summary>
         /// <param name="idToken">Google's ID token</param>
+        /// <param name="options">Options for the link operations.</param>
         /// <returns>Task for the operation</returns>
         /// <exception cref="AuthenticationException">
         /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
@@ -234,7 +219,7 @@ namespace Unity.Services.Authentication
         /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.Unknown"/> if the API call failed due to unexpected response from the server. Check Unity logs for more debugging information.</description></item>
         /// </list>
         /// </exception>
-        Task LinkWithGoogleAsync(string idToken);
+        Task LinkWithGoogleAsync(string idToken, LinkOptions options = null);
 
         /// <summary>
         /// Unlinks the Google account from the current player account.
@@ -244,7 +229,7 @@ namespace Unity.Services.Authentication
         /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
         /// <list type="bullet">
         /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.ClientInvalidUserState"/> if the player has not authorized to perform this operation.</description></item>
-        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.ClientUnlinkExternalIdNotFound"/> if the player's UserInfo does not have a matching external id.</description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.ClientUnlinkExternalIdNotFound"/> if the player's PlayerInfo does not have a matching external id.</description></item>
         /// </list>
         /// </exception>
         /// <exception cref="RequestFailedException">
@@ -259,8 +244,10 @@ namespace Unity.Services.Authentication
 
         /// <summary>
         /// Sign in using Facebook's access token.
+        /// If no options are used, this will create an account if none exist.
         /// </summary>
         /// <param name="accessToken">Facebook's access token</param>
+        /// <param name="options">Options for the operation</param>
         /// <returns>Task for the operation</returns>
         /// <exception cref="AuthenticationException">
         /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
@@ -277,12 +264,13 @@ namespace Unity.Services.Authentication
         /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.Unknown"/> if the API call failed due to unexpected response from the server. Check Unity logs for more debugging information.</description></item>
         /// </list>
         /// </exception>
-        Task SignInWithFacebookAsync(string accessToken);
+        Task SignInWithFacebookAsync(string accessToken, SignInOptions options = null);
 
         /// <summary>
         /// Link the current player with the Facebook account using Facebook's access token.
         /// </summary>
         /// <param name="accessToken">Facebook's access token</param>
+        /// <param name="options">Options for the link operations.</param>
         /// <returns>Task for the operation</returns>
         /// <exception cref="AuthenticationException">
         /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
@@ -301,7 +289,7 @@ namespace Unity.Services.Authentication
         /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.Unknown"/> if the API call failed due to unexpected response from the server. Check Unity logs for more debugging information.</description></item>
         /// </list>
         /// </exception>
-        Task LinkWithFacebookAsync(string accessToken);
+        Task LinkWithFacebookAsync(string accessToken, LinkOptions options = null);
 
         /// <summary>
         /// Unlinks the Facebook account from the current player account.
@@ -311,7 +299,7 @@ namespace Unity.Services.Authentication
         /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
         /// <list type="bullet">
         /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.ClientInvalidUserState"/> if the player has not authorized to perform this operation.</description></item>
-        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.ClientUnlinkExternalIdNotFound"/> if the player's UserInfo does not have a matching external id.</description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.ClientUnlinkExternalIdNotFound"/> if the player's PlayerInfo does not have a matching external id.</description></item>
         /// </list>
         /// </exception>
         /// <exception cref="RequestFailedException">
@@ -326,8 +314,10 @@ namespace Unity.Services.Authentication
 
         /// <summary>
         /// Sign in using Steam's session ticket.
+        /// If no options are used, this will create an account if none exist.
         /// </summary>
         /// <param name="sessionTicket">Steam's session ticket</param>
+        /// <param name="options">Options for the operation</param>
         /// <returns>Task for the operation</returns>
         /// <exception cref="AuthenticationException">
         /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
@@ -344,12 +334,13 @@ namespace Unity.Services.Authentication
         /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.Unknown"/> if the API call failed due to unexpected response from the server. Check Unity logs for more debugging information.</description></item>
         /// </list>
         /// </exception>
-        Task SignInWithSteamAsync(string sessionTicket);
+        Task SignInWithSteamAsync(string sessionTicket, SignInOptions options = null);
 
         /// <summary>
         /// Link the current player with the Steam account using Steam's session ticket.
         /// </summary>
         /// <param name="sessionTicket">Steam's session ticket</param>
+        /// <param name="options">Options for the link operations.</param>
         /// <returns>Task for the operation</returns>
         /// <exception cref="AuthenticationException">
         /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
@@ -368,7 +359,7 @@ namespace Unity.Services.Authentication
         /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.Unknown"/> if the API call failed due to unexpected response from the server. Check Unity logs for more debugging information.</description></item>
         /// </list>
         /// </exception>
-        Task LinkWithSteamAsync(string sessionTicket);
+        Task LinkWithSteamAsync(string sessionTicket, LinkOptions options = null);
 
         /// <summary>
         /// Unlinks the Steam account from the current player account.
@@ -378,7 +369,7 @@ namespace Unity.Services.Authentication
         /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
         /// <list type="bullet">
         /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.ClientInvalidUserState"/> if the player has not authorized to perform this operation.</description></item>
-        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.ClientUnlinkExternalIdNotFound"/> if the player's UserInfo does not have a matching external id.</description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.ClientUnlinkExternalIdNotFound"/> if the player's PlayerInfo does not have a matching external id.</description></item>
         /// </list>
         /// </exception>
         /// <exception cref="RequestFailedException">
@@ -390,52 +381,6 @@ namespace Unity.Services.Authentication
         /// </list>
         /// </exception>
         Task UnlinkSteamAsync();
-
-        /// <summary>
-        /// SignIn the current player with the external provider.
-        /// </summary>
-        /// <param name="externalToken">The user token from the external provider</param>
-        /// <returns>Task for the operation</returns>
-        /// <exception cref="AuthenticationException">
-        /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
-        /// <list type="bullet">
-        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.InvalidParameters"/> if parameter is empty or invalid. </description></item>
-        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.ClientInvalidUserState"/> if the player has already signed in or a sign-in operation is in progress.</description></item>
-        /// </list>
-        /// </exception>
-        /// <exception cref="RequestFailedException">
-        /// The task fails with the exception when the task cannot complete successfully.
-        /// <list type="bullet">
-        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.InvalidToken"/> if the server side returned an invalid access token. </description></item>
-        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.TransportError"/> if the API call failed due to network error. Check Unity logs for more debugging information.</description></item>
-        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.Unknown"/> if the API call failed due to unexpected response from the server. Check Unity logs for more debugging information.</description></item>
-        /// </list>
-        /// </exception>
-        Task SignInWithExternalTokenAsync(ExternalTokenRequest externalToken);
-
-        /// <summary>
-        /// Link the current player with the external provider.
-        /// </summary>
-        /// <param name="externalToken">The user token from the external provider</param>
-        /// <returns>Task for the operation</returns>
-        /// <exception cref="AuthenticationException">
-        /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
-        /// <list type="bullet">
-        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.AccountAlreadyLinked"/> if the player tries to link a social account while the social account is already linked with another player.</description></item>
-        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.InvalidParameters"/> if parameter is empty or invalid. </description></item>
-        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.ClientInvalidUserState"/> if the player is not authorized to perform this operation.</description></item>
-        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.AccountLinkLimitExceeded"/> if the player has already reached the limit of links for this provider type.</description></item>
-        /// </list>
-        /// </exception>
-        /// <exception cref="RequestFailedException">
-        /// The task fails with the exception when the task cannot complete successfully.
-        /// <list type="bullet">
-        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.InvalidToken"/> if access token is invalid/expired. The access token is refreshed before it expires. This may happen if the refresh fails, or the app is unpaused with an expired access token while the refresh hasn't finished.</description></item>
-        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.TransportError"/> if the API call failed due to network error. Check Unity logs for more debugging information.</description></item>
-        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.Unknown"/> if the API call failed due to unexpected response from the server. Check Unity logs for more debugging information.</description></item>
-        /// </list>
-        /// </exception>
-        Task LinkWithExternalTokenAsync(ExternalTokenRequest externalToken);
 
         /// <summary>
         /// Deletes the currently signed in player permanently.
@@ -458,8 +403,7 @@ namespace Unity.Services.Authentication
         Task DeleteAccountAsync();
 
         /// <summary>
-        /// Sign out the current player.
-        /// Returns the info of the logged in player, which includes id, idDomain, createdAt and externalIds properties.
+        /// Returns the info of the logged in player, which includes the player's id, creation time and linked identities.
         /// </summary>
         /// <returns>Task for the operation</returns>
         /// <exception cref="AuthenticationException">
@@ -476,12 +420,13 @@ namespace Unity.Services.Authentication
         /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.Unknown"/> if the API call failed due to unexpected response from the server. Check Unity logs for more debugging information.</description></item>
         /// </list>
         /// </exception>
-        Task<UserInfo> GetUserInfoAsync();
+        Task<PlayerInfo> GetPlayerInfoAsync();
 
         /// <summary>
         /// Sign out the current player.
         /// </summary>
-        void SignOut();
+        /// <param name="clearCredentials">Option to clear the session token that enables logging in to the same account</param>
+        void SignOut(bool clearCredentials = false);
 
         /// <summary>
         /// Switch the current profile.
@@ -490,6 +435,7 @@ namespace Unity.Services.Authentication
         /// The profile may only contain alphanumeric values, `-`, `_`, and must be no longer than 30 characters.
         /// The player must be signed out for this operation to succeed.
         /// </summary>
+        /// <param name="profile">The profile to switch to.</param>
         /// <exception cref="AuthenticationException">
         /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
         /// <list type="bullet">

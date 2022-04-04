@@ -1,17 +1,16 @@
 using System;
 using System.Text;
 using System.Threading.Tasks;
-using Unity.Services.Authentication.Models;
 using Unity.Services.Core;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace Unity.Services.Authentication.Samples
 {
-//Anonymous sign-in creates a new user for the game session without any input from the player and is a quick way for a player
-//to get started with your game. The following UI sample shows how to set up the ability for players to sign in anonymously
-//in your game and get your access token. If a player has already signed in before, the SignInAnonymously() recovers the existing
-//login of a user whether they signed in anonymously or through a social account.
+    //Anonymous sign-in creates a new player for the game session without any input from the player and is a quick way for a player
+    //to get started with your game. The following UI sample shows how to set up the ability for players to sign in anonymously
+    //in your game and get your access token. If a player has already signed in before, the SignInAnonymously() recovers the existing
+    //login of a player whether they signed in anonymously or through a social account.
     public class AnonymousSignInUIExample : MonoBehaviour
     {
         [SerializeField]
@@ -23,6 +22,8 @@ namespace Unity.Services.Authentication.Samples
         [SerializeField]
         Button m_ClearSessionButton;
         [SerializeField]
+        Button m_SwitchProfileButton;
+        [SerializeField]
         Text m_SignOutButtonText;
         [SerializeField]
         Text m_SessionText;
@@ -33,9 +34,11 @@ namespace Unity.Services.Authentication.Samples
         [SerializeField]
         Text m_ExceptionText;
         [SerializeField]
-        Text m_UserInfoText;
+        Text m_PlayerInfoText;
+        [SerializeField]
+        InputField m_ProfileNameInput;
 
-        UserInfo m_UserInfo;
+        PlayerInfo m_PlayerInfo;
         string m_ExternalIds;
 
         async void Start()
@@ -46,6 +49,11 @@ namespace Unity.Services.Authentication.Samples
 
             //Shows if a cached session token exist
             Debug.Log($"Cached Session Token Exist: {AuthenticationService.Instance.SessionTokenExists}");
+
+            // Shows Current profile
+            Debug.Log(AuthenticationService.Instance.Profile);
+            m_ProfileNameInput.text = AuthenticationService.Instance.Profile;
+
 
             AuthenticationService.Instance.SignedIn += () =>
             {
@@ -89,29 +97,31 @@ namespace Unity.Services.Authentication.Samples
             m_SessionText.text = AuthenticationService.Instance.SessionTokenExists ? "Session Token: Cached token exists" : "Session Token: Not Found";
             m_SignInButton.interactable = !isSignedIn;
             m_SignOutButton.interactable = isSignedIn;
+            m_SwitchProfileButton.interactable = !isSignedIn;
             m_ClearSessionButton.interactable = !isSignedIn;
+            m_ProfileNameInput.interactable = !isSignedIn;
+            m_ProfileNameInput.text = AuthenticationService.Instance.Profile;
             m_ExceptionText.text = "";
 
-            if (m_UserInfo != null)
-                m_UserInfoText.text = isSignedIn ? GetUserInfoText(m_UserInfo) : "";
+            if (m_PlayerInfo != null)
+                m_PlayerInfoText.text = isSignedIn ? GetPlayerInfoText(m_PlayerInfo) : "";
         }
 
         /// <summary>
-        /// Returns User info string if the player is authorized
+        /// Returns Player info string if the player is authorized
         /// </summary>
-        /// <param name="userInfo"></param>
+        /// <param name="playerInfo"></param>
         /// <returns></returns>
-        string GetUserInfoText(UserInfo userInfo)
+        string GetPlayerInfoText(PlayerInfo playerInfo)
         {
-            if (string.IsNullOrEmpty(userInfo.CreatedAt))
+            if (playerInfo.CreatedAt == null)
                 return string.Empty;
 
-            var dateTime = DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt64(userInfo.CreatedAt));
+            var dateTime = DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt64(playerInfo.CreatedAt));
 
-            var userText = $"CreatedAt: {dateTime.LocalDateTime} \n ExternalIds: {m_ExternalIds} \n " +
-                $"IdDomain: {userInfo.IdDomain}";
+            var playerText = $"CreatedAt: {dateTime.LocalDateTime} \n ExternalIds: {m_ExternalIds} \n ";
 
-            return userText;
+            return playerText;
         }
 
         public async void OnClickSignIn()
@@ -134,22 +144,37 @@ namespace Unity.Services.Authentication.Samples
             UpdateUI();
         }
 
-        public async void OnClickGetUserInfo() => await GetUserInfoAsync();
-
-        async Task GetUserInfoAsync()
+        public void OnClickSwitchProfile()
         {
-            m_UserInfo = await AuthenticationService.Instance.GetUserInfoAsync();
-            m_ExternalIds = GetExternalIds(m_UserInfo);
+            try
+            {
+                AuthenticationService.Instance.SwitchProfile(m_ProfileNameInput.text);
+            }
+            catch (Exception ex)
+            {
+                Debug.Log(ex);
+                m_ProfileNameInput.text = AuthenticationService.Instance.Profile;
+            }
+            Debug.Log($"Current Profile: {AuthenticationService.Instance.Profile}");
+            PlayerPrefsLog();
+        }
+
+        public async void OnClickGetPlayerInfo() => await GetPlayerInfoAsync();
+
+        async Task GetPlayerInfoAsync()
+        {
+            m_PlayerInfo = await AuthenticationService.Instance.GetPlayerInfoAsync();
+            m_ExternalIds = GetExternalIds(m_PlayerInfo);
             UpdateUI();
         }
 
-        string GetExternalIds(UserInfo userInfo)
+        string GetExternalIds(PlayerInfo playerInfo)
         {
             var sb = new StringBuilder();
-            if (userInfo.ExternalIds != null)
+            if (playerInfo.Identities != null)
             {
-                foreach (var id in userInfo.ExternalIds)
-                    sb.Append(id.ProviderId + " ");
+                foreach (var id in playerInfo.Identities)
+                    sb.Append(id.TypeId + " ");
 
                 return sb.ToString();
             }
@@ -161,6 +186,13 @@ namespace Unity.Services.Authentication.Samples
         {
             AuthenticationService.Instance.ClearSessionToken();
             UpdateUI();
+        }
+
+        void PlayerPrefsLog()
+        {
+            var sessionToken = PlayerPrefs.GetString($"{Application.cloudProjectId}.{AuthenticationService.Instance.Profile}.unity.services.authentication.session_token");
+            var playerPrefsMessageResult = string.IsNullOrEmpty(sessionToken) ? "No session token for this profile" : $"Session token: {sessionToken}";
+            Debug.Log(playerPrefsMessageResult);
         }
     }
 }

@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using Unity.Services.Authentication.Editor.Models;
 
 namespace Unity.Services.Authentication.Editor
 {

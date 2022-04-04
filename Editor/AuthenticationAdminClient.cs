@@ -1,53 +1,12 @@
 using System;
-using System.Reflection;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Unity.Services.Authentication.Editor.Models;
-using Unity.Services.Authentication.Models;
-using Unity.Services.Authentication.Utilities;
 using Unity.Services.Core;
+using Unity.Services.Core.Editor.OrganizationHandler;
 using UnityEditor;
-using UnityEngine;
-using Logger = Unity.Services.Authentication.Utilities.Logger;
 
 namespace Unity.Services.Authentication.Editor
 {
-    static class AuthenticationAdminClientManager
-    {
-        internal static IAuthenticationAdminClient Create()
-        {
-            if (!IsConfigured())
-                return null;
-
-            var networkClient = new AuthenticationAdminNetworkClient("https://services.unity.com", GetOrganizationId(), GetProjectId(), new NetworkingUtilities(null));
-            return new AuthenticationAdminClient(networkClient, new GenesisTokenProvider());
-        }
-
-        internal static bool IsConfigured()
-        {
-            return !string.IsNullOrEmpty(GetOrganizationId()) && !string.IsNullOrEmpty(GetProjectId());
-        }
-
-        // GetOrganizationId will gets the organization id associated with this Unity project.
-        static string GetOrganizationId()
-        {
-            // This is a temporary workaround to get the Genesis organization foreign key for non-DevX enhanced Unity versions.
-            // When the eventual changes are backported into previous versions of Unity, this will no longer be necessary.
-            Assembly assembly = Assembly.GetAssembly(typeof(EditorWindow));
-            var unityConnectInstance = assembly.CreateInstance("UnityEditor.Connect.UnityConnect", false, BindingFlags.NonPublic | BindingFlags.Instance, null, null, null, null);
-            Type t = unityConnectInstance.GetType();
-            var projectInfo = t.GetProperty("projectInfo").GetValue(unityConnectInstance, null);
-
-            Type projectInfoType = projectInfo.GetType();
-            return projectInfoType.GetProperty("organizationForeignKey").GetValue(projectInfo, null) as string;
-        }
-
-        static string GetProjectId()
-        {
-            return CloudProjectSettings.projectId;
-        }
-    }
-
     class AuthenticationAdminClient : IAuthenticationAdminClient
     {
         readonly IAuthenticationAdminNetworkClient m_AuthenticationAdminNetworkClient;

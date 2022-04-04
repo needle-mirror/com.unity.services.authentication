@@ -4,74 +4,81 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [1.0.0-pre.37] - 2021-12-08
+## [2.0.0] - 2022-04-04
+Public GA release.
 
-## [1.0.0-pre.36] - 2021-12-07
+## [1.0.0-pre.85] - 2022-02-23
+### Changed
+- Restructured package file hierarchy.
+- Refactored PlayerInfo's CreatedAt to be a DateTime (UTC).
+- Refactored PlayerInfo's identities to use new Identity type.
+- ExternalId is no longer public and is replaced by Identity.
 
-## [1.0.0-pre.35] - 2021-12-06
+## [1.0.0-pre.83] - 2022-02-18
+### Changed
+- Removed 'SignInWithExternalTokenAsync and LinkWithExternalTokenAsync apis.
+- Changed the following models to internal: UnlinkRequest, SignInWithExternalTokenRequest, LinkWithExternalTokenRequest
 
-## [1.0.0-pre.34] - 2021-12-05
+## [1.0.0-pre.80] - 2022-02-15
+### Added
+-  Added helper methods to retrieve external Ids
+### Changed
+-  Renamed public model `UserInfo` to `PlayerInfo`
+-  Renamed `GetUserInfo` to `GetPlayerInfo`
+-  Removed `DomainId` property from the `PlayerInfo` model
 
-## [1.0.0-pre.33] - 2021-12-04
+## [1.0.0-pre.77] - 2022-02-12
+### Added
+- Added SignInOptions models for all sign in operations.
+- Added LinkOptions model for all link operations.
+### Changed
+- Removed SignInWithSessionTokenAsync. This is fully handled by SignInAnonymously.
+- Split ExternalTokenRequest into SignInExtenalTokenRequest and LinkWithExternalTokenRequest.
+
+## [1.0.0-pre.73] - 2022-02-08
+### Changed
+- Removed namespaces Unity.Services.Authentication.Models and Unity.Services.Authentication.Utilities for simplified use.
+
+## [1.0.0-pre.67] - 2022-02-02
+### Added
+- Added optional parameter on Signout to clear credentials.
+- Added player id caching between sessions.
+- Added optional force link parameter to linking apis (Apple, Facebook, Google, Steam).
+### Changed
+- Reset the session token when getting an invalid session token error.
+
+## [1.0.0-pre.44] - 2021-12-16
+### Added
+- Added enableRefresh parameter to SignInWithExternalTokenAsync.
 
 ## [1.0.0-pre.32] - 2021-12-03
-Adding profile support. Profiles allow managing multiple accounts at the same time by isolating the session token persistence.
+Added profile support. Profiles allow managing multiple accounts at the same time by isolating the session token persistence.
+### Added
 - Added `Profile` property to `IAuthenticationService` to access the current profile.
 - Added `SwitchProfile` to `IAuthenticationService` to change the current profile.
 - Added `ClientInvalidProfile` error code to `AuthenticationErrorCodes` used when entering an invalid profile name.
 - Added `SetProfile` extension method to `InitializationOptions`.
 
-## [1.0.0-pre.31] - 2021-12-02
-
-## [1.0.0-pre.30] - 2021-12-01
-
-## [1.0.0-pre.29] - 2021-11-29
-
-## [1.0.0-pre.28] - 2021-11-28
-
-## [1.0.0-pre.27] - 2021-11-27
-
 ## [1.0.0-pre.26] - 2021-11-26
+### Added
 - Added `DeleteAccountAsync` to `IAuthenticationService`.
 - Added `AccountLinkLimitExceeded` and `ClientUnlinkExternalIdNotFound` error codes to `AuthenticationErrorCodes`.
 - Error code `AccountLinkLimitExceeded` is used when the current player's account has reached the limit of links for the provider when using a link operation.
 - Error code `ClientUnlinkExternalIdNotFound` is sent when no matching external id is found in the player's `UserInfo` when using an unlink operation.
 
-## [1.0.0-pre.25] - 2021-11-24
-
-## [1.0.0-pre.24] - 2021-11-23
-
-## [1.0.0-pre.23] - 2021-11-22
-
-## [1.0.0-pre.22] - 2021-11-21
-
-## [1.0.0-pre.21] - 2021-11-20
-
 ## [1.0.0-pre.20] - 2021-11-19
+### Added
 - Added `UserInfo` property to `IAuthenticationService`.
 - Added `UnlinkAppleAsync` function to `IAuthenticationService`.
 - Added `UnlinkFacebookAsync` function to `IAuthenticationService`.
 - Added `UnlinkGoogleAsync` function to `IAuthenticationService`.
 - Added `UnlinkSteamAsync` function to `IAuthenticationService`.
 
-## [1.0.0-pre.16] - 2021-11-13
-
-## [1.0.0-pre.15] - 2021-11-12
-
 ## [1.0.0-pre.14] - 2021-11-11
+### Added
 - Added `IsAuthorized` property.
 - Added `SessionTokenExists` property.
 - Added `GetUserInfoAsync` to `IAuthenticationService`
-
-## [1.0.0-pre.13] - 2021-11-09
-
-## [1.0.0-pre.12] - 2021-11-07
-
-## [1.0.0-pre.11] - 2021-11-06
-
-## [1.0.0-pre.10] - 2021-11-05
-
-## [1.0.0-pre.9] - 2021-11-04
 
 ## [1.0.0-pre.8] - 2021-11-03
 ### Added
