@@ -45,6 +45,14 @@ namespace Unity.Services.Authentication.Editor
                 ClientIdDisplayName = "Client ID",
                 NeedClientSecret = false
             },
+            [IdProviderKeys.GooglePlayGames] = new IdProviderOptions
+            {
+                IdProviderType = IdProviderKeys.GooglePlayGames,
+                DisplayName = IdProviderNames.GooglePlayGames,
+                ClientIdDisplayName = "Client ID",
+                ClientSecretDisplayName = "Client Secret",
+                NeedClientSecret = true
+            },
             [IdProviderKeys.Steam] = new IdProviderOptions
             {
                 IdProviderType = IdProviderKeys.Steam,

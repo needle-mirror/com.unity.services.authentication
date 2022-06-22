@@ -51,17 +51,20 @@ namespace Unity.Services.Authentication
         public abstract System.Threading.Tasks.Task LinkWithAppleAsync(string idToken, Unity.Services.Authentication.LinkOptions options = default(Unity.Services.Authentication.LinkOptions));
         public abstract System.Threading.Tasks.Task LinkWithFacebookAsync(string accessToken, Unity.Services.Authentication.LinkOptions options = default(Unity.Services.Authentication.LinkOptions));
         public abstract System.Threading.Tasks.Task LinkWithGoogleAsync(string idToken, Unity.Services.Authentication.LinkOptions options = default(Unity.Services.Authentication.LinkOptions));
+        public abstract System.Threading.Tasks.Task LinkWithGooglePlayGamesAsync(string authCode, Unity.Services.Authentication.LinkOptions options = default(Unity.Services.Authentication.LinkOptions));
         public abstract System.Threading.Tasks.Task LinkWithSteamAsync(string sessionTicket, Unity.Services.Authentication.LinkOptions options = default(Unity.Services.Authentication.LinkOptions));
         public abstract System.Threading.Tasks.Task SignInAnonymouslyAsync(Unity.Services.Authentication.SignInOptions options = default(Unity.Services.Authentication.SignInOptions));
         public abstract System.Threading.Tasks.Task SignInWithAppleAsync(string idToken, Unity.Services.Authentication.SignInOptions options = default(Unity.Services.Authentication.SignInOptions));
         public abstract System.Threading.Tasks.Task SignInWithFacebookAsync(string accessToken, Unity.Services.Authentication.SignInOptions options = default(Unity.Services.Authentication.SignInOptions));
         public abstract System.Threading.Tasks.Task SignInWithGoogleAsync(string idToken, Unity.Services.Authentication.SignInOptions options = default(Unity.Services.Authentication.SignInOptions));
+        public abstract System.Threading.Tasks.Task SignInWithGooglePlayGamesAsync(string authCode, Unity.Services.Authentication.SignInOptions options = default(Unity.Services.Authentication.SignInOptions));
         public abstract System.Threading.Tasks.Task SignInWithSteamAsync(string sessionTicket, Unity.Services.Authentication.SignInOptions options = default(Unity.Services.Authentication.SignInOptions));
         public abstract void SignOut(bool clearCredentials = False);
         public abstract void SwitchProfile(string profile);
         public abstract System.Threading.Tasks.Task UnlinkAppleAsync();
         public abstract System.Threading.Tasks.Task UnlinkFacebookAsync();
         public abstract System.Threading.Tasks.Task UnlinkGoogleAsync();
+        public abstract System.Threading.Tasks.Task UnlinkGooglePlayGamesAsync();
         public abstract System.Threading.Tasks.Task UnlinkSteamAsync();
     }
 

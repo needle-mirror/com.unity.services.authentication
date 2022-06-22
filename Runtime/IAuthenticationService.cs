@@ -243,6 +243,76 @@ namespace Unity.Services.Authentication
         Task UnlinkGoogleAsync();
 
         /// <summary>
+        /// Sign in using Google Play Games' authorization code.
+        /// If no options are used, this will create an account if none exist.
+        /// </summary>
+        /// <param name="authCode">Google Play Games' authorization code</param>
+        /// <param name="options">Options for the operation</param>
+        /// <returns>Task for the operation</returns>
+        /// <exception cref="AuthenticationException">
+        /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
+        /// <list type="bullet">
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.InvalidParameters"/> if parameter is empty or invalid. </description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.ClientInvalidUserState"/> if the player has already signed in or a sign-in operation is in progress.</description></item>
+        /// </list>
+        /// </exception>
+        /// <exception cref="RequestFailedException">
+        /// The task fails with the exception when the task cannot complete successfully.
+        /// <list type="bullet">
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.InvalidToken"/> if the server side returned an invalid access token. </description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.TransportError"/> if the API call failed due to network error. Check Unity logs for more debugging information.</description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.Unknown"/> if the API call failed due to unexpected response from the server. Check Unity logs for more debugging information.</description></item>
+        /// </list>
+        /// </exception>
+        Task SignInWithGooglePlayGamesAsync(string authCode, SignInOptions options = null);
+
+        /// <summary>
+        /// Link the current player with the Google play games account using Google play games' authorization code.
+        /// </summary>
+        /// <param name="authCode">Google play games' authorization code</param>
+        /// <param name="options">Options for the link operations.</param>
+        /// <returns>Task for the operation</returns>
+        /// <exception cref="AuthenticationException">
+        /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
+        /// <list type="bullet">
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.AccountAlreadyLinked"/> if the player tries to link a social account while the social account is already linked with another player.</description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.InvalidParameters"/> if parameter is empty or invalid. </description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.ClientInvalidUserState"/> if the player is not authorized to perform this operation.</description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.AccountLinkLimitExceeded"/> if the player has already reached the limit of links for this provider type.</description></item>
+        /// </list>
+        /// </exception>
+        /// <exception cref="RequestFailedException">
+        /// The task fails with the exception when the task cannot complete successfully.
+        /// <list type="bullet">
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.InvalidToken"/> if access token is invalid/expired. The access token is refreshed before it expires. This may happen if the refresh fails, or the app is unpaused with an expired access token while the refresh hasn't finished.</description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.TransportError"/> if the API call failed due to network error. Check Unity logs for more debugging information.</description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.Unknown"/> if the API call failed due to unexpected response from the server. Check Unity logs for more debugging information.</description></item>
+        /// </list>
+        /// </exception>
+        Task LinkWithGooglePlayGamesAsync(string authCode, LinkOptions options = null);
+
+        /// <summary>
+        /// Unlinks the Google play games account from the current player account.
+        /// </summary>
+        /// <returns>Task for the operation</returns>
+        /// <exception cref="AuthenticationException">
+        /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
+        /// <list type="bullet">
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.ClientInvalidUserState"/> if the player has not authorized to perform this operation.</description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.ClientUnlinkExternalIdNotFound"/> if the player's PlayerInfo does not have a matching external id.</description></item>
+        /// </list>
+        /// </exception>
+        /// <exception cref="RequestFailedException">
+        /// The task fails with the exception when the task cannot complete successfully.
+        /// <list type="bullet">
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.InvalidToken"/> if access token is invalid/expired. The access token is refreshed before it expires. This may happen if the refresh fails, or the app is unpaused with an expired access token while the refresh hasn't finished.</description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.TransportError"/> if the API call failed due to network error. Check Unity logs for more debugging information.</description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.Unknown"/> if the API call failed due to unexpected response from the server. Check Unity logs for more debugging information.</description></item>
+        /// </list>
+        /// </exception>
+        Task UnlinkGooglePlayGamesAsync();
+
+        /// <summary>
         /// Sign in using Facebook's access token.
         /// If no options are used, this will create an account if none exist.
         /// </summary>

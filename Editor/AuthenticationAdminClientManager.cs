@@ -1,3 +1,4 @@
+using System;
 using Unity.Services.Core.Editor.OrganizationHandler;
 using UnityEditor;
 
@@ -5,11 +6,8 @@ namespace Unity.Services.Authentication.Editor
 {
     static class AuthenticationAdminClientManager
     {
-#if UNITY_SERVICES_STAGING || AUTHENTICATION_TESTING_STAGING_UAS
-        const string k_ServicesHost = "https://staging.services.unity.com";
-#else
-        const string k_ServicesHost = "https://services.unity.com";
-#endif
+        const string k_CloudEnvironmentArg = "-cloudEnvironment";
+        const string k_StagingEnvironment = "staging";
 
         internal static IAuthenticationAdminClient Create()
         {
@@ -18,7 +16,8 @@ namespace Unity.Services.Authentication.Editor
                 return null;
             }
 
-            var networkClient = new AuthenticationAdminNetworkClient(k_ServicesHost, GetOrganizationId(), GetProjectId(), new NetworkHandler());
+            var host = GetHost(GetCloudEnvironment(Environment.GetCommandLineArgs()));
+            var networkClient = new AuthenticationAdminNetworkClient(host, GetOrganizationId(), GetProjectId(), new NetworkHandler());
             return new AuthenticationAdminClient(networkClient, new GenesisTokenProvider());
         }
 
@@ -32,9 +31,39 @@ namespace Unity.Services.Authentication.Editor
             return OrganizationProvider.Organization.Key;
         }
 
-        static string GetProjectId()
+        internal static string GetProjectId()
         {
             return CloudProjectSettings.projectId;
+        }
+
+        static string GetHost(string cloudEnvironment)
+        {
+            switch (cloudEnvironment)
+            {
+                case k_StagingEnvironment:
+                    return "https://staging.services.unity.com";
+                default:
+                    return "https://services.unity.com";
+            }
+        }
+
+        internal static string GetCloudEnvironment(string[] commandLineArgs)
+        {
+            try
+            {
+                var cloudEnvironmentIndex = Array.IndexOf(commandLineArgs, k_CloudEnvironmentArg);
+
+                if (cloudEnvironmentIndex >= 0 && cloudEnvironmentIndex <= commandLineArgs.Length - 2)
+                {
+                    return commandLineArgs[cloudEnvironmentIndex + 1];
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.LogVerbose(e);
+            }
+
+            return null;
         }
     }
 }

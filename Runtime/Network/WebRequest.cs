@@ -103,7 +103,11 @@ namespace Unity.Services.Authentication
                 case WebRequestVerb.Post:
                     if (string.IsNullOrEmpty(m_Payload))
                     {
+#if UNITY_2022_2_OR_NEWER
+                        unityWebRequest = UnityWebRequest.PostWwwForm(m_Url, string.Empty);
+#else
                         unityWebRequest = UnityWebRequest.Post(m_Url, string.Empty);
+#endif
                     }
                     else
                     {

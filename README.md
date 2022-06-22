@@ -46,6 +46,11 @@ Clearing all `PlayerPrefs` keys will require the player to sign in again from sc
     * Game developer is responsible for installing the necessary SDK and get the token from Google.
     * By default, this method will create an account if no account is currently linked.
     * If you attempt to sign in while already signed in or currently signing in, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
+* `AuthenticationService.Instance.SignInWithGooglePlayGamesAsync(string authCode, SignInOptions options = null)`
+  * This triggers the sign-in of the player with an authorization code from Google Play Games.
+  * Game developer is responsible for installing the necessary SDK and get the authorization code from Google Play Games.
+  * By default, this method will create an account if no account is currently linked.
+  * If you attempt to sign in while already signed in or currently signing in, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
 * `AuthenticationService.Instance.SignInWithFacebookAsync(string accessToken, SignInOptions options = null)`
     * This triggers the sign-in of the player with an access token from Facebook.
     * Game developer is responsible for installing the necessary SDK and get the token from Facebook.
@@ -66,6 +71,13 @@ Clearing all `PlayerPrefs` keys will require the player to sign in again from sc
     * If you attempt to link with an account that is already linked with another player, this method will throw an `AuthenticationException` with  `AuthenticationErrorCodes.AccountAlreadyLinked`.
     * If you attempt to link when there is already a google account linked to this account, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountLinkLimitExceeded`.
     * If you attempt to link without being authorized, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
+* `AuthenticationService.Instance.LinkWithGooglePlayGamesAsync(string authCode, LinkOptions options = null)`
+  * This function links the current player with an authorization code from Google Play Games. The player can later sign-in with the linked Google Play Games account.
+  * You can provide options to force the operation in case the Google Play Games account is already linked to another player.
+  * Game developer is responsible for installing the necessary SDK and get the authorization code from Google Play Games.
+  * If you attempt to link with an account that is already linked with another player, this method will throw an `AuthenticationException` with  `AuthenticationErrorCodes.AccountAlreadyLinked`.
+  * If you attempt to link when there is already a Google Play Games account linked to this account, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountLinkLimitExceeded`.
+  * If you attempt to link without being authorized, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
 * `AuthenticationService.Instance.LinkWithFacebookAsync(string accessToken, LinkOptions options = null)`
     * This function links the current player with an access token from Facebook. The player can later sign-in with the linked Facebook account.
     * You can provide options to force the operation in case the Facebook account is already linked to another player.
@@ -91,6 +103,11 @@ Clearing all `PlayerPrefs` keys will require the player to sign in again from sc
     * If you attempt to link when there is already a Google account linked to this account, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountLinkLimitExceeded`.
     * If you attempt to unlink without being authorized, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
     * If you attempt to unlink without having a Google external id in the player's PlayerInfo, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientUnlinkExternalIdNotFound`.
+* `AuthenticationService.Instance.UnlinkWithGooglePlayGamesAsync()`
+  * This function attempts to unlink the Google Play Games account using the external id from the player's PlayerInfo.
+  * If you attempt to link when there is already a Google Play Games account linked to this account, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountLinkLimitExceeded`.
+  * If you attempt to unlink without being authorized, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
+  * If you attempt to unlink without having a Google Play Games external id in the player's PlayerInfo, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientUnlinkExternalIdNotFound`.
 * `AuthenticationService.Instance.UnlinkWithFacebookAsync()`
     * This function attempts to unlink the Facebook account using the external id from the player's PlayerInfo.
     * If you attempt to link when there is already a Facebook account linked to this account, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountLinkLimitExceeded`.

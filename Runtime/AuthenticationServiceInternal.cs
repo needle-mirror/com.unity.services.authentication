@@ -58,7 +58,6 @@ namespace Unity.Services.Authentication
 
         internal event Action<AuthenticationState, AuthenticationState> StateChanged;
 
-
         internal AuthenticationServiceInternal(IAuthenticationSettings settings,
                                                IAuthenticationNetworkClient networkClient,
                                                IProfile profile,
@@ -106,7 +105,7 @@ namespace Unity.Services.Authentication
                     if (string.IsNullOrEmpty(sessionToken))
                     {
                         var exception = BuildClientSessionTokenNotExistsException();
-                        SendSignInFailedEvent(exception);
+                        SendSignInFailedEvent(exception, true);
                         return Task.FromException(exception);
                     }
 
@@ -123,14 +122,14 @@ namespace Unity.Services.Authentication
                 else
                 {
                     var exception = BuildClientSessionTokenNotExistsException();
-                    SendSignInFailedEvent(exception);
+                    SendSignInFailedEvent(exception, true);
                     return Task.FromException(exception);
                 }
             }
             else
             {
                 var exception = BuildClientInvalidStateException();
-                SendSignInFailedEvent(exception);
+                SendSignInFailedEvent(exception, false);
                 return Task.FromException(exception);
             }
         }
@@ -183,6 +182,31 @@ namespace Unity.Services.Authentication
         public Task UnlinkGoogleAsync()
         {
             return UnlinkExternalTokenAsync(IdProviderKeys.Google);
+        }
+
+        public Task SignInWithGooglePlayGamesAsync(string authCode, SignInOptions options = null)
+        {
+            return SignInWithExternalTokenAsync(IdProviderKeys.GooglePlayGames, new SignInWithExternalTokenRequest
+            {
+                IdProvider = IdProviderKeys.GooglePlayGames,
+                Token = authCode,
+                SignInOnly = !options?.CreateAccount ?? false
+            });
+        }
+
+        public Task LinkWithGooglePlayGamesAsync(string authCode, LinkOptions options = null)
+        {
+            return LinkWithExternalTokenAsync(IdProviderKeys.GooglePlayGames, new LinkWithExternalTokenRequest
+            {
+                IdProvider = IdProviderKeys.GooglePlayGames,
+                Token = authCode,
+                ForceLink = options?.ForceLink ?? false
+            });
+        }
+
+        public Task UnlinkGooglePlayGamesAsync()
+        {
+            return UnlinkExternalTokenAsync(IdProviderKeys.GooglePlayGames);
         }
 
         public Task SignInWithFacebookAsync(string accessToken, SignInOptions options = null)
@@ -338,7 +362,7 @@ namespace Unity.Services.Authentication
             else
             {
                 var exception = BuildClientInvalidStateException();
-                SendSignInFailedEvent(exception);
+                SendSignInFailedEvent(exception, false);
                 return Task.FromException(exception);
             }
         }
@@ -429,13 +453,13 @@ namespace Unity.Services.Authentication
             }
             catch (RequestFailedException e)
             {
-                SendSignInFailedEvent(e);
+                SendSignInFailedEvent(e, true);
                 throw;
             }
             catch (WebRequestException e)
             {
                 var authException = BuildServerException(e);
-                SendSignInFailedEvent(authException);
+                SendSignInFailedEvent(authException, true);
                 throw authException;
             }
         }
@@ -624,10 +648,13 @@ namespace Unity.Services.Authentication
             }
         }
 
-        void SendSignInFailedEvent(RequestFailedException exception)
+        void SendSignInFailedEvent(RequestFailedException exception, bool forceSignOut)
         {
             SignInFailed?.Invoke(exception);
-            SignOut();
+            if (forceSignOut)
+            {
+                SignOut();
+            }
         }
 
         /// <summary>

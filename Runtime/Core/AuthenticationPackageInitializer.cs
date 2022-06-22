@@ -11,11 +11,8 @@ namespace Unity.Services.Authentication
 {
     class AuthenticationPackageInitializer : IInitializablePackage
     {
-#if UNITY_SERVICES_STAGING || AUTHENTICATION_TESTING_STAGING_UAS
-        const string k_UasHost = "https://player-auth-stg.services.api.unity.com";
-#else
-        const string k_UasHost = "https://player-auth.services.api.unity.com";
-#endif
+        const string k_CloudEnvironmentKey = "com.unity.services.core.cloud-environment";
+        const string k_StagingEnvironment = "staging";
 
         public Task Initialize(CoreRegistry registry)
         {
@@ -36,7 +33,10 @@ namespace Unity.Services.Authentication
             var sessionToken = new SessionTokenComponent(cache);
             var wellKnownKeys = new WellKnownKeysComponent();
             var networkHandler = new NetworkHandler();
-            var networkClient = new AuthenticationNetworkClient(k_UasHost,
+
+            var host = GetHost(projectConfiguration);
+
+            var networkClient = new AuthenticationNetworkClient(host,
                 projectId,
                 environment,
                 networkHandler,
@@ -76,6 +76,19 @@ namespace Unity.Services.Authentication
                 .ProvidesComponent<IPlayerId>()
                 .ProvidesComponent<IAccessToken>()
                 .ProvidesComponent<IEnvironmentId>();
+        }
+
+        string GetHost(IProjectConfiguration projectConfiguration)
+        {
+            var cloudEnvironment = projectConfiguration?.GetString(k_CloudEnvironmentKey);
+
+            switch (cloudEnvironment)
+            {
+                case k_StagingEnvironment:
+                    return "https://player-auth-stg.services.api.unity.com";
+                default:
+                    return "https://player-auth.services.api.unity.com";
+            }
         }
     }
 }

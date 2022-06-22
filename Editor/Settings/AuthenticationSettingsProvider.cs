@@ -2,12 +2,17 @@ using System.Collections.Generic;
 using Unity.Services.Core.Editor;
 using UnityEditor;
 using UnityEngine.UIElements;
+using UnityEngine;
 
 namespace Unity.Services.Authentication.Editor
 {
     class AuthenticationSettingsProvider : EditorGameServiceSettingsProvider
     {
+        static readonly AuthenticationEditorService k_AuthenticationEditorService = new AuthenticationEditorService();
+
         const string k_Title = "Authentication";
+        const string k_GoToDashboardContainer = "dashboard-button-container";
+        const string k_GoToDashboardBtn = "dashboard-link-button";
 
         static AuthenticationSettingsElement Element { get; set; }
         static string CloudProjectId { get; set; }
@@ -51,6 +56,27 @@ namespace Unity.Services.Authentication.Editor
         protected override VisualElement GenerateUnsupportedDetailUI()
         {
             return GenerateServiceDetailUI();
+        }
+
+        public override void OnActivate(string searchContext, VisualElement rootElement)
+        {
+            base.OnActivate(searchContext, rootElement);
+            SetDashboardButton(rootElement);
+        }
+
+        static void SetDashboardButton(VisualElement rootElement)
+        {
+            rootElement.Q(k_GoToDashboardContainer).style.display = DisplayStyle.Flex;
+            var goToDashboard = rootElement.Q(k_GoToDashboardBtn);
+
+            if (goToDashboard != null)
+            {
+                var clickable = new Clickable(() =>
+                {
+                    Application.OpenURL(k_AuthenticationEditorService.GetFormattedDashboardUrl());
+                });
+                goToDashboard.AddManipulator(clickable);
+            }
         }
 
         /// <summary>

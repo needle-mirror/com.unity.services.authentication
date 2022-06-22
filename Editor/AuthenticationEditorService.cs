@@ -1,4 +1,6 @@
 using Unity.Services.Core.Editor;
+using Unity.Services.Core.Editor.OrganizationHandler;
+using UnityEditor;
 
 namespace Unity.Services.Authentication.Editor
 {
@@ -25,7 +27,7 @@ namespace Unity.Services.Authentication.Editor
         /// <summary>
         /// Flag used to determine whether this service has a dashboard
         /// </summary>
-        public bool HasDashboard => false;
+        public bool HasDashboard => true;
 
         /// <summary>
         /// The enabler which allows the service to toggle on/off
@@ -40,7 +42,11 @@ namespace Unity.Services.Authentication.Editor
         /// <returns>The formatted URL</returns>
         public string GetFormattedDashboardUrl()
         {
-            return null;
+            if (AuthenticationAdminClientManager.IsConfigured())
+            {
+                return $"https://dashboard.unity3d.com/organizations/{AuthenticationAdminClientManager.GetOrganizationId()}/projects/{AuthenticationAdminClientManager.GetProjectId()}/player-authentication/identity-providers";
+            }
+            return $"https://dashboard.unity3d.com/player-authentication";
         }
     }
 }
