@@ -23,13 +23,13 @@ Clearing all `PlayerPrefs` keys will require the player to sign in again from sc
 ### Sign-In API
 
 * `AuthenticationService.Instance.SignedIn`
-	* This is an event to which you can subscribe to be notified when the sign-in process has completed successfully.
+  * This is an event to which you can subscribe to be notified when the sign-in process has completed successfully.
 * `AuthenticationService.Instance.SignInFailed`
-	* This is an event to which you can subscribe to be notified when the sign-in process has failed for some reason.
+  * This is an event to which you can subscribe to be notified when the sign-in process has failed for some reason.
 * `AuthenticationService.Instance.SignedOut`
-	* This is an event to which you can subscribe to be notified when the player has been signed out.
+  * This is an event to which you can subscribe to be notified when the player has been signed out.
 * `AuthenticationService.Instance.Expired`
-	* This is an event to which you can subscribe to be notified when the player session expires. The session is normally refreshed automatically, but if a session fails to refresh until the expiration time, this event will trigger.
+  * This is an event to which you can subscribe to be notified when the player session expires. The session is normally refreshed automatically, but if a session fails to refresh until the expiration time, this event will trigger.
 * `AuthenticationService.Instance.SignInAnonymouslyAsync(SignInOptions options = null)`
     * This triggers the anonymous sign-in processes. This will generate or use the stored session token to access the account.
     * You can provide options to control if an account should be created.
@@ -57,6 +57,11 @@ Clearing all `PlayerPrefs` keys will require the player to sign in again from sc
     * You can provide options to control if an account should be created.
     * By default, this method will create an account if no account is currently linked.
     * If this method is called while already signed in or currently signing in, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
+* `AuthenticationService.Instance.SignInWithOpenIdConnectAsync(string idProviderName, string idToken, SignInOptions = null)`
+  * This triggers the sign-in of the player with a custom OpenID Connect id provider account
+  * Game developer is responsible for installing the necessary SDK and get the idToken.
+  * By default, this method will create an account if no account is currently linked.
+  * If this method is called while already signed in or currently signing in, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
 * `AuthenticationService.Instance.LinkWithAppleAsync(string idToken, LinkOptions options = null)`
     * This function links the current player with an ID token from Apple. The player can later sign-in with the linked Apple account.
     * You can provide options to force the operation in case the Apple account is already linked to another player.
@@ -92,6 +97,13 @@ Clearing all `PlayerPrefs` keys will require the player to sign in again from sc
     * If you attempt to link with an account that is already linked with another player, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountAlreadyLinked`.
     * If you attempt to link when there is already a steam account linked to this account, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountLinkLimitExceeded`.
     * If you attempt to link without being authorized, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
+* `AuthenticationService.Instance.LinkWithOpenIdConnectAsync(string idProviderName, string idToken, LinkOptions options = null)`
+  * This function links the current player with a custom OpenID Connect id provider account. The player can later sign-in with the linked account.
+  * You can provide options to force the operation in case the account is already linked to another player.
+  * Game developer is responsible for installing the necessary SDK and get the token.
+  * If you attempt to link with an account that is already linked with another player, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountAlreadyLinked`.
+  * If you attempt to link when there is already an OpenID Connect account linked to this account, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountLinkLimitExceeded`.
+  * If you attempt to link without being authorized, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
 * `AuthenticationService.Instance.UnlinkWithAppleAsync()`
     * This function attempts to unlink the Apple account using the external id from the player's PlayerInfo.
     * Use `AuthenticationService.Instance.GetPlayerInfoAsync()` to load all of your player's external ids.
@@ -118,6 +130,11 @@ Clearing all `PlayerPrefs` keys will require the player to sign in again from sc
     * If you attempt to link when there is already a Steam account linked to this account, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountLinkLimitExceeded`.
     * If you attempt to unlink without being authorized, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
     * If you attempt to unlink without having a Steam external id in the player's PlayerInfo, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientUnlinkExternalIdNotFound`.
+* `AuthenticationService.Instance.UnlinkOpenIdConnectAsync(string idProviderName)`
+  * This function attempts to unlink the custom OpenID Connect id provider account using the external id from the player's PlayerInfo.
+  * If you attempt to link when there is already an OpenID Connect account linked to this account, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountLinkLimitExceeded`.
+  * If you attempt to unlink without being authorized, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
+  * If you attempt to unlink without having an external id in the player's PlayerInfo, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientUnlinkExternalIdNotFound`.
 * `AuthenticationService.Instance.DeleteAccountAsync()`
     * This function attempts to permanently delete the current player account.
     * If you attempt to delete without being authorized, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
@@ -126,7 +143,7 @@ Clearing all `PlayerPrefs` keys will require the player to sign in again from sc
   * If you are not authorized, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
 * `AuthenticationService.Instance.SignOut(bool clearCredentials = false)`
     * This triggers the sign-out process, which will reset the session’s access token. By default, the session token is preserved to allow the player to sign in to the same account.
-	* You can optionally clear the credentials (player id, session token) by setting the clearCredentials flag to true.
+  * You can optionally clear the credentials (player id, session token) by setting the clearCredentials flag to true.
 * `AuthenticationService.Instance.ClearSessionToken()`
     * Clears the session token from the local cache if it exists.
     * If you are not signed out, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
@@ -138,28 +155,28 @@ Clearing all `PlayerPrefs` keys will require the player to sign in again from sc
     * If you are not signed out, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
     * If the profile is invalid, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidProfile`.
 * `AuthenticationService.Instance.IsSignedIn`
-	* Returns true if the player is signed in.
-	* The player is still considered signed in even if the access token expires, until `AuthenticationService.Instance.SignOut()` is explicitly called.
+  * Returns true if the player is signed in.
+  * The player is still considered signed in even if the access token expires, until `AuthenticationService.Instance.SignOut()` is explicitly called.
 * `AuthenticationService.Instance.IsAuthorized`
-	* Returns true if the player is signed in and the access token is valid.
+  * Returns true if the player is signed in and the access token is valid.
 * `AuthenticationService.Instance.IsExpired`
-	* Returns true if the access token has expired.
+  * Returns true if the access token has expired.
 * `AuthenticationService.Instance.PlayerId`
-	* This property exposes the ID of the player when they are signed in, or null if they are not.
+  * This property exposes the ID of the player when they are signed in, or null if they are not.
 * `AuthenticationService.Instance.Profile`
-	* This property exposes the current profile.
+  * This property exposes the current profile.
     * A profile isolates the Session Token in the `PlayerPrefs`.
     * This allows managing multiple accounts locally.
     * Profiles are not persisted and are optional.
 * `AuthenticationService.Instance.AccessToken`
-	* Returns the raw string of the current access token, or null if no valid token is available (e.g. the player is signed in but the token has expired and could not be refreshed).
-	* This value is updated automatically by the refresh process, so consumers should NOT cache this value.
+  * Returns the raw string of the current access token, or null if no valid token is available (e.g. the player is signed in but the token has expired and could not be refreshed).
+  * This value is updated automatically by the refresh process, so consumers should NOT cache this value.
 * `AuthenticationService.Instance.SessionTokenExists`
     * Returns True if there is a cached session token.
     * The session token is updated after each login and preserved locally on the device.
     * It can be used to authenticate the player to the same account in the future.
-	* You can use `AuthenticationService.Instance.ClearSessionToken()` to clear the token from the local cache.
+  * You can use `AuthenticationService.Instance.ClearSessionToken()` to clear the token from the local cache.
 * `AuthenticationService.Instance.PlayerInfo`
-	* Returns the current player's player info, such as account creation time and linked external ids.
+  * Returns the current player's player info, such as account creation time and linked external ids.
     * This is only partially loaded during sign in operations.
     * Use `AuthenticationService.Instance.GetPlayerInfoAsync()` to load the all the player info.

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Unity.Services.Authentication
 {
@@ -9,6 +10,9 @@ namespace Unity.Services.Authentication
     /// </summary>
     public sealed class PlayerInfo
     {
+        const string k_OpenIdConnectPrefix = "oidc-";
+        const string k_IdProviderNameRegex = @"^oidc-[a-z0-9-_\.]{1,15}$";
+
         /// <summary>
         /// Player Id
         /// </summary>
@@ -107,6 +111,25 @@ namespace Unity.Services.Authentication
         }
 
         /// <summary>
+        /// Returns the player's id if one has been linked with a given OpenID Connect id provider.
+        /// </summary>
+        /// <param name="idProviderName">the name of the id provider created. Note that it must start with <i><b>&quot;oidc-&quot;</b></i> and have between 1 and 20 characters</param>
+        /// <returns>The player's id</returns>
+        public string GetOpenIdConnectId(string idProviderName)
+        {
+            return ValidateOpenIdConnectIdProviderName(idProviderName) ? GetIdentityId(idProviderName) : null;
+        }
+
+        /// <summary>
+        /// Get all OpenID Connect id providers linked to the player
+        /// </summary>
+        /// <returns>A list of all OpenID Connect id providers</returns>
+        public List<Identity> GetOpenIdConnectIdProviders()
+        {
+            return Identities?.FindAll(id => id.TypeId.StartsWith(k_OpenIdConnectPrefix));
+        }
+
+        /// <summary>
         /// Returns the player's identity user id for a given identity type id
         /// </summary>
         internal string GetIdentityId(string typeId)
@@ -131,6 +154,11 @@ namespace Unity.Services.Authentication
         internal void RemoveIdentity(string typeId)
         {
             Identities?.RemoveAll(x => x.TypeId == typeId);
+        }
+
+        bool ValidateOpenIdConnectIdProviderName(string idProviderName)
+        {
+            return !string.IsNullOrEmpty(idProviderName) && Regex.Match(idProviderName, k_IdProviderNameRegex).Success;
         }
     }
 }

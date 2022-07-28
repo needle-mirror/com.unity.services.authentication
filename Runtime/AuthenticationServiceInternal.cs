@@ -12,6 +12,7 @@ namespace Unity.Services.Authentication
     class AuthenticationServiceInternal : IAuthenticationService
     {
         const string k_ProfileRegex = @"^[a-zA-Z0-9_-]{1,30}$";
+        const string k_IdProviderNameRegex = @"^oidc-[a-z0-9-_\.]{1,15}$";
         public event Action<RequestFailedException> SignInFailed;
         public event Action SignedIn;
         public event Action SignedOut;
@@ -257,6 +258,43 @@ namespace Unity.Services.Authentication
         public Task UnlinkSteamAsync()
         {
             return UnlinkExternalTokenAsync(IdProviderKeys.Steam);
+        }
+
+        public Task SignInWithOpenIdConnectAsync(string idProviderName, string idToken, SignInOptions options = null)
+        {
+            if (!ValidateOpenIdConnectIdProviderName(idProviderName))
+            {
+                throw BuildInvalidIdProviderNameException();
+            }
+            return SignInWithExternalTokenAsync(idProviderName, new SignInWithExternalTokenRequest
+            {
+                IdProvider = idProviderName,
+                Token = idToken,
+                SignInOnly = !options?.CreateAccount ?? false
+            });
+        }
+
+        public Task LinkWithOpenIdConnectAsync(string idProviderName, string idToken, LinkOptions options = null)
+        {
+            if (!ValidateOpenIdConnectIdProviderName(idProviderName))
+            {
+                throw BuildInvalidIdProviderNameException();
+            }
+            return LinkWithExternalTokenAsync(idProviderName, new LinkWithExternalTokenRequest()
+            {
+                IdProvider = idProviderName,
+                Token = idToken,
+                ForceLink = options?.ForceLink ?? false
+            });
+        }
+
+        public Task UnlinkOpenIdConnectAsync(string idProviderName)
+        {
+            if (!ValidateOpenIdConnectIdProviderName(idProviderName))
+            {
+                throw BuildInvalidIdProviderNameException();
+            }
+            return UnlinkExternalTokenAsync(idProviderName);
         }
 
         public async Task DeleteAccountAsync()
@@ -760,6 +798,16 @@ namespace Unity.Services.Authentication
             }
         }
 
+        /// <summary>
+        /// Returns an exception with <c>InvalidParameters</c> error
+        /// when the open id connect id provider name is not valid
+        /// </summary>
+        /// <returns>The exception that represents the error.</returns>
+        RequestFailedException BuildInvalidIdProviderNameException()
+        {
+            return AuthenticationException.Create(AuthenticationErrorCodes.InvalidParameters, "Invalid IdProviderName. The Id Provider name should start with 'oidc-' and have between 1 and 20 characters");
+        }
+
         int MapErrorCodes(string serverErrorTitle)
         {
             switch (serverErrorTitle)
@@ -785,6 +833,11 @@ namespace Unity.Services.Authentication
             }
 
             return CommonErrorCodes.Unknown;
+        }
+
+        bool ValidateOpenIdConnectIdProviderName(string idProviderName)
+        {
+            return !string.IsNullOrEmpty(idProviderName) && Regex.Match(idProviderName, k_IdProviderNameRegex).Success;
         }
     }
 }

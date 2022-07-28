@@ -117,9 +117,9 @@ namespace Unity.Services.Authentication.Samples
             if (playerInfo.CreatedAt == null)
                 return string.Empty;
 
-            var dateTime = DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt64(playerInfo.CreatedAt));
+            var localDateTime = playerInfo?.CreatedAt.Value.ToLocalTime();
 
-            var playerText = $"CreatedAt: {dateTime.LocalDateTime} \n ExternalIds: {m_ExternalIds} \n ";
+            var playerText = $"CreatedAt: {localDateTime.Value} \n ExternalIds: {m_ExternalIds} \n ";
 
             return playerText;
         }

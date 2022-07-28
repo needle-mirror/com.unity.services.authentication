@@ -28,6 +28,11 @@ namespace Unity.Services.Authentication.Editor
         public string ClientSecretDisplayName { get; set; } = "Client Secret";
 
         /// <summary>
+        /// The OpenID Connect Id provider configuration struct
+        /// </summary>
+        public OpenIDConfig OidcConfig { get; set; }
+
+        /// <summary>
         /// Whether the client secret is needed in the target ID provider.
         /// </summary>
         public bool NeedClientSecret { get; set; }

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Unity.Services.Authentication.Internal;
 using Unity.Services.Core.Configuration.Internal;
@@ -16,6 +17,9 @@ namespace Unity.Services.Authentication
 
         public Task Initialize(CoreRegistry registry)
         {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
             var settings = new AuthenticationSettings();
             var scheduler = registry.GetServiceComponent<IActionScheduler>();
             var environment = registry.GetServiceComponent<IEnvironments>();
@@ -60,6 +64,9 @@ namespace Unity.Services.Authentication
             registry.RegisterServiceComponent<IAccessToken>(authenticationService.AccessTokenComponent);
             registry.RegisterServiceComponent<IEnvironmentId>(authenticationService.EnvironmentIdComponent);
             registry.RegisterServiceComponent<IPlayerId>(authenticationService.PlayerIdComponent);
+
+            stopwatch.Stop();
+            metrics.SendPackageInitTimeMetric(stopwatch.Elapsed.TotalSeconds);
 
             return Task.CompletedTask;
         }

@@ -236,11 +236,10 @@ namespace Unity.Services.Authentication.Samples
             if (playerInfo?.CreatedAt == null)
                 return string.Empty;
 
-            var dateTime = DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt64(playerInfo.CreatedAt));
-
             var builder = new StringBuilder();
+            var localDateTime = playerInfo?.CreatedAt.Value.ToLocalTime();
 
-            builder.AppendLine($"CreatedAt: {dateTime.LocalDateTime}");
+            builder.AppendLine($"CreatedAt: {localDateTime.Value}");
             builder.AppendLine($"Id: {playerInfo.Id}");
             builder.AppendLine();
 

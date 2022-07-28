@@ -15,6 +15,7 @@ namespace Unity.Services.Authentication
         readonly IDictionary<string, string> m_Headers;
         readonly string m_Payload;
         readonly string m_PayloadContentType;
+        readonly JsonSerializerSettings m_JsonSerializerSettings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
 
         internal INetworkConfiguration Configuration { get; }
         internal int Retries { get; private set; }
@@ -53,7 +54,7 @@ namespace Unity.Services.Authentication
             {
                 try
                 {
-                    return JsonConvert.DeserializeObject<T>(textResult);
+                    return JsonConvert.DeserializeObject<T>(textResult, m_JsonSerializerSettings);
                 }
                 catch (Exception e)
                 {

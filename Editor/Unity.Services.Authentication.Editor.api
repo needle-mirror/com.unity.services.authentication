@@ -21,6 +21,7 @@ namespace Unity.Services.Authentication.Editor
         public string DisplayName { get; set; }
         public string IdProviderType { get; set; }
         public bool NeedClientSecret { get; set; }
+        public Unity.Services.Authentication.Editor.OpenIDConfig OidcConfig { get; set; }
         public IdProviderOptions() {}
         public delegate Unity.Services.Authentication.Editor.IdProviderCustomSettingsElement CreateCustomSettingsElementDelegate(string idDomain, System.Func<string> servicesGatewayTokenCallback, bool skipConfirmation);
     }
@@ -30,5 +31,10 @@ namespace Unity.Services.Authentication.Editor
         public static Unity.Services.Authentication.Editor.IdProviderOptions GetOptions(string idProviderType);
         public static void Register(Unity.Services.Authentication.Editor.IdProviderOptions idProviderOptions);
         public static void Unregister(string idProviderType);
+    }
+
+    public struct OpenIDConfig
+    {
+        [Newtonsoft.Json.JsonProperty(@"issuer")] public string Issuer { get; set; }
     }
 }

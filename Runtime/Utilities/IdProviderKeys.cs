@@ -7,5 +7,6 @@ namespace Unity.Services.Authentication
         internal const string GooglePlayGames = "google-play-games";
         internal const string Facebook = "facebook.com";
         internal const string Steam = "steampowered.com";
+        internal const string OpenIDConnect = "oidc-";
     }
 }

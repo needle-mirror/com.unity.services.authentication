@@ -1,4 +1,5 @@
 using System;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
@@ -9,6 +10,8 @@ namespace Unity.Services.Authentication.Editor
     class IdProviderElement : VisualElement
     {
         const string k_ElementUxml = "Packages/com.unity.services.authentication/Editor/UXML/IdProviderElement.uxml";
+        const string k_IdProviderNameRegex = @"^oidc-[a-z0-9-_\.]{1,15}$";
+        const string k_NewOpenIDProviderName = "New OpenId Connect";
 
         /// <summary>
         /// Event triggered when the <see cref="IdProviderElement"/> starts or finishes waiting for a task.
@@ -61,6 +64,16 @@ namespace Unity.Services.Authentication.Editor
         public TextField ClientSecretField { get; }
 
         /// <summary>
+        /// The text field to fill the oidc name.
+        /// </summary>
+        public TextField OidcName { get; }
+
+        /// <summary>
+        /// The text field to fill the oidc issuer url.
+        /// </summary>
+        public TextField OidcIssuer { get; }
+
+        /// <summary>
         /// The button to save the changes.
         /// </summary>
         public Button SaveButton { get; }
@@ -94,11 +107,13 @@ namespace Unity.Services.Authentication.Editor
             SavedValue?.Type != CurrentValue?.Type ||
             SavedValue?.Disabled != CurrentValue?.Disabled ||
             (SavedValue?.ClientId ?? "") != (CurrentValue?.ClientId ?? "") ||
-            (SavedValue?.ClientSecret ?? "") != (CurrentValue?.ClientSecret ?? "");
+            (SavedValue?.ClientSecret ?? "") != (CurrentValue?.ClientSecret ?? "") ||
+            (SavedValue?.OidcConfig.Issuer ?? "") != (CurrentValue?.OidcConfig.Issuer ?? "");
 
         public bool IsValid =>
             !string.IsNullOrEmpty(CurrentValue.ClientId) &&
-            (!m_Options.NeedClientSecret || !string.IsNullOrEmpty(CurrentValue.ClientSecret));
+            (!m_Options.NeedClientSecret || !string.IsNullOrEmpty(CurrentValue.ClientSecret)) &&
+            (m_Options.OidcConfig.Issuer == null || !string.IsNullOrEmpty(CurrentValue.OidcConfig.Issuer));
 
         readonly string m_IdDomainId;
         readonly IAuthenticationAdminClient m_AdminClient;
@@ -130,7 +145,8 @@ namespace Unity.Services.Authentication.Editor
                 var containerUI = containerAsset.CloneTree().contentContainer;
 
                 Container = containerUI.Q<Foldout>(className: "auth-id-provider-details");
-                Container.text = m_Options.DisplayName;
+                Container.text = m_Options.IdProviderType.Contains(IdProviderKeys.OpenIDConnect) ? savedValue.Type : m_Options.DisplayName;
+                Container.text = Container.text == IdProviderKeys.OpenIDConnect ? k_NewOpenIDProviderName : Container.text;
 
                 // If the ID Provider element is new, default to unfold.
                 Container.value = SavedValue.New;
@@ -151,6 +167,21 @@ namespace Unity.Services.Authentication.Editor
                 else
                 {
                     ClientSecretField.style.display = DisplayStyle.None;
+                }
+
+                OidcIssuer = containerUI.Q<TextField>("oidc-issuer-url");
+                OidcName = containerUI.Q<TextField>("oidc-name");
+
+                if (options.OidcConfig.Issuer != null)
+                {
+                    OidcIssuer.RegisterCallback<ChangeEvent<string>>(OnIssuerURLChanged);
+                    OidcName.isReadOnly = Container.text == savedValue.Type;
+                    OidcName.RegisterCallback<ChangeEvent<string>>(OnOidcNameChanged);
+                }
+                else
+                {
+                    OidcIssuer.style.display = DisplayStyle.None;
+                    OidcName.style.display = DisplayStyle.None;
                 }
 
                 SaveButton = containerUI.Q<Button>("id-provider-save");
@@ -231,8 +262,27 @@ namespace Unity.Services.Authentication.Editor
             RefreshButtons();
         }
 
+        void OnOidcNameChanged(ChangeEvent<string> evt)
+        {
+            CurrentValue.Type = evt.newValue;
+            RefreshButtons();
+        }
+
+        void OnIssuerURLChanged(ChangeEvent<string> evt)
+        {
+            var currentValueOidcConfig = CurrentValue.OidcConfig;
+            currentValueOidcConfig.Issuer = evt.newValue;
+            CurrentValue.OidcConfig = currentValueOidcConfig;
+            RefreshButtons();
+        }
+
         void OnSaveButtonClicked()
         {
+            if (!ValidateOpenIDConnectParams())
+            {
+                return;
+            }
+
             var option = DisplayDialogComplex("Save your changes", "Do you want to save the ID provider changes?", "Save", "Cancel", "");
             switch (option)
             {
@@ -248,6 +298,40 @@ namespace Unity.Services.Authentication.Editor
                     Logger.LogError("Unrecognized option.");
                     break;
             }
+        }
+
+        bool ValidateOpenIDConnectParams()
+        {
+            try
+            {
+                if (CurrentValue.OidcConfig.Issuer != null)
+                {
+                    if (!ValidateOpenIdConnectIdProviderName(CurrentValue.Type))
+                    {
+                        throw new ArgumentException("Invalid Oidc Name: The Id Provider name should start with 'oidc-' and have between 1 and 20 characters");
+                    }
+
+                    if (!Uri.IsWellFormedUriString(CurrentValue.OidcConfig.Issuer, UriKind.Absolute))
+                    {
+                        throw new ArgumentException("Invalid Issuer(URL): The URL should begin with 'http://' or 'https://' and include your domain name");
+                    }
+
+                    Container.text = CurrentValue.Type;
+                    OidcName.isReadOnly = true;
+                }
+            }
+            catch (Exception e)
+            {
+                InvokeError(e);
+                return false;
+            }
+
+            return true;
+        }
+
+        static bool ValidateOpenIdConnectIdProviderName(string idProviderName)
+        {
+            return !string.IsNullOrEmpty(idProviderName) && Regex.Match(idProviderName, k_IdProviderNameRegex).Success;
         }
 
         async void Save()
@@ -268,6 +352,7 @@ namespace Unity.Services.Authentication.Editor
                     var response = await m_AdminClient.UpdateIdProviderAsync(m_IdDomainId, CurrentValue.Type, request);
                     SavedValue = new IdProvider(response);
                 }
+
 
                 await UpdateStateAsync();
                 OnSaveCompleted();
@@ -325,7 +410,8 @@ namespace Unity.Services.Authentication.Editor
             EnabledToggle.value = !CurrentValue.Disabled;
             ClientIdField.value = CurrentValue.ClientId ?? "";
             ClientSecretField.value = CurrentValue.ClientSecret ?? "";
-
+            OidcName.value = CurrentValue.Type ?? "";
+            OidcIssuer.value = CurrentValue.OidcConfig.Issuer ?? "";
             RefreshButtons();
         }
 

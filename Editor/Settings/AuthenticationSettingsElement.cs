@@ -173,7 +173,10 @@ namespace Unity.Services.Authentication.Editor
                 }
 
                 var idProviderElement = (IdProviderElement)child;
-                unusedIdProviders.Remove(idProviderElement.DisplayName);
+                if (unusedIdProviders.Contains(idProviderElement.Container.text))
+                {
+                    unusedIdProviders.Remove(idProviderElement.DisplayName);
+                }
             }
 
             unusedIdProviders.Sort();

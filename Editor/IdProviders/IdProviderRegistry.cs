@@ -53,6 +53,15 @@ namespace Unity.Services.Authentication.Editor
                 ClientSecretDisplayName = "Client Secret",
                 NeedClientSecret = true
             },
+            [IdProviderKeys.OpenIDConnect] = new IdProviderOptions
+            {
+                IdProviderType = IdProviderKeys.OpenIDConnect,
+                DisplayName = IdProviderNames.OpenIDConnect,
+                ClientIdDisplayName = "Client ID",
+                ClientSecretDisplayName = "Client Secret",
+                NeedClientSecret = false,
+                OidcConfig = new OpenIDConfig() { Issuer = "" }
+            },
             [IdProviderKeys.Steam] = new IdProviderOptions
             {
                 IdProviderType = IdProviderKeys.Steam,
@@ -96,6 +105,11 @@ namespace Unity.Services.Authentication.Editor
         /// <returns>The ID provider option.</returns>
         public static IdProviderOptions GetOptions(string idProviderType)
         {
+            if (idProviderType.Contains(IdProviderKeys.OpenIDConnect))
+            {
+                idProviderType = IdProviderKeys.OpenIDConnect;
+            }
+
             if (!IdProviderOptions.ContainsKey(idProviderType))
             {
                 return null;

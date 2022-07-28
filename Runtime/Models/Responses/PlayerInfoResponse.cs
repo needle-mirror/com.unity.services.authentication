@@ -15,7 +15,7 @@ namespace Unity.Services.Authentication
         /// Constructor
         /// </summary>
         [Preserve]
-        public PlayerInfoResponse() { }
+        public PlayerInfoResponse() {}
 
         /// <summary>
         /// Player Id

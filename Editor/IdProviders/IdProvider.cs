@@ -1,3 +1,5 @@
+using System;
+
 namespace Unity.Services.Authentication.Editor
 {
     class IdProvider
@@ -5,6 +7,7 @@ namespace Unity.Services.Authentication.Editor
         public string Type { get; set; }
         public string ClientId { get; set; }
         public string ClientSecret { get; set; }
+        public OpenIDConfig  OidcConfig { get; set; }
         public bool Disabled { get; set; }
         public bool New { get; set; }
 
@@ -15,6 +18,7 @@ namespace Unity.Services.Authentication.Editor
             Type = response.Type;
             ClientId = response.ClientId;
             ClientSecret = response.ClientSecret;
+            OidcConfig = response.OidcConfig;
             Disabled = response.Disabled;
             New = false;
         }
@@ -26,6 +30,7 @@ namespace Unity.Services.Authentication.Editor
                 Type = Type,
                 ClientId = ClientId,
                 ClientSecret = ClientSecret,
+                OidcConfig = OidcConfig,
                 Disabled = Disabled,
                 New = New,
             };

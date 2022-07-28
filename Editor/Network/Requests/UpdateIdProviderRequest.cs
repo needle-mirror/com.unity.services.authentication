@@ -16,6 +16,9 @@ namespace Unity.Services.Authentication.Editor
         [JsonProperty("type")]
         public string Type;
 
+        [JsonProperty("oidcConfig")]
+        public OpenIDConfig OidcConfig;
+
         [Preserve]
         public UpdateIdProviderRequest() {}
 
@@ -25,6 +28,7 @@ namespace Unity.Services.Authentication.Editor
             ClientId = idProvider.ClientId;
             ClientSecret = idProvider.ClientSecret;
             Type = idProvider.Type;
+            OidcConfig = idProvider.OidcConfig;
         }
     }
 }
