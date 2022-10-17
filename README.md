@@ -57,6 +57,11 @@ Clearing all `PlayerPrefs` keys will require the player to sign in again from sc
     * You can provide options to control if an account should be created.
     * By default, this method will create an account if no account is currently linked.
     * If this method is called while already signed in or currently signing in, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
+*  `AuthenticationService.Instance.SignInWithOculusAsync(string nonce, string userId, SignInOptions options = null)`
+   * This triggers the sign-in of the player with an Oculus account
+   * Game developer is responsible for installing the necessary SDK to get the userId and nonce key.
+   * By default, this method will create an account if no account is currently linked.
+   * If this method is called while already signed in or currently signing in, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
 * `AuthenticationService.Instance.SignInWithOpenIdConnectAsync(string idProviderName, string idToken, SignInOptions = null)`
   * This triggers the sign-in of the player with a custom OpenID Connect id provider account
   * Game developer is responsible for installing the necessary SDK and get the idToken.
@@ -97,6 +102,13 @@ Clearing all `PlayerPrefs` keys will require the player to sign in again from sc
     * If you attempt to link with an account that is already linked with another player, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountAlreadyLinked`.
     * If you attempt to link when there is already a steam account linked to this account, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountLinkLimitExceeded`.
     * If you attempt to link without being authorized, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
+* `AuthenticationService.Instance.LinkWithOculusAsync(string nonce, string userId, LinkOptions options = null)`
+  * This function links the current player with an Oculus account. The player can later sign-in with the linked account.
+  * You can provide options to force the operation in case the account is already linked to another player.
+  * Game developer is responsible for installing the necessary SDK to get the userId and nonce key.
+  * If you attempt to link with an account that is already linked with another player, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountAlreadyLinked`.
+  * If you attempt to link when there is already an Oculus account linked to this account, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountLinkLimitExceeded`.
+  * If you attempt to link without being authorized, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
 * `AuthenticationService.Instance.LinkWithOpenIdConnectAsync(string idProviderName, string idToken, LinkOptions options = null)`
   * This function links the current player with a custom OpenID Connect id provider account. The player can later sign-in with the linked account.
   * You can provide options to force the operation in case the account is already linked to another player.
@@ -130,6 +142,11 @@ Clearing all `PlayerPrefs` keys will require the player to sign in again from sc
     * If you attempt to link when there is already a Steam account linked to this account, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountLinkLimitExceeded`.
     * If you attempt to unlink without being authorized, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
     * If you attempt to unlink without having a Steam external id in the player's PlayerInfo, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientUnlinkExternalIdNotFound`.
+* `AuthenticationService.Instance.UnlinkOculusAsync()`
+  * This function attempts to unlink the Oculus account using the external id from the player's PlayerInfo.
+  * If you attempt to link when there is already an Oculus account linked to this account, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountLinkLimitExceeded`.
+  * If you attempt to unlink without being authorized, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
+  * If you attempt to unlink without having an Oculus external id in the player's PlayerInfo, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientUnlinkExternalIdNotFound`.
 * `AuthenticationService.Instance.UnlinkOpenIdConnectAsync(string idProviderName)`
   * This function attempts to unlink the custom OpenID Connect id provider account using the external id from the player's PlayerInfo.
   * If you attempt to link when there is already an OpenID Connect account linked to this account, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountLinkLimitExceeded`.

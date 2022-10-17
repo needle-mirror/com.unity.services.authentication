@@ -93,12 +93,21 @@ namespace Unity.Services.Authentication
         }
 
         /// <summary>
-        /// Returns the player's Google Play Games id if one has been linked.
+        /// Returns the player's Google id if one has been linked.
         /// </summary>
-        /// <returns>The player's Google Play Games id</returns>
+        /// <returns>The player's Google id</returns>
         public string GetGoogleId()
         {
             return GetIdentityId(IdProviderKeys.Google);
+        }
+
+        /// <summary>
+        /// Returns the player's Google Play Games id if one has been linked.
+        /// </summary>
+        /// <returns>The player's Google Play Games id</returns>
+        public string GetGooglePlayGamesId()
+        {
+            return GetIdentityId(IdProviderKeys.GooglePlayGames);
         }
 
         /// <summary>
@@ -108,6 +117,15 @@ namespace Unity.Services.Authentication
         public string GetAppleId()
         {
             return GetIdentityId(IdProviderKeys.Apple);
+        }
+
+        /// <summary>
+        /// Returns the player's Oculus OrgScopedID if one has been linked.
+        /// </summary>
+        /// <returns>The player's Oculus OrgScopedID</returns>
+        public string GetOculusId()
+        {
+            return GetIdentityId(IdProviderKeys.Oculus);
         }
 
         /// <summary>

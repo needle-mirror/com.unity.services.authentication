@@ -308,7 +308,7 @@ namespace Unity.Services.Authentication.Editor
                 {
                     if (!ValidateOpenIdConnectIdProviderName(CurrentValue.Type))
                     {
-                        throw new ArgumentException("Invalid Oidc Name: The Id Provider name should start with 'oidc-' and have between 1 and 20 characters");
+                        throw new ArgumentException("Invalid Oidc Name: The Id Provider name should start with 'oidc-' and have between 6 and 20 characters (including 'oidc-')");
                     }
 
                     if (!Uri.IsWellFormedUriString(CurrentValue.OidcConfig.Issuer, UriKind.Absolute))

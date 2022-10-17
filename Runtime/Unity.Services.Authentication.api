@@ -5,15 +5,15 @@ namespace Unity.Services.Authentication
 {
     public static class AuthenticationErrorCodes
     {
-        public static readonly int AccountAlreadyLinked;
-        public static readonly int AccountLinkLimitExceeded;
-        public static readonly int ClientInvalidProfile;
-        public static readonly int ClientInvalidUserState;
-        public static readonly int ClientNoActiveSession;
-        public static readonly int ClientUnlinkExternalIdNotFound;
-        public static readonly int InvalidParameters;
-        public static readonly int InvalidSessionToken;
-        public static readonly int MinValue;
+        public static readonly int AccountAlreadyLinked = 10003;
+        public static readonly int AccountLinkLimitExceeded = 10004;
+        public static readonly int ClientInvalidProfile = 10006;
+        public static readonly int ClientInvalidUserState = 10000;
+        public static readonly int ClientNoActiveSession = 10001;
+        public static readonly int ClientUnlinkExternalIdNotFound = 10005;
+        public static readonly int InvalidParameters = 10002;
+        public static readonly int InvalidSessionToken = 10007;
+        public static readonly int MinValue = 10000;
     }
 
     public sealed class AuthenticationException : Unity.Services.Core.RequestFailedException
@@ -21,14 +21,14 @@ namespace Unity.Services.Authentication
         public static Unity.Services.Core.RequestFailedException Create(int errorCode, string message, System.Exception innerException = default(System.Exception));
     }
 
-    [System.Runtime.CompilerServices.Extension] public static class AuthenticationExtensions
+    public static class AuthenticationExtensions
     {
-        [System.Runtime.CompilerServices.Extension] public static Unity.Services.Core.InitializationOptions SetProfile(Unity.Services.Core.InitializationOptions options, string profile);
+        public static Unity.Services.Core.InitializationOptions SetProfile(this Unity.Services.Core.InitializationOptions options, string profile);
     }
 
     public static class AuthenticationService
     {
-        public static Unity.Services.Authentication.IAuthenticationService Instance { get; }
+        public static IAuthenticationService Instance { get; }
     }
 
     public interface IAuthenticationService
@@ -37,38 +37,41 @@ namespace Unity.Services.Authentication
         public event System.Action SignedIn;
         public event System.Action SignedOut;
         public event System.Action<Unity.Services.Core.RequestFailedException> SignInFailed;
-        public abstract string AccessToken { get; }
-        public abstract bool IsAuthorized { get; }
-        public abstract bool IsExpired { get; }
-        public abstract bool IsSignedIn { get; }
-        public abstract string PlayerId { get; }
-        public abstract Unity.Services.Authentication.PlayerInfo PlayerInfo { get; }
-        public abstract string Profile { get; }
-        public abstract bool SessionTokenExists { get; }
-        public abstract void ClearSessionToken();
-        public abstract System.Threading.Tasks.Task DeleteAccountAsync();
-        public abstract System.Threading.Tasks.Task<Unity.Services.Authentication.PlayerInfo> GetPlayerInfoAsync();
-        public abstract System.Threading.Tasks.Task LinkWithAppleAsync(string idToken, Unity.Services.Authentication.LinkOptions options = default(Unity.Services.Authentication.LinkOptions));
-        public abstract System.Threading.Tasks.Task LinkWithFacebookAsync(string accessToken, Unity.Services.Authentication.LinkOptions options = default(Unity.Services.Authentication.LinkOptions));
-        public abstract System.Threading.Tasks.Task LinkWithGoogleAsync(string idToken, Unity.Services.Authentication.LinkOptions options = default(Unity.Services.Authentication.LinkOptions));
-        public abstract System.Threading.Tasks.Task LinkWithGooglePlayGamesAsync(string authCode, Unity.Services.Authentication.LinkOptions options = default(Unity.Services.Authentication.LinkOptions));
-        public abstract System.Threading.Tasks.Task LinkWithOpenIdConnectAsync(string idProviderName, string idToken, Unity.Services.Authentication.LinkOptions options = default(Unity.Services.Authentication.LinkOptions));
-        public abstract System.Threading.Tasks.Task LinkWithSteamAsync(string sessionTicket, Unity.Services.Authentication.LinkOptions options = default(Unity.Services.Authentication.LinkOptions));
-        public abstract System.Threading.Tasks.Task SignInAnonymouslyAsync(Unity.Services.Authentication.SignInOptions options = default(Unity.Services.Authentication.SignInOptions));
-        public abstract System.Threading.Tasks.Task SignInWithAppleAsync(string idToken, Unity.Services.Authentication.SignInOptions options = default(Unity.Services.Authentication.SignInOptions));
-        public abstract System.Threading.Tasks.Task SignInWithFacebookAsync(string accessToken, Unity.Services.Authentication.SignInOptions options = default(Unity.Services.Authentication.SignInOptions));
-        public abstract System.Threading.Tasks.Task SignInWithGoogleAsync(string idToken, Unity.Services.Authentication.SignInOptions options = default(Unity.Services.Authentication.SignInOptions));
-        public abstract System.Threading.Tasks.Task SignInWithGooglePlayGamesAsync(string authCode, Unity.Services.Authentication.SignInOptions options = default(Unity.Services.Authentication.SignInOptions));
-        public abstract System.Threading.Tasks.Task SignInWithOpenIdConnectAsync(string idProviderName, string idToken, Unity.Services.Authentication.SignInOptions options = default(Unity.Services.Authentication.SignInOptions));
-        public abstract System.Threading.Tasks.Task SignInWithSteamAsync(string sessionTicket, Unity.Services.Authentication.SignInOptions options = default(Unity.Services.Authentication.SignInOptions));
-        public abstract void SignOut(bool clearCredentials = False);
-        public abstract void SwitchProfile(string profile);
-        public abstract System.Threading.Tasks.Task UnlinkAppleAsync();
-        public abstract System.Threading.Tasks.Task UnlinkFacebookAsync();
-        public abstract System.Threading.Tasks.Task UnlinkGoogleAsync();
-        public abstract System.Threading.Tasks.Task UnlinkGooglePlayGamesAsync();
-        public abstract System.Threading.Tasks.Task UnlinkOpenIdConnectAsync(string idProviderName);
-        public abstract System.Threading.Tasks.Task UnlinkSteamAsync();
+        public string AccessToken { get; }
+        public bool IsAuthorized { get; }
+        public bool IsExpired { get; }
+        public bool IsSignedIn { get; }
+        public string PlayerId { get; }
+        public PlayerInfo PlayerInfo { get; }
+        public string Profile { get; }
+        public bool SessionTokenExists { get; }
+        public void ClearSessionToken();
+        public System.Threading.Tasks.Task DeleteAccountAsync();
+        public System.Threading.Tasks.Task<PlayerInfo> GetPlayerInfoAsync();
+        public System.Threading.Tasks.Task LinkWithAppleAsync(string idToken, LinkOptions options = default(LinkOptions));
+        public System.Threading.Tasks.Task LinkWithFacebookAsync(string accessToken, LinkOptions options = default(LinkOptions));
+        public System.Threading.Tasks.Task LinkWithGoogleAsync(string idToken, LinkOptions options = default(LinkOptions));
+        public System.Threading.Tasks.Task LinkWithGooglePlayGamesAsync(string authCode, LinkOptions options = default(LinkOptions));
+        public System.Threading.Tasks.Task LinkWithOculusAsync(string nonce, string userId, LinkOptions options = default(LinkOptions));
+        public System.Threading.Tasks.Task LinkWithOpenIdConnectAsync(string idProviderName, string idToken, LinkOptions options = default(LinkOptions));
+        public System.Threading.Tasks.Task LinkWithSteamAsync(string sessionTicket, LinkOptions options = default(LinkOptions));
+        public System.Threading.Tasks.Task SignInAnonymouslyAsync(SignInOptions options = default(SignInOptions));
+        public System.Threading.Tasks.Task SignInWithAppleAsync(string idToken, SignInOptions options = default(SignInOptions));
+        public System.Threading.Tasks.Task SignInWithFacebookAsync(string accessToken, SignInOptions options = default(SignInOptions));
+        public System.Threading.Tasks.Task SignInWithGoogleAsync(string idToken, SignInOptions options = default(SignInOptions));
+        public System.Threading.Tasks.Task SignInWithGooglePlayGamesAsync(string authCode, SignInOptions options = default(SignInOptions));
+        public System.Threading.Tasks.Task SignInWithOculusAsync(string nonce, string userId, SignInOptions options = default(SignInOptions));
+        public System.Threading.Tasks.Task SignInWithOpenIdConnectAsync(string idProviderName, string idToken, SignInOptions options = default(SignInOptions));
+        public System.Threading.Tasks.Task SignInWithSteamAsync(string sessionTicket, SignInOptions options = default(SignInOptions));
+        public void SignOut(bool clearCredentials = false);
+        public void SwitchProfile(string profile);
+        public System.Threading.Tasks.Task UnlinkAppleAsync();
+        public System.Threading.Tasks.Task UnlinkFacebookAsync();
+        public System.Threading.Tasks.Task UnlinkGoogleAsync();
+        public System.Threading.Tasks.Task UnlinkGooglePlayGamesAsync();
+        public System.Threading.Tasks.Task UnlinkOculusAsync();
+        public System.Threading.Tasks.Task UnlinkOpenIdConnectAsync(string idProviderName);
+        public System.Threading.Tasks.Task UnlinkSteamAsync();
     }
 
     public sealed class Identity
@@ -87,12 +90,14 @@ namespace Unity.Services.Authentication
     {
         public System.Nullable<System.DateTime> CreatedAt { get; }
         public string Id { get; }
-        public System.Collections.Generic.List<Unity.Services.Authentication.Identity> Identities { get; }
+        public System.Collections.Generic.List<Identity> Identities { get; }
         public string GetAppleId();
         public string GetFacebookId();
         public string GetGoogleId();
+        public string GetGooglePlayGamesId();
+        public string GetOculusId();
         public string GetOpenIdConnectId(string idProviderName);
-        public System.Collections.Generic.List<Unity.Services.Authentication.Identity> GetOpenIdConnectIdProviders();
+        public System.Collections.Generic.List<Identity> GetOpenIdConnectIdProviders();
         public string GetSteamId();
     }
 

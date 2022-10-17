@@ -260,6 +260,33 @@ namespace Unity.Services.Authentication
             return UnlinkExternalTokenAsync(IdProviderKeys.Steam);
         }
 
+        public Task SignInWithOculusAsync(string nonce, string userId, SignInOptions options = null)
+        {
+            return SignInWithExternalTokenAsync(IdProviderKeys.Oculus, new SignInWithOculusRequest
+            {
+                IdProvider = IdProviderKeys.Oculus,
+                Token = nonce,
+                OculusConfig = new OculusConfig(){UserId = userId},
+                SignInOnly = !options?.CreateAccount ?? false
+            });
+        }
+
+        public Task LinkWithOculusAsync(string nonce, string userId, LinkOptions options = null)
+        {
+            return LinkWithExternalTokenAsync(IdProviderKeys.Oculus, new LinkWithOculusRequest()
+            {
+                IdProvider = IdProviderKeys.Oculus,
+                Token = nonce,
+                OculusConfig = new OculusConfig(){UserId = userId},
+                ForceLink = options?.ForceLink ?? false
+            });
+        }
+
+        public Task UnlinkOculusAsync()
+        {
+            return UnlinkExternalTokenAsync(IdProviderKeys.Oculus);
+        }
+
         public Task SignInWithOpenIdConnectAsync(string idProviderName, string idToken, SignInOptions options = null)
         {
             if (!ValidateOpenIdConnectIdProviderName(idProviderName))
@@ -805,7 +832,7 @@ namespace Unity.Services.Authentication
         /// <returns>The exception that represents the error.</returns>
         RequestFailedException BuildInvalidIdProviderNameException()
         {
-            return AuthenticationException.Create(AuthenticationErrorCodes.InvalidParameters, "Invalid IdProviderName. The Id Provider name should start with 'oidc-' and have between 1 and 20 characters");
+            return AuthenticationException.Create(AuthenticationErrorCodes.InvalidParameters, "Invalid IdProviderName. The Id Provider name should start with 'oidc-' and have between 6 and 20 characters (including 'oidc-')");
         }
 
         int MapErrorCodes(string serverErrorTitle)

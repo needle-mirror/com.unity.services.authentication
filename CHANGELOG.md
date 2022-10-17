@@ -4,6 +4,18 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [2.3.1] - 2022-10-17
+### Changed
+- Updated the core SDK dependency version
+
+## [2.3.0] - 2022-10-12
+## Added
+- Added `GetGooglePlayGamesId()` to `PlayerInfo`.
+- Added `SignInWithOculusAsync`, `LinkWithOculusAsync`, `UnlinkOculusAsync`
+- Added Oculus ID provider to Project Settings UI to configure ID providers.
+### Changed
+- Updated the core SDK dependency to the latest version.
+
 ## [2.2.0] - 2022-07-28
 ### Added
 - Added `SignInWithOpenIdConnectAsync`, `LinkWithOpenIdConnectAsync`, `UnlinkOpenIdConnectAsync`

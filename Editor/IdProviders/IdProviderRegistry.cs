@@ -23,6 +23,7 @@ namespace Unity.Services.Authentication.Editor
         /// </summary>
         static Dictionary<string, IdProviderOptions> DefaultIdProviderOptions => new Dictionary<string, IdProviderOptions>
         {
+        	// Please keep them in alphabetical order
             [IdProviderKeys.Apple] = new IdProviderOptions
             {
                 IdProviderType = IdProviderKeys.Apple,
@@ -51,6 +52,14 @@ namespace Unity.Services.Authentication.Editor
                 DisplayName = IdProviderNames.GooglePlayGames,
                 ClientIdDisplayName = "Client ID",
                 ClientSecretDisplayName = "Client Secret",
+                NeedClientSecret = true
+            },
+            [IdProviderKeys.Oculus] = new IdProviderOptions
+            {
+                IdProviderType = IdProviderKeys.Oculus,
+                DisplayName = IdProviderNames.Oculus,
+                ClientIdDisplayName = "App ID",
+                ClientSecretDisplayName = "App Secret",
                 NeedClientSecret = true
             },
             [IdProviderKeys.OpenIDConnect] = new IdProviderOptions
