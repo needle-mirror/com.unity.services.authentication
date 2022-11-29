@@ -49,6 +49,7 @@ namespace Unity.Services.Authentication
         public System.Threading.Tasks.Task DeleteAccountAsync();
         public System.Threading.Tasks.Task<PlayerInfo> GetPlayerInfoAsync();
         public System.Threading.Tasks.Task LinkWithAppleAsync(string idToken, LinkOptions options = default(LinkOptions));
+        public System.Threading.Tasks.Task LinkWithAppleGameCenterAsync(string signature, string teamPlayerId, string publicKeyURL, string salt, long timestamp, LinkOptions options = default(LinkOptions));
         public System.Threading.Tasks.Task LinkWithFacebookAsync(string accessToken, LinkOptions options = default(LinkOptions));
         public System.Threading.Tasks.Task LinkWithGoogleAsync(string idToken, LinkOptions options = default(LinkOptions));
         public System.Threading.Tasks.Task LinkWithGooglePlayGamesAsync(string authCode, LinkOptions options = default(LinkOptions));
@@ -57,6 +58,7 @@ namespace Unity.Services.Authentication
         public System.Threading.Tasks.Task LinkWithSteamAsync(string sessionTicket, LinkOptions options = default(LinkOptions));
         public System.Threading.Tasks.Task SignInAnonymouslyAsync(SignInOptions options = default(SignInOptions));
         public System.Threading.Tasks.Task SignInWithAppleAsync(string idToken, SignInOptions options = default(SignInOptions));
+        public System.Threading.Tasks.Task SignInWithAppleGameCenterAsync(string signature, string teamPlayerId, string publicKeyURL, string salt, long timestamp, SignInOptions options = default(SignInOptions));
         public System.Threading.Tasks.Task SignInWithFacebookAsync(string accessToken, SignInOptions options = default(SignInOptions));
         public System.Threading.Tasks.Task SignInWithGoogleAsync(string idToken, SignInOptions options = default(SignInOptions));
         public System.Threading.Tasks.Task SignInWithGooglePlayGamesAsync(string authCode, SignInOptions options = default(SignInOptions));
@@ -66,6 +68,7 @@ namespace Unity.Services.Authentication
         public void SignOut(bool clearCredentials = false);
         public void SwitchProfile(string profile);
         public System.Threading.Tasks.Task UnlinkAppleAsync();
+        public System.Threading.Tasks.Task UnlinkAppleGameCenterAsync();
         public System.Threading.Tasks.Task UnlinkFacebookAsync();
         public System.Threading.Tasks.Task UnlinkGoogleAsync();
         public System.Threading.Tasks.Task UnlinkGooglePlayGamesAsync();
@@ -91,6 +94,7 @@ namespace Unity.Services.Authentication
         public System.Nullable<System.DateTime> CreatedAt { get; }
         public string Id { get; }
         public System.Collections.Generic.List<Identity> Identities { get; }
+        public string GetAppleGameCenterId();
         public string GetAppleId();
         public string GetFacebookId();
         public string GetGoogleId();

@@ -10,3 +10,5 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("Unity.Services.Authentication.EditorTests")]
 [assembly: InternalsVisibleTo("Unity.Services.Authentication.TestUtils")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")] // For Moq
+
+

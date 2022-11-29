@@ -23,12 +23,19 @@ namespace Unity.Services.Authentication.Editor
         /// </summary>
         static Dictionary<string, IdProviderOptions> DefaultIdProviderOptions => new Dictionary<string, IdProviderOptions>
         {
-        	// Please keep them in alphabetical order
+            // Please keep them in alphabetical order
             [IdProviderKeys.Apple] = new IdProviderOptions
             {
                 IdProviderType = IdProviderKeys.Apple,
                 DisplayName = IdProviderNames.SignInWithApple,
                 ClientIdDisplayName = "App ID",
+                NeedClientSecret = false
+            },
+            [IdProviderKeys.AppleGameCenter] = new IdProviderOptions
+            {
+                IdProviderType = IdProviderKeys.AppleGameCenter,
+                DisplayName = IdProviderNames.AppleGameCenter,
+                ClientIdDisplayName = "Bundle ID",
                 NeedClientSecret = false
             },
             [IdProviderKeys.Facebook] = new IdProviderOptions

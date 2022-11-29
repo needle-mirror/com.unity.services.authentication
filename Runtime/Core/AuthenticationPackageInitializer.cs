@@ -17,9 +17,6 @@ namespace Unity.Services.Authentication
 
         public Task Initialize(CoreRegistry registry)
         {
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
-
             var settings = new AuthenticationSettings();
             var scheduler = registry.GetServiceComponent<IActionScheduler>();
             var environment = registry.GetServiceComponent<IEnvironments>();
@@ -35,7 +32,6 @@ namespace Unity.Services.Authentication
             var environmentId = new EnvironmentIdComponent();
             var playerId = new PlayerIdComponent(cache);
             var sessionToken = new SessionTokenComponent(cache);
-            var wellKnownKeys = new WellKnownKeysComponent();
             var networkHandler = new NetworkHandler();
 
             var host = GetHost(projectConfiguration);
@@ -57,16 +53,12 @@ namespace Unity.Services.Authentication
                 accessToken,
                 environmentId,
                 playerId,
-                sessionToken,
-                wellKnownKeys);
+                sessionToken);
 
             AuthenticationService.Instance = authenticationService;
             registry.RegisterServiceComponent<IAccessToken>(authenticationService.AccessTokenComponent);
             registry.RegisterServiceComponent<IEnvironmentId>(authenticationService.EnvironmentIdComponent);
             registry.RegisterServiceComponent<IPlayerId>(authenticationService.PlayerIdComponent);
-
-            stopwatch.Stop();
-            metrics.SendPackageInitTimeMetric(stopwatch.Elapsed.TotalSeconds);
 
             return Task.CompletedTask;
         }

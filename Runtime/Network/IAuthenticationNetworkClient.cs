@@ -4,7 +4,6 @@ namespace Unity.Services.Authentication
 {
     interface IAuthenticationNetworkClient
     {
-        Task<WellKnownKeysResponse> GetWellKnownKeysAsync();
         Task<SignInResponse> SignInAnonymouslyAsync();
         Task<SignInResponse> SignInWithSessionTokenAsync(string token);
         Task<SignInResponse> SignInWithExternalTokenAsync(string idProvider, SignInWithExternalTokenRequest externalToken);

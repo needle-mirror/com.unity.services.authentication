@@ -5,7 +5,6 @@ namespace Unity.Services.Authentication
     class AuthenticationMetrics : IAuthenticationMetrics
     {
         const string k_PackageName = "com.unity.services.authentication";
-        const string k_PackageInitTimeKey = "package_init_time";
         const string k_NetworkErrorKey = "network_error_event";
         const string k_ExpiredSessionKey = "expired_session_event";
         const string k_ClientInvalidStateExceptionKey = "client_invalid_state_exception_event";
@@ -17,11 +16,6 @@ namespace Unity.Services.Authentication
         internal AuthenticationMetrics(IMetricsFactory metricsFactory)
         {
             m_Metrics = metricsFactory.Create(k_PackageName);
-        }
-
-        public void SendPackageInitTimeMetric(double initTimeSeconds)
-        {
-            m_Metrics.SendHistogramMetric(k_PackageInitTimeKey, initTimeSeconds);
         }
 
         public void SendNetworkErrorMetric()

@@ -120,6 +120,15 @@ namespace Unity.Services.Authentication
         }
 
         /// <summary>
+        /// Returns the player's AppleGameCenter teamPlayerID if one has been linked.
+        /// </summary>
+        /// <returns>The player's AppleGameCenter teamPlayerID</returns>
+        public string GetAppleGameCenterId()
+        {
+            return GetIdentityId(IdProviderKeys.AppleGameCenter);
+        }
+
+        /// <summary>
         /// Returns the player's Oculus OrgScopedID if one has been linked.
         /// </summary>
         /// <returns>The player's Oculus OrgScopedID</returns>

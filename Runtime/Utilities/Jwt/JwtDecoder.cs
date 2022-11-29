@@ -23,103 +23,27 @@ namespace Unity.Services.Authentication
             m_DateTime = dateTime;
         }
 
-        public T Decode<T>(string token, WellKnownKey[] keys) where T : BaseJwt
+        public T Decode<T>(string token) where T : BaseJwt
         {
-            if (keys == null)
-            {
-                Logger.LogError("No well-known keys to verify token.");
-                return null;
-            }
-
             var parts = token.Split(k_JwtSeparator);
             if (parts.Length == 3)
             {
-                var header = parts[0];
                 var payload = parts[1];
-                var signature = Base64UrlDecode(parts[2]);
-
-                var headerJson = Encoding.UTF8.GetString(Base64UrlDecode(header));
                 var payloadJson = Encoding.UTF8.GetString(Base64UrlDecode(payload));
-
-                var headerData = JsonConvert.DeserializeObject<Dictionary<string, string>>(headerJson);
                 var payloadData = JsonConvert.DeserializeObject<T>(payloadJson);
 
-                // verify exp claim https://tools.ietf.org/html/draft-ietf-oauth-json-web-token-32#section-4.1.4
                 var secondsSinceEpoch = m_DateTime.SecondsSinceUnixEpoch();
-                if (secondsSinceEpoch >= payloadData.ExpirationTimeUnix)
+                if (payloadData != null && secondsSinceEpoch >= payloadData.ExpirationTimeUnix)
                 {
                     Logger.LogError("Token has expired.");
                     return null;
                 }
 
-                // NOTE: VerifySignature includes creating a load of cryptography objects, so
-                // do it last in case we don't need to.
-                if (VerifySignature(header, headerData["kid"], payload, keys, signature))
-                {
-                    return payloadData;
-                }
-
-                Logger.LogError("Token signature could not be verified.");
-                return null;
+                return payloadData;
             }
 
             Logger.LogError($"That is not a valid token (expected 3 parts but has {parts.Length}).");
             return null;
-        }
-
-        bool VerifySignature(string header, string keyId, string payload, WellKnownKey[] keys, byte[] signature)
-        {
-            var key = GetKey(keyId, keys);
-
-            if (key != null)
-            {
-                var verified = Verify(header, payload, signature, Base64UrlDecode(key.N), Base64UrlDecode(key.E));
-                if (!verified)
-                {
-                    Logger.LogError("Signature failed verification!");
-                }
-
-                return verified;
-            }
-
-            Logger.LogError("Unable to verify signature, does not use a well-known key ID.");
-            return false;
-        }
-
-        WellKnownKey GetKey(string keyId, WellKnownKey[] keys)
-        {
-            foreach (var key in keys)
-            {
-                if (key.KeyId == keyId)
-                {
-                    return key;
-                }
-            }
-
-            return null;
-        }
-
-        bool Verify(string header, string payload, byte[] signature, byte[] modulus, byte[] exponent)
-        {
-            // Based on:
-            // https://stackoverflow.com/questions/34403823/verifying-jwt-signed-with-the-rs256-algorithm-using-public-key-in-c-sharp
-            using (var rsa = new RSACryptoServiceProvider())
-            {
-                rsa.ImportParameters(new RSAParameters
-                {
-                    Modulus = modulus,
-                    Exponent = exponent
-                });
-
-                using (var sha256 = SHA256.Create())
-                {
-                    var hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(header + '.' + payload));
-
-                    var rsaDeformatter = new RSAPKCS1SignatureDeformatter(rsa);
-                    rsaDeformatter.SetHashAlgorithm("SHA256");
-                    return rsaDeformatter.VerifySignature(hash, signature);
-                }
-            }
         }
 
         byte[] Base64UrlDecode(string input)

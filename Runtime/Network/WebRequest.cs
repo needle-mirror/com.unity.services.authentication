@@ -59,7 +59,7 @@ namespace Unity.Services.Authentication
                 catch (Exception e)
                 {
                     var errorMessage = "Failed to deserialize object!";
-                    Logger.LogError($"{errorMessage} {e.Message}");
+                    Logger.Log($"{errorMessage} {e.Message}");
                     throw new WebRequestException(false, false, true, 0, errorMessage, null);
                 }
             }

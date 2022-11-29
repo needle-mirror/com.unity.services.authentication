@@ -41,6 +41,12 @@ Clearing all `PlayerPrefs` keys will require the player to sign in again from sc
     * You can provide options to control if an account should be created.
     * By default, this method will create an account if no account is currently linked.
     * If you attempt to sign in while already signed in or currently signing in, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
+* `AuthenticationService.Instance.SignInWithAppleGameCenterAsync(string signature, string teamPlayerId, string publicKeyURL, string salt, ulong timestamp, SignInOptions options = null)`
+    * This triggers the sign-in of the player with a signature from AppleGameCenter.
+    * Game developer is responsible for installing the necessary SDK and get the signature from AppleGameCenter.
+    * You can provide options to control if an account should be created.
+    * By default, this method will create an account if no account is currently linked.
+    * If you attempt to sign in while already signed in or currently signing in, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
 * `AuthenticationService.Instance.SignInWithGoogleAsync(string idToken, SignInOptions options = null)`
     * This triggers the sign-in of the player with an ID token from Google.
     * Game developer is responsible for installing the necessary SDK and get the token from Google.
@@ -74,6 +80,13 @@ Clearing all `PlayerPrefs` keys will require the player to sign in again from sc
     * If you attempt to link with an account that is already linked with another player, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountAlreadyLinked`.
     * If you attempt to link when there is already an apple account linked to this account, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountLinkLimitExceeded`.
     * If you attempt to link without being authorized, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
+* `AuthenticationService.Instance.LinkWithAppleGameCenterAsync(string signature, string teamPlayerId, string publicKeyURL, string salt, ulong timestamp, LinkOptions options = null)`
+  * This function links the current player with a signature from AppleGameCenter. The player can later sign-in with the linked AppleGameCenter account.
+  * You can provide options to force the operation in case the AppleGameCenter account is already linked to another player.
+  * Game developer is responsible for installing the necessary SDK and get the signature from AppleGameCenter.
+  * If you attempt to link with an account that is already linked with another player, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountAlreadyLinked`.
+  * If you attempt to link when there is already a AppleGameCenter account linked to this account, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountLinkLimitExceeded`.
+  * If you attempt to link without being authorized, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
 * `AuthenticationService.Instance.LinkWithGoogleAsync(string idToken, LinkOptions options = null)`
     * This function links the current player with an ID token from Google. The player can later sign-in with the linked Google account.
     * You can provide options to force the operation in case the Google account is already linked to another player.
@@ -122,6 +135,12 @@ Clearing all `PlayerPrefs` keys will require the player to sign in again from sc
     * If you attempt to link when there is already an Apple account linked to this account, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountLinkLimitExceeded`.
     * If you attempt to unlink without being authorized, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
     * If you attempt to unlink without having an Apple external id in the player's PlayerInfo, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientUnlinkExternalIdNotFound`.
+* `AuthenticationService.Instance.UnlinkAppleGameCenterAsync()`
+  * This function attempts to unlink the AppleGameCenter account using the external id from the player's PlayerInfo.
+  * Use `AuthenticationService.Instance.GetPlayerInfoAsync()` to load all of your player's external ids.
+  * If you attempt to link when there is already an AppleGameCenter account linked to this account, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountLinkLimitExceeded`.
+  * If you attempt to unlink without being authorized, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
+  * If you attempt to unlink without having an AppleGameCenter external id in the player's PlayerInfo, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientUnlinkExternalIdNotFound`.
 * `AuthenticationService.Instance.UnlinkWithGoogleAsync()`
     * This function attempts to unlink the Google account using the external id from the player's PlayerInfo.
     * If you attempt to link when there is already a Google account linked to this account, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountLinkLimitExceeded`.

@@ -44,8 +44,6 @@ namespace Unity.Services.Authentication
         internal EnvironmentIdComponent EnvironmentIdComponent { get; }
         internal PlayerIdComponent PlayerIdComponent { get; }
         internal SessionTokenComponent SessionTokenComponent { get; }
-        internal WellKnownKeysComponent WellKnownKeysComponent { get; }
-
         internal AuthenticationState State { get; set; }
         internal IAuthenticationSettings Settings { get; }
         internal IAuthenticationNetworkClient NetworkClient { get; set; }
@@ -70,8 +68,7 @@ namespace Unity.Services.Authentication
                                                AccessTokenComponent accessToken,
                                                EnvironmentIdComponent environmentId,
                                                PlayerIdComponent playerId,
-                                               SessionTokenComponent sessionToken,
-                                               WellKnownKeysComponent wellKnownKeys)
+                                               SessionTokenComponent sessionToken)
         {
             Settings = settings;
             NetworkClient = networkClient;
@@ -87,7 +84,6 @@ namespace Unity.Services.Authentication
             EnvironmentIdComponent = environmentId;
             PlayerIdComponent = playerId;
             SessionTokenComponent = sessionToken;
-            WellKnownKeysComponent = wellKnownKeys;
 
             State = AuthenticationState.SignedOut;
             MigrateCache();
@@ -158,6 +154,35 @@ namespace Unity.Services.Authentication
         public Task UnlinkAppleAsync()
         {
             return UnlinkExternalTokenAsync(IdProviderKeys.Apple);
+        }
+
+        public Task SignInWithAppleGameCenterAsync(string signature, string teamPlayerId, string publicKeyURL,
+            string salt, ulong timestamp, SignInOptions options = null)
+        {
+            return SignInWithExternalTokenAsync(IdProviderKeys.AppleGameCenter, new SignInWithAppleGameCenterRequest()
+            {
+                IdProvider = IdProviderKeys.AppleGameCenter,
+                Token = signature,
+                AppleGameCenterConfig = new AppleGameCenterConfig() { TeamPlayerId = teamPlayerId, PublicKeyURL = publicKeyURL, Salt = salt, Timestamp = timestamp },
+                SignInOnly = !options?.CreateAccount ?? false
+            });
+        }
+
+        public Task LinkWithAppleGameCenterAsync(string signature, string teamPlayerId, string publicKeyURL,
+            string salt, ulong timestamp, LinkOptions options = null)
+        {
+            return LinkWithExternalTokenAsync(IdProviderKeys.AppleGameCenter, new LinkWithAppleGameCenterRequest()
+            {
+                IdProvider = IdProviderKeys.AppleGameCenter,
+                Token = signature,
+                AppleGameCenterConfig = new AppleGameCenterConfig() { TeamPlayerId = teamPlayerId, PublicKeyURL = publicKeyURL, Salt = salt, Timestamp = timestamp },
+                ForceLink = options?.ForceLink ?? false
+            });
+        }
+
+        public Task UnlinkAppleGameCenterAsync()
+        {
+            return UnlinkExternalTokenAsync(IdProviderKeys.AppleGameCenter);
         }
 
         public Task SignInWithGoogleAsync(string idToken, SignInOptions options = null)
@@ -412,12 +437,6 @@ namespace Unity.Services.Authentication
             }
         }
 
-        internal async Task GetWellKnownKeysAsync()
-        {
-            var response = await NetworkClient.GetWellKnownKeysAsync();
-            WellKnownKeysComponent.Keys = response.Keys;
-        }
-
         internal Task SignInWithExternalTokenAsync(string idProvider, SignInWithExternalTokenRequest request, bool enableRefresh = true)
         {
             if (State == AuthenticationState.SignedOut || State == AuthenticationState.Expired)
@@ -511,10 +530,7 @@ namespace Unity.Services.Authentication
             try
             {
                 ChangeState(AuthenticationState.SigningIn);
-                var wellKnownKeysTask = WellKnownKeysComponent.Keys == null ? GetWellKnownKeysAsync() : Task.CompletedTask;
-                var signinRequestTask = signInRequest();
-                await Task.WhenAll(signinRequestTask, wellKnownKeysTask);
-                CompleteSignIn(await signinRequestTask, enableRefresh);
+                CompleteSignIn(await signInRequest(), enableRefresh);
             }
             catch (RequestFailedException e)
             {
@@ -541,7 +557,7 @@ namespace Unity.Services.Authentication
             catch (RequestFailedException)
             {
                 // Refresh failed since we received a bad token. Retry.
-                Logger.LogWarning("The access token is not valid. Retry JWKS and refresh again.");
+                Logger.LogWarning("The access token is not valid. Retry and refresh again.");
 
                 if (State != AuthenticationState.Expired)
                 {
@@ -563,7 +579,7 @@ namespace Unity.Services.Authentication
         {
             try
             {
-                var accessTokenDecoded = m_JwtDecoder.Decode<AccessToken>(response.IdToken, WellKnownKeysComponent?.Keys);
+                var accessTokenDecoded = m_JwtDecoder.Decode<AccessToken>(response.IdToken);
                 if (accessTokenDecoded == null)
                 {
                     throw AuthenticationException.Create(CommonErrorCodes.InvalidToken, "Failed to decode and verify access token.");
@@ -793,7 +809,7 @@ namespace Unity.Services.Authentication
         /// <returns>The converted exception.</returns>
         internal RequestFailedException BuildServerException(WebRequestException exception)
         {
-            Logger.LogError($"Request failed: {exception.ResponseCode}, {exception.Message}");
+            Logger.Log($"Request failed: {exception.ResponseCode}, {exception.Message}");
 
             if (exception.NetworkError)
             {
@@ -810,7 +826,7 @@ namespace Unity.Services.Authentication
                 if (errorCode == AuthenticationErrorCodes.InvalidSessionToken)
                 {
                     SessionTokenComponent.Clear();
-                    Logger.LogError($"The session token is invalid and has been cleared. The associated account is no longer accessible through this login method.");
+                    Logger.Log($"The session token is invalid and has been cleared. The associated account is no longer accessible through this login method.");
                 }
 
                 return AuthenticationException.Create(errorCode, errorResponse.Detail, exception);

@@ -7,7 +7,6 @@ namespace Unity.Services.Authentication
 {
     class AuthenticationNetworkClient : IAuthenticationNetworkClient
     {
-        const string k_WellKnownUrlStem = "/.well-known/jwks.json";
         const string k_AnonymousUrlStem = "/v1/authentication/anonymous";
         const string k_SessionTokenUrlStem = "/v1/authentication/session-token";
         const string k_ExternalTokenUrlStem = "/v1/authentication/external-token";
@@ -21,9 +20,8 @@ namespace Unity.Services.Authentication
         internal INetworkHandler NetworkHandler { get; }
 
         string AccessToken => AccessTokenComponent.AccessToken;
-        string EnvironmentId => EnvironmentComponent.Current;
+        string EnvironmentName => EnvironmentComponent.Current;
 
-        readonly string m_WellKnownUrl;
         readonly string m_AnonymousUrl;
         readonly string m_SessionTokenUrl;
         readonly string m_ExternalTokenUrl;
@@ -44,7 +42,6 @@ namespace Unity.Services.Authentication
             EnvironmentComponent = environment;
             NetworkHandler = networkHandler;
 
-            m_WellKnownUrl = host + k_WellKnownUrlStem;
             m_AnonymousUrl = host + k_AnonymousUrlStem;
             m_SessionTokenUrl = host + k_SessionTokenUrlStem;
             m_ExternalTokenUrl = host + k_ExternalTokenUrlStem;
@@ -59,11 +56,6 @@ namespace Unity.Services.Authentication
                 // The Error-Version header enables RFC7807HttpError error responses
                 ["Error-Version"] = "v1"
             };
-        }
-
-        public Task<WellKnownKeysResponse> GetWellKnownKeysAsync()
-        {
-            return NetworkHandler.GetAsync<WellKnownKeysResponse>(m_WellKnownUrl);
         }
 
         public Task<SignInResponse> SignInAnonymouslyAsync()
@@ -120,11 +112,11 @@ namespace Unity.Services.Authentication
 
         Dictionary<string, string> WithEnvironment(Dictionary<string, string> headers)
         {
-            var environmentId = EnvironmentId;
+            var environmentName = EnvironmentName;
 
-            if (!string.IsNullOrEmpty(environmentId))
+            if (!string.IsNullOrEmpty(environmentName))
             {
-                headers["UnityEnvironment"] = environmentId;
+                headers["UnityEnvironment"] = environmentName;
             }
 
             return headers;
