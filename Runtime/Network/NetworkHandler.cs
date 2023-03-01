@@ -1,6 +1,6 @@
+using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 
 namespace Unity.Services.Authentication
 {
@@ -13,9 +13,9 @@ namespace Unity.Services.Authentication
 
         INetworkConfiguration Configuration { get; }
 
-        public NetworkHandler()
+        public NetworkHandler(INetworkConfiguration configuration)
         {
-            Configuration = new NetworkConfiguration();
+            Configuration = configuration;
         }
 
         public Task<T> GetAsync<T>(string url, IDictionary<string, string> headers = null)

@@ -6,6 +6,10 @@ namespace Unity.Services.Authentication
     /// <summary>
     /// AuthenticationException represents a runtime exception from authentication.
     /// </summary>
+    /// <remarks>
+    /// See <see cref="AuthenticationErrorCodes"/> for possible error codes.
+    /// Consult the service documentation for specific error codes various APIs can return.
+    /// </remarks>
     public sealed class AuthenticationException : RequestFailedException
     {
         /// <summary>

@@ -57,9 +57,14 @@ namespace Unity.Services.Authentication
         string AccessToken { get; }
 
         /// <summary>
-        /// Returns the current player's ID when they are signed in, otherwise null.
+        /// Returns the current player's ID. This value is cached between sessions.
         /// </summary>
         string PlayerId { get; }
+
+        /// <summary>
+        /// Returns the current player's name. This value is cached between sessions.
+        /// </summary>
+        string PlayerName { get; }
 
         /// <summary>
         /// The profile isolates the values saved to the PlayerPrefs.
@@ -675,6 +680,7 @@ namespace Unity.Services.Authentication
         /// </exception>
         Task UnlinkOpenIdConnectAsync(string idProviderName);
 
+
         /// <summary>
         /// Deletes the currently signed in player permanently.
         /// </summary>
@@ -714,6 +720,48 @@ namespace Unity.Services.Authentication
         /// </list>
         /// </exception>
         Task<PlayerInfo> GetPlayerInfoAsync();
+
+        /// <summary>
+        /// Returns the name of the logged in player if it has been set.
+        /// If no name has been set, this will return null.
+        /// This will also cache the name locally.
+        /// </summary>
+        /// <returns>Task for the operation with the resulting player name</returns>
+        /// <exception cref="AuthenticationException">
+        /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
+        /// <list type="bullet">
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.ClientInvalidUserState"/> if the player is not authorized to perform this operation.</description></item>
+        /// </list>
+        /// </exception>
+        /// <exception cref="RequestFailedException">
+        /// The task fails with the exception when the task cannot complete successfully.
+        /// <list type="bullet">
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.TransportError"/> if the API call failed due to network error. Check Unity logs for more debugging information.</description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.Unknown"/> if the API call failed due to unexpected response from the server. Check Unity logs for more debugging information.</description></item>
+        /// </list>
+        /// </exception>
+        Task<string> GetPlayerNameAsync();
+
+        /// <summary>
+        /// Updates the player name of the logged in player.
+        /// </summary>
+        /// <param name="name">The new name for the player. It must not contain spaces.</param>
+        /// <returns>Task for the operation with the resulting player name</returns>
+        /// <exception cref="AuthenticationException">
+        /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
+        /// <list type="bullet">
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.ClientInvalidUserState"/> if the player is not authorized to perform this operation.</description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.InvalidParameters"/> if the provided player name is invalid.</description></item>
+        /// </list>
+        /// </exception>
+        /// <exception cref="RequestFailedException">
+        /// The task fails with the exception when the task cannot complete successfully.
+        /// <list type="bullet">
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.TransportError"/> if the API call failed due to network error. Check Unity logs for more debugging information.</description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.Unknown"/> if the API call failed due to unexpected response from the server. Check Unity logs for more debugging information.</description></item>
+        /// </list>
+        /// </exception>
+        Task<string> UpdatePlayerNameAsync(string name);
 
         /// <summary>
         /// Sign out the current player.

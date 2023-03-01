@@ -177,6 +177,14 @@ Clearing all `PlayerPrefs` keys will require the player to sign in again from sc
 * `AuthenticationService.Instance.GetPlayerInfoAsync()`
   * This function returns the `PlayerId`, `CreatedAt` and `ExternalIds` properties for an authorized player
   * If you are not authorized, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
+* `AuthenticationService.Instance.GetPlayerNameAsync()`
+  * This function returns the name for the current player. It also caches it locally.
+  * If no name has been set, this will return null.
+  * If you are not authorized, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
+* `AuthenticationService.Instance.UpdatePlayerNameAsync(string playerName)`
+  * This function attempts to update the current player name. It also caches it locally.
+  * If you are not authorized, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
+  * If the provided player name is invalid, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.InvalidParameters`.
 * `AuthenticationService.Instance.SignOut(bool clearCredentials = false)`
     * This triggers the sign-out process, which will reset the session’s access token. By default, the session token is preserved to allow the player to sign in to the same account.
   * You can optionally clear the credentials (player id, session token) by setting the clearCredentials flag to true.
@@ -198,7 +206,9 @@ Clearing all `PlayerPrefs` keys will require the player to sign in again from sc
 * `AuthenticationService.Instance.IsExpired`
   * Returns true if the access token has expired.
 * `AuthenticationService.Instance.PlayerId`
-  * This property exposes the ID of the player when they are signed in, or null if they are not.
+  * This property exposes the ID of the player. This value is cached between sessions.
+* `AuthenticationService.Instance.PlayerName`
+  * This property exposes the name of the player. This value is cached between sessions.
 * `AuthenticationService.Instance.Profile`
   * This property exposes the current profile.
     * A profile isolates the Session Token in the `PlayerPrefs`.

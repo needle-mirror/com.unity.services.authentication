@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using Unity.Services.Core.Configuration.Internal;
 using UnityEngine;
 
@@ -30,8 +31,14 @@ namespace Unity.Services.Authentication
             PlayerPrefs.DeleteKey(GetKey(key));
         }
 
+        [CanBeNull]
         public string GetString(string key)
         {
+            if (!HasKey(key))
+            {
+                return null;
+            }
+
             return PlayerPrefs.GetString(GetKey(key));
         }
 

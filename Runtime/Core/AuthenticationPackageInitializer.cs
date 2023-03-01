@@ -1,6 +1,7 @@
-using System.Diagnostics;
 using System.Threading.Tasks;
+using Unity.Services.Authentication.Generated.Api;
 using Unity.Services.Authentication.Internal;
+using Unity.Services.Authentication.Shared;
 using Unity.Services.Core.Configuration.Internal;
 using Unity.Services.Core.Environments.Internal;
 using Unity.Services.Core.Internal;
@@ -31,10 +32,17 @@ namespace Unity.Services.Authentication
             var accessToken = new AccessTokenComponent();
             var environmentId = new EnvironmentIdComponent();
             var playerId = new PlayerIdComponent(cache);
+            var playerName = new PlayerNameComponent(cache);
             var sessionToken = new SessionTokenComponent(cache);
-            var networkHandler = new NetworkHandler();
+            var networkConfiguration = new NetworkConfiguration();
+            var networkHandler = new NetworkHandler(networkConfiguration);
 
-            var host = GetHost(projectConfiguration);
+            var host = GetPlayerAuthHost(projectConfiguration);
+
+            var apiClient = new AuthenticationApiClient(networkConfiguration);
+            var playerNamesConfiguration = new ApiConfiguration();
+            playerNamesConfiguration.BasePath = GetPlayerNamesHost(projectConfiguration);
+            var playerNamesApi = new PlayerNamesApi(apiClient, playerNamesConfiguration);
 
             var networkClient = new AuthenticationNetworkClient(host,
                 projectId,
@@ -44,6 +52,7 @@ namespace Unity.Services.Authentication
             var authenticationService = new AuthenticationServiceInternal(
                 settings,
                 networkClient,
+                playerNamesApi,
                 profile,
                 jwtDecoder,
                 cache,
@@ -53,6 +62,7 @@ namespace Unity.Services.Authentication
                 accessToken,
                 environmentId,
                 playerId,
+                playerName,
                 sessionToken);
 
             AuthenticationService.Instance = authenticationService;
@@ -77,7 +87,7 @@ namespace Unity.Services.Authentication
                 .ProvidesComponent<IEnvironmentId>();
         }
 
-        string GetHost(IProjectConfiguration projectConfiguration)
+        string GetPlayerAuthHost(IProjectConfiguration projectConfiguration)
         {
             var cloudEnvironment = projectConfiguration?.GetString(k_CloudEnvironmentKey);
 
@@ -87,6 +97,19 @@ namespace Unity.Services.Authentication
                     return "https://player-auth-stg.services.api.unity.com";
                 default:
                     return "https://player-auth.services.api.unity.com";
+            }
+        }
+
+        string GetPlayerNamesHost(IProjectConfiguration projectConfiguration)
+        {
+            var cloudEnvironment = projectConfiguration?.GetString(k_CloudEnvironmentKey);
+
+            switch (cloudEnvironment)
+            {
+                case k_StagingEnvironment:
+                    return "https://social-stg.services.api.unity.com/v1";
+                default:
+                    return "https://social.services.api.unity.com/v1";
             }
         }
     }

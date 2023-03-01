@@ -1,5 +1,7 @@
 using System.Runtime.CompilerServices;
+using UnityEngine.Scripting;
 
+[assembly: AlwaysLinkAssembly]
 [assembly: InternalsVisibleTo("Unity.Services.Authentication.Editor")]
 [assembly: InternalsVisibleTo("Unity.Services.Authentication.Internal1")]
 [assembly: InternalsVisibleTo("Unity.Services.Authentication.Internal2")]
@@ -10,5 +12,4 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("Unity.Services.Authentication.EditorTests")]
 [assembly: InternalsVisibleTo("Unity.Services.Authentication.TestUtils")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")] // For Moq
-
 

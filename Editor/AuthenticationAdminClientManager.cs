@@ -17,7 +17,9 @@ namespace Unity.Services.Authentication.Editor
             }
 
             var host = GetHost(GetCloudEnvironment(Environment.GetCommandLineArgs()));
-            var networkClient = new AuthenticationAdminNetworkClient(host, GetOrganizationId(), GetProjectId(), new NetworkHandler());
+            var networkConfiguration = new NetworkConfiguration();
+            var networkHandler = new NetworkHandler(networkConfiguration);
+            var networkClient = new AuthenticationAdminNetworkClient(host, GetOrganizationId(), GetProjectId(), networkHandler);
             return new AuthenticationAdminClient(networkClient, new GenesisTokenProvider());
         }
 

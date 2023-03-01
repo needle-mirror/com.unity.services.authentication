@@ -1,11 +1,13 @@
 using System;
 using System.Linq;
+using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
+using Unity.Services.Authentication.Generated.Api;
+using Unity.Services.Authentication.Generated.Model;
+using Unity.Services.Authentication.Shared;
 using Unity.Services.Core;
 using Unity.Services.Core.Scheduler.Internal;
-using UnityEngine;
 
 namespace Unity.Services.Authentication
 {
@@ -35,6 +37,7 @@ namespace Unity.Services.Authentication
         public string AccessToken => AccessTokenComponent.AccessToken;
 
         public string PlayerId => PlayerIdComponent.PlayerId;
+        public string PlayerName => PlayerNameComponent.PlayerName;
         public PlayerInfo PlayerInfo { get; internal set; }
 
         internal long? ExpirationActionId { get; set; }
@@ -43,10 +46,13 @@ namespace Unity.Services.Authentication
         internal AccessTokenComponent AccessTokenComponent { get; }
         internal EnvironmentIdComponent EnvironmentIdComponent { get; }
         internal PlayerIdComponent PlayerIdComponent { get; }
+        internal PlayerNameComponent PlayerNameComponent { get; }
         internal SessionTokenComponent SessionTokenComponent { get; }
         internal AuthenticationState State { get; set; }
         internal IAuthenticationSettings Settings { get; }
         internal IAuthenticationNetworkClient NetworkClient { get; set; }
+        internal IPlayerNamesApi PlayerNamesApi { get; set; }
+        internal IAuthenticationExceptionHandler ExceptionHandler { get; set; }
 
         readonly IProfile m_Profile;
         readonly IJwtDecoder m_JwtDecoder;
@@ -55,10 +61,12 @@ namespace Unity.Services.Authentication
         readonly IDateTimeWrapper m_DateTime;
         readonly IAuthenticationMetrics m_Metrics;
 
+
         internal event Action<AuthenticationState, AuthenticationState> StateChanged;
 
         internal AuthenticationServiceInternal(IAuthenticationSettings settings,
                                                IAuthenticationNetworkClient networkClient,
+                                               IPlayerNamesApi playerNamesApi,
                                                IProfile profile,
                                                IJwtDecoder jwtDecoder,
                                                IAuthenticationCache cache,
@@ -68,10 +76,12 @@ namespace Unity.Services.Authentication
                                                AccessTokenComponent accessToken,
                                                EnvironmentIdComponent environmentId,
                                                PlayerIdComponent playerId,
+                                               PlayerNameComponent playerName,
                                                SessionTokenComponent sessionToken)
         {
             Settings = settings;
             NetworkClient = networkClient;
+            PlayerNamesApi = playerNamesApi;
 
             m_Profile = profile;
             m_JwtDecoder = jwtDecoder;
@@ -80,15 +90,24 @@ namespace Unity.Services.Authentication
             m_DateTime = dateTime;
             m_Metrics = metrics;
 
+            ExceptionHandler = new AuthenticationExceptionHandler(m_Metrics);
+
             AccessTokenComponent = accessToken;
             EnvironmentIdComponent = environmentId;
             PlayerIdComponent = playerId;
+            PlayerNameComponent = playerName;
             SessionTokenComponent = sessionToken;
 
             State = AuthenticationState.SignedOut;
             MigrateCache();
 
+            PlayerIdComponent.PlayerIdChanged += OnPlayerIdChanged;
             Expired += () => m_Metrics.SendExpiredSessionMetric();
+        }
+
+        private void OnPlayerIdChanged(string playerId)
+        {
+            PlayerNameComponent.Clear();
         }
 
         public Task SignInAnonymouslyAsync(SignInOptions options = null)
@@ -101,7 +120,8 @@ namespace Unity.Services.Authentication
 
                     if (string.IsNullOrEmpty(sessionToken))
                     {
-                        var exception = BuildClientSessionTokenNotExistsException();
+                        SessionTokenComponent.Clear();
+                        var exception = ExceptionHandler.BuildClientSessionTokenNotExistsException();
                         SendSignInFailedEvent(exception, true);
                         return Task.FromException(exception);
                     }
@@ -118,14 +138,15 @@ namespace Unity.Services.Authentication
                 }
                 else
                 {
-                    var exception = BuildClientSessionTokenNotExistsException();
+                    SessionTokenComponent.Clear();
+                    var exception = ExceptionHandler.BuildClientSessionTokenNotExistsException();
                     SendSignInFailedEvent(exception, true);
                     return Task.FromException(exception);
                 }
             }
             else
             {
-                var exception = BuildClientInvalidStateException();
+                var exception = ExceptionHandler.BuildClientInvalidStateException(State);
                 SendSignInFailedEvent(exception, false);
                 return Task.FromException(exception);
             }
@@ -291,7 +312,7 @@ namespace Unity.Services.Authentication
             {
                 IdProvider = IdProviderKeys.Oculus,
                 Token = nonce,
-                OculusConfig = new OculusConfig(){UserId = userId},
+                OculusConfig = new OculusConfig() { UserId = userId },
                 SignInOnly = !options?.CreateAccount ?? false
             });
         }
@@ -302,7 +323,7 @@ namespace Unity.Services.Authentication
             {
                 IdProvider = IdProviderKeys.Oculus,
                 Token = nonce,
-                OculusConfig = new OculusConfig(){UserId = userId},
+                OculusConfig = new OculusConfig() { UserId = userId },
                 ForceLink = options?.ForceLink ?? false
             });
         }
@@ -316,7 +337,7 @@ namespace Unity.Services.Authentication
         {
             if (!ValidateOpenIdConnectIdProviderName(idProviderName))
             {
-                throw BuildInvalidIdProviderNameException();
+                throw ExceptionHandler.BuildInvalidIdProviderNameException();
             }
             return SignInWithExternalTokenAsync(idProviderName, new SignInWithExternalTokenRequest
             {
@@ -330,7 +351,7 @@ namespace Unity.Services.Authentication
         {
             if (!ValidateOpenIdConnectIdProviderName(idProviderName))
             {
-                throw BuildInvalidIdProviderNameException();
+                throw ExceptionHandler.BuildInvalidIdProviderNameException();
             }
             return LinkWithExternalTokenAsync(idProviderName, new LinkWithExternalTokenRequest()
             {
@@ -344,10 +365,11 @@ namespace Unity.Services.Authentication
         {
             if (!ValidateOpenIdConnectIdProviderName(idProviderName))
             {
-                throw BuildInvalidIdProviderNameException();
+                throw ExceptionHandler.BuildInvalidIdProviderNameException();
             }
             return UnlinkExternalTokenAsync(idProviderName);
         }
+
 
         public async Task DeleteAccountAsync()
         {
@@ -360,12 +382,12 @@ namespace Unity.Services.Authentication
                 }
                 catch (WebRequestException e)
                 {
-                    throw BuildServerException(e);
+                    throw ExceptionHandler.ConvertException(e);
                 }
             }
             else
             {
-                throw BuildClientInvalidStateException();
+                throw ExceptionHandler.BuildClientInvalidStateException(State);
             }
         }
 
@@ -378,6 +400,7 @@ namespace Unity.Services.Authentication
             {
                 SessionTokenComponent.Clear();
                 PlayerIdComponent.Clear();
+                PlayerNameComponent.Clear();
             }
 
             CancelScheduledRefresh();
@@ -395,12 +418,12 @@ namespace Unity.Services.Authentication
                 }
                 else
                 {
-                    throw BuildClientInvalidProfileException();
+                    throw ExceptionHandler.BuildClientInvalidProfileException();
                 }
             }
             else
             {
-                throw BuildClientInvalidStateException();
+                throw ExceptionHandler.BuildClientInvalidStateException(State);
             }
         }
 
@@ -412,7 +435,7 @@ namespace Unity.Services.Authentication
             }
             else
             {
-                throw BuildClientInvalidStateException();
+                throw ExceptionHandler.BuildClientInvalidStateException(State);
             }
         }
 
@@ -428,12 +451,83 @@ namespace Unity.Services.Authentication
                 }
                 catch (WebRequestException e)
                 {
-                    throw BuildServerException(e);
+                    throw ExceptionHandler.ConvertException(e);
                 }
             }
             else
             {
-                throw BuildClientInvalidStateException();
+                throw ExceptionHandler.BuildClientInvalidStateException(State);
+            }
+        }
+
+        public async Task<string> GetPlayerNameAsync()
+        {
+            if (IsAuthorized)
+            {
+                try
+                {
+                    PlayerNamesApi.Configuration.AccessToken = AccessTokenComponent.AccessToken;
+                    var response = await PlayerNamesApi.GetNameAsync(PlayerId);
+                    var player = response.Data;
+                    PlayerNameComponent.PlayerName = player.Name;
+                    return player.Name;
+                }
+                catch (ApiException e)
+                {
+                    if (e.Response.StatusCode == HttpStatusCode.NotFound)
+                    {
+                        PlayerNameComponent.Clear();
+                        return null;
+                    }
+
+                    throw ExceptionHandler.ConvertException(e);
+                }
+                catch (Exception e)
+                {
+                    throw ExceptionHandler.BuildUnknownException(e.Message);
+                }
+            }
+            else
+            {
+                throw ExceptionHandler.BuildClientInvalidStateException(State);
+            }
+        }
+
+        public async Task<string> UpdatePlayerNameAsync(string playerName)
+        {
+            if (IsAuthorized)
+            {
+                if (string.IsNullOrWhiteSpace(playerName) || playerName.Any(char.IsWhiteSpace))
+                {
+                    throw ExceptionHandler.BuildInvalidPlayerNameException();
+                }
+
+                try
+                {
+                    PlayerNamesApi.Configuration.AccessToken = AccessTokenComponent.AccessToken;
+                    var response = await PlayerNamesApi.UpdateNameAsync(PlayerId, new UpdateNameRequest(playerName));
+                    var playerNameResult = response.Data?.Name;
+
+                    if (string.IsNullOrWhiteSpace(playerNameResult))
+                    {
+                        throw ExceptionHandler.BuildUnknownException("Invalid player name response");
+                    }
+
+                    PlayerNameComponent.PlayerName = playerNameResult;
+                    return playerNameResult;
+                }
+                catch (ApiException e)
+                {
+                    throw ExceptionHandler.ConvertException(e);
+                }
+                catch (Exception e)
+                {
+                    throw ExceptionHandler.BuildUnknownException(e.Message);
+                }
+            }
+            else
+            {
+                throw ExceptionHandler.BuildClientInvalidStateException(State);
             }
         }
 
@@ -445,7 +539,7 @@ namespace Unity.Services.Authentication
             }
             else
             {
-                var exception = BuildClientInvalidStateException();
+                var exception = ExceptionHandler.BuildClientInvalidStateException(State);
                 SendSignInFailedEvent(exception, false);
                 return Task.FromException(exception);
             }
@@ -462,12 +556,12 @@ namespace Unity.Services.Authentication
                 }
                 catch (WebRequestException e)
                 {
-                    throw BuildServerException(e);
+                    throw ExceptionHandler.ConvertException(e);
                 }
             }
             else
             {
-                throw BuildClientInvalidStateException();
+                throw ExceptionHandler.BuildClientInvalidStateException(State);
             }
         }
 
@@ -479,7 +573,7 @@ namespace Unity.Services.Authentication
 
                 if (externalId == null)
                 {
-                    throw BuildClientUnlinkExternalIdNotFoundException();
+                    throw ExceptionHandler.BuildClientUnlinkExternalIdNotFoundException();
                 }
 
                 try
@@ -494,12 +588,12 @@ namespace Unity.Services.Authentication
                 }
                 catch (WebRequestException e)
                 {
-                    throw BuildServerException(e);
+                    throw ExceptionHandler.ConvertException(e);
                 }
             }
             else
             {
-                throw BuildClientInvalidStateException();
+                throw ExceptionHandler.BuildClientInvalidStateException(State);
             }
         }
 
@@ -539,7 +633,14 @@ namespace Unity.Services.Authentication
             }
             catch (WebRequestException e)
             {
-                var authException = BuildServerException(e);
+                var authException = ExceptionHandler.ConvertException(e);
+
+                if (authException.ErrorCode == AuthenticationErrorCodes.InvalidSessionToken)
+                {
+                    SessionTokenComponent.Clear();
+                    Logger.Log($"The session token is invalid and has been cleared. The associated account is no longer accessible through this login method.");
+                }
+
                 SendSignInFailedEvent(authException, true);
                 throw authException;
             }
@@ -688,7 +789,7 @@ namespace Unity.Services.Authentication
             }
             catch (Exception e)
             {
-                Debug.LogException(e);
+                Logger.LogException(e);
             }
         }
 
@@ -736,146 +837,6 @@ namespace Unity.Services.Authentication
             {
                 SignOut();
             }
-        }
-
-        /// <summary>
-        /// Returns an exception with <c>ClientInvalidUserState</c> error
-        /// when the player is in an invalid state.
-        /// </summary>
-        /// <returns>The exception that represents the error.</returns>
-        RequestFailedException BuildClientInvalidStateException()
-        {
-            var errorMessage = string.Empty;
-
-            switch (State)
-            {
-                case AuthenticationState.SignedOut:
-                    errorMessage = "Invalid state for this operation. The player is signed out.";
-                    break;
-                case AuthenticationState.SigningIn:
-                    errorMessage = "Invalid state for this operation. The player is already signing in.";
-                    break;
-                case AuthenticationState.Authorized:
-                case AuthenticationState.Refreshing:
-                    errorMessage = "Invalid state for this operation. The player is already signed in.";
-                    break;
-                case AuthenticationState.Expired:
-                    errorMessage = "Invalid state for this operation. The player session has expired.";
-                    break;
-            }
-            m_Metrics.SendClientInvalidStateExceptionMetric();
-            return AuthenticationException.Create(AuthenticationErrorCodes.ClientInvalidUserState, errorMessage);
-        }
-
-        /// <summary>
-        /// Returns an exception with <c>n</c> error
-        /// when trying to switch to an invalid profile.
-        /// </summary>
-        /// <returns>The exception that represents the error.</returns>
-        RequestFailedException BuildClientInvalidProfileException()
-        {
-            return AuthenticationException.Create(AuthenticationErrorCodes.ClientInvalidProfile, "Invalid profile name. The profile may only contain alphanumeric values, '-', '_', and must be no longer than 30 characters.");
-        }
-
-        /// <summary>
-        /// Returns an exception with <c>UnlinkExternalIdNotFound</c> error
-        /// when the player is calling <c>Unlink*</c> method but there is no external id found for the provider.
-        /// </summary>
-        /// <returns>The exception that represents the error.</returns>
-        RequestFailedException BuildClientUnlinkExternalIdNotFoundException()
-        {
-            m_Metrics.SendUnlinkExternalIdNotFoundExceptionMetric();
-            return AuthenticationException.Create(AuthenticationErrorCodes.ClientUnlinkExternalIdNotFound, "No external id was found to unlink from the provider. Use GetPlayerInfoAsync to load the linked external ids.");
-        }
-
-        /// <summary>
-        /// Returns an exception with <c>ClientNoActiveSession</c> error
-        /// when the player is calling <c>SignInAnonymously</c> methods while there is no session token stored.
-        /// </summary>
-        /// <returns>The exception that represents the error.</returns>
-        RequestFailedException BuildClientSessionTokenNotExistsException()
-        {
-            // At this point, the contents of the cache are invalid, and we don't want future
-            m_Metrics.SendClientSessionTokenNotExistsExceptionMetric();
-            // SignInAnonymously to read the current contents of the key.
-            SessionTokenComponent.Clear();
-            return AuthenticationException.Create(AuthenticationErrorCodes.ClientNoActiveSession, "There is no cached session token.");
-        }
-
-        /// <summary>
-        /// Convert a web request exception to an authentication or request failed exception.
-        /// </summary>
-        /// <param name="exception">The web request exception to convert.</param>
-        /// <returns>The converted exception.</returns>
-        internal RequestFailedException BuildServerException(WebRequestException exception)
-        {
-            Logger.Log($"Request failed: {exception.ResponseCode}, {exception.Message}");
-
-            if (exception.NetworkError)
-            {
-                m_Metrics.SendNetworkErrorMetric();
-                return AuthenticationException.Create(CommonErrorCodes.TransportError, $"Network Error: {exception.Message}", exception);
-            }
-
-            try
-            {
-                var errorResponse = JsonConvert.DeserializeObject<AuthenticationErrorResponse>(exception.Message);
-
-                var errorCode = MapErrorCodes(errorResponse.Title);
-
-                if (errorCode == AuthenticationErrorCodes.InvalidSessionToken)
-                {
-                    SessionTokenComponent.Clear();
-                    Logger.Log($"The session token is invalid and has been cleared. The associated account is no longer accessible through this login method.");
-                }
-
-                return AuthenticationException.Create(errorCode, errorResponse.Detail, exception);
-            }
-            catch (JsonException e)
-            {
-                return AuthenticationException.Create(CommonErrorCodes.Unknown, "Failed to deserialize server response.", e);
-            }
-            catch (Exception)
-            {
-                return AuthenticationException.Create(CommonErrorCodes.Unknown, "Unknown error deserializing server response. ", exception);
-            }
-        }
-
-        /// <summary>
-        /// Returns an exception with <c>InvalidParameters</c> error
-        /// when the open id connect id provider name is not valid
-        /// </summary>
-        /// <returns>The exception that represents the error.</returns>
-        RequestFailedException BuildInvalidIdProviderNameException()
-        {
-            return AuthenticationException.Create(AuthenticationErrorCodes.InvalidParameters, "Invalid IdProviderName. The Id Provider name should start with 'oidc-' and have between 6 and 20 characters (including 'oidc-')");
-        }
-
-        int MapErrorCodes(string serverErrorTitle)
-        {
-            switch (serverErrorTitle)
-            {
-                case "ENTITY_EXISTS":
-                    // This is the only reason why ENTITY_EXISTS is returned so far.
-                    // Include the request/API context in case it has a different meaning in the future.
-                    return AuthenticationErrorCodes.AccountAlreadyLinked;
-                case "LINKED_ACCOUNT_LIMIT_EXCEEDED":
-                    return AuthenticationErrorCodes.AccountLinkLimitExceeded;
-                case "INVALID_PARAMETERS":
-                    return AuthenticationErrorCodes.InvalidParameters;
-                case "INVALID_SESSION_TOKEN":
-                    return AuthenticationErrorCodes.InvalidSessionToken;
-                case "PERMISSION_DENIED":
-                    // This is the server side response when the third party token is invalid to sign-in or link a player.
-                    // Also map to AuthenticationErrorCodes.InvalidParameters since it's basically an invalid parameter.
-                    // Include the request/API context in case it has a different meaning in the future.
-                    return AuthenticationErrorCodes.InvalidParameters;
-                case "UNAUTHORIZED_REQUEST":
-                    // This happens when either the token is invalid or the token has expired.
-                    return CommonErrorCodes.InvalidToken;
-            }
-
-            return CommonErrorCodes.Unknown;
         }
 
         bool ValidateOpenIdConnectIdProviderName(string idProviderName)

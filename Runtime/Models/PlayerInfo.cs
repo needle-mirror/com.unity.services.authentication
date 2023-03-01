@@ -147,6 +147,7 @@ namespace Unity.Services.Authentication
             return ValidateOpenIdConnectIdProviderName(idProviderName) ? GetIdentityId(idProviderName) : null;
         }
 
+
         /// <summary>
         /// Get all OpenID Connect id providers linked to the player
         /// </summary>
