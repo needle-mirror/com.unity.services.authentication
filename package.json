@@ -1,12 +1,12 @@
 {
   "name": "com.unity.services.authentication",
   "displayName": "Authentication",
-  "version": "2.5.0-pre.3",
+  "version": "2.5.0",
   "unity": "2019.4",
   "description": "Client SDK offering player identity management for Unity Gaming Services.\n\nIdentity providers can be configured from the editor or the Unity Dashboard.\n\nPlayer management is available in the Unity Dashboard.",
   "dependencies": {
-    "com.unity.nuget.newtonsoft-json": "3.0.2",
-    "com.unity.services.core": "1.8.1",
+    "com.unity.nuget.newtonsoft-json": "3.2.1",
+    "com.unity.services.core": "1.9.0",
     "com.unity.modules.unitywebrequest": "1.0.0",
     "com.unity.ugui": "1.0.0"
   },
@@ -27,7 +27,7 @@
       "Windows 8 Universal",
       "Windows 10 Universal"
     ],
-    "changelog": "### Added\n- Added `GetPlayerNameAsync` to retrieve the current player name in the Authentication service\n- Added `UpdatePlayerNameAsync` to update the current player name in the Authentication service\n- Added `PlayerName` property and caching in the Authentication service\n### Changed\n- `PlayerId` property now properly returns null instead of an empty string by default\n- Package's license to refresh legal links."
+    "changelog": "### Fixed\n- Properly disposing web request when using player names\n- Fixing exception reporting in some cases for the SignInFailed event\n- Remove time validation on client side, to prevent token expiry errors caused by the wrong date/time settings on devices. \n- Adding Preserve attributes to api models to prevent issues with code stripping for player names"
   },
   "samples": [
     {
@@ -37,14 +37,14 @@
     }
   ],
   "relatedPackages": {
-    "com.unity.services.authentication.tests": "2.5.0-pre.3"
+    "com.unity.services.authentication.tests": "2.5.0"
   },
   "upmCi": {
-    "footprint": "832c63ba519a4a2f89631979244c3780da8ee91c"
+    "footprint": "d9d5780f5e2835666c46f5a3582f579a958bf667"
   },
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/operate-services-sdk.git",
     "type": "git",
-    "revision": "1ab5a01c761ac6172d70f8b21e9f065c46e5dfdf"
+    "revision": "8dff44bedc34fa7a78147c064baf8ed5b2108044"
   }
 }

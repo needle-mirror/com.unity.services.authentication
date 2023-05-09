@@ -1,4 +1,3 @@
-using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -46,7 +45,7 @@ namespace Unity.Services.Authentication
 
         public Task<T> PostAsync<T>(string url, object payload, IDictionary<string, string> headers = null)
         {
-            var jsonPayload = payload != null ? JsonConvert.SerializeObject(payload) : null;
+            var jsonPayload = payload != null ? IsolatedJsonConvert.SerializeObject(payload, SerializerSettings.DefaultSerializerSettings) : null;
 
             var request = new WebRequest(
                 Configuration,
@@ -61,7 +60,7 @@ namespace Unity.Services.Authentication
 
         public Task<T> PutAsync<T>(string url, object payload, IDictionary<string, string> headers = null)
         {
-            var jsonPayload = payload != null ? JsonConvert.SerializeObject(payload) : null;
+            var jsonPayload = payload != null ? IsolatedJsonConvert.SerializeObject(payload, SerializerSettings.DefaultSerializerSettings) : null;
 
             var request = new WebRequest(
                 Configuration,

@@ -54,7 +54,7 @@ namespace Unity.Services.Authentication
             {
                 try
                 {
-                    return JsonConvert.DeserializeObject<T>(textResult, m_JsonSerializerSettings);
+                    return IsolatedJsonConvert.DeserializeObject<T>(textResult, m_JsonSerializerSettings);
                 }
                 catch (Exception e)
                 {

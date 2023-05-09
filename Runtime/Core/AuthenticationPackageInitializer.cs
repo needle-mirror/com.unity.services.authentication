@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using Unity.Services.Authentication.Generated.Api;
+using Unity.Services.Authentication.Generated;
 using Unity.Services.Authentication.Internal;
 using Unity.Services.Authentication.Shared;
 using Unity.Services.Core.Configuration.Internal;
@@ -24,10 +24,9 @@ namespace Unity.Services.Authentication
             var projectId = registry.GetServiceComponent<ICloudProjectId>();
             var projectConfiguration = registry.GetServiceComponent<IProjectConfiguration>();
             var profile = new ProfileComponent(projectConfiguration.GetString(AuthenticationExtensions.ProfileKey, "default"));
-            var dateTime = new DateTimeWrapper();
             var metricsFactory = registry.GetServiceComponent<IMetricsFactory>();
             var metrics = new AuthenticationMetrics(metricsFactory);
-            var jwtDecoder = new JwtDecoder(dateTime);
+            var jwtDecoder = new JwtDecoder();
             var cache = new AuthenticationCache(projectId, profile);
             var accessToken = new AccessTokenComponent();
             var environmentId = new EnvironmentIdComponent();
@@ -57,7 +56,6 @@ namespace Unity.Services.Authentication
                 jwtDecoder,
                 cache,
                 scheduler,
-                dateTime,
                 metrics,
                 accessToken,
                 environmentId,

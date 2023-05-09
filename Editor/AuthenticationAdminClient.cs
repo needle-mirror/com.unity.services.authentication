@@ -187,10 +187,10 @@ namespace Unity.Services.Authentication.Editor
                 switch (service)
                 {
                     case ServiceCalled.TokenExchange:
-                        var tokenExchangeErrorResponse = JsonConvert.DeserializeObject<TokenExchangeErrorResponse>(exception.Message);
+                        var tokenExchangeErrorResponse = IsolatedJsonConvert.DeserializeObject<TokenExchangeErrorResponse>(exception.Message, SerializerSettings.DefaultSerializerSettings);
                         return AuthenticationException.Create(MapErrorCodes(tokenExchangeErrorResponse.Name), tokenExchangeErrorResponse.Message);
                     case ServiceCalled.AuthenticationAdmin:
-                        var authenticationAdminErrorResponse = JsonConvert.DeserializeObject<AuthenticationErrorResponse>(exception.Message);
+                        var authenticationAdminErrorResponse = IsolatedJsonConvert.DeserializeObject<AuthenticationErrorResponse>(exception.Message, SerializerSettings.DefaultSerializerSettings);
                         if (authenticationAdminErrorResponse.Status == 401)
                         {
                             GatewayToken = null;

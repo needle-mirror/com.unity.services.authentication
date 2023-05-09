@@ -33,9 +33,19 @@ namespace Unity.Services.Authentication.Editor
         internal OpenIDConfig OidcConfig { get; set; }
 
         /// <summary>
+        /// Whether the client id is needed in the target ID provider. True by default.
+        /// </summary>
+        public bool NeedClientId { get; set; } = true;
+
+        /// <summary>
         /// Whether the client secret is needed in the target ID provider.
         /// </summary>
         public bool NeedClientSecret { get; set; }
+
+        /// <summary>
+        /// Whether the id provider can be deleted. True by default
+        /// </summary>
+        public bool CanBeDeleted { get; set; } = true;
 
         /// <summary>
         /// The delegate to create custom settings UI element for the ID provider.

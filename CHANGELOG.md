@@ -4,6 +4,13 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] - 2023-05-09
+### Fixed
+- Properly disposing web request when using player names
+- Fixing exception reporting in some cases for the SignInFailed event
+- Remove time validation on client side, to prevent token expiry errors caused by the wrong date/time settings on devices. 
+- Adding Preserve attributes to api models to prevent issues with code stripping for player names
+
 ## [2.5.0-pre.3] - 2023-03-01
 ### Added
 - Added `GetPlayerNameAsync` to retrieve the current player name in the Authentication service

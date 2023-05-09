@@ -1,6 +1,7 @@
-using Newtonsoft.Json;
+using System;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using Unity.Services.Authentication.Shared;
 using UnityEngine.Networking;
 
@@ -88,14 +89,16 @@ namespace Unity.Services.Authentication
         async Task<ApiResponse> SendAsync(string path, WebRequestVerb method, ApiRequestOptions options, IApiConfiguration configuration, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             bool shouldRetry;
-            int attempts = 0;
+            var attempts = 0;
 
             do
             {
                 try
                 {
-                    var request = BuildWebRequest(path, method, options, configuration);
-                    return await AuthenticationWebRequestUtils.SendWebRequestAsync(request);
+                    using (var request = BuildWebRequest(path, method, options, configuration))
+                    {
+                        return await AuthenticationWebRequestUtils.SendWebRequestAsync(request);
+                    }
                 }
                 catch (ApiException e)
                 {
@@ -107,7 +110,8 @@ namespace Unity.Services.Authentication
                         throw;
                     }
                 }
-            } while (shouldRetry);
+            }
+            while (shouldRetry);
 
             return null;
         }
@@ -115,30 +119,32 @@ namespace Unity.Services.Authentication
         async Task<ApiResponse<T>> SendAsync<T>(string path, WebRequestVerb method, ApiRequestOptions options, IApiConfiguration configuration, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             bool shouldRetry;
-            int retries = 0;
+            var attempts = 0;
 
             do
             {
                 try
                 {
-                    var request = BuildWebRequest(path, method, options, configuration);
-                    return await AuthenticationWebRequestUtils.SendWebRequestAsync<T>(request, cancellationToken);
+                    using (var request = BuildWebRequest(path, method, options, configuration))
+                    {
+                        return await AuthenticationWebRequestUtils.SendWebRequestAsync<T>(request, cancellationToken);
+                    }
                 }
                 catch (ApiException e)
                 {
                     shouldRetry = e.Type == ApiExceptionType.Network;
 
-                    if (retries >= Configuration.Retries || !shouldRetry)
+                    if (attempts >= Configuration.Retries || !shouldRetry)
                     {
                         throw;
                     }
 
-                    retries++;
+                    attempts++;
                 }
-            } while (shouldRetry);
+            }
+            while (shouldRetry);
 
             return null;
-
         }
 
         internal UnityWebRequest BuildWebRequest(string path, WebRequestVerb method, ApiRequestOptions options, IApiConfiguration configuration)
@@ -179,7 +185,7 @@ namespace Unity.Services.Authentication
             if (options.Data != null)
             {
                 var settings = new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore };
-                var data = JsonConvert.SerializeObject(options.Data, settings);
+                var data = IsolatedJsonConvert.SerializeObject(options.Data, settings);
                 request.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(data));
             }
 

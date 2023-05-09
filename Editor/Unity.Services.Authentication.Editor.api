@@ -15,11 +15,13 @@ namespace Unity.Services.Authentication.Editor
 
     public class IdProviderOptions
     {
+        public bool CanBeDeleted { get; set; }
         public string ClientIdDisplayName { get; set; }
         public string ClientSecretDisplayName { get; set; }
         public IdProviderOptions.CreateCustomSettingsElementDelegate CustomSettingsElementCreator { get; set; }
         public string DisplayName { get; set; }
         public string IdProviderType { get; set; }
+        public bool NeedClientId { get; set; }
         public bool NeedClientSecret { get; set; }
         public IdProviderOptions() {}
         public delegate IdProviderCustomSettingsElement CreateCustomSettingsElementDelegate(string idDomain, System.Func<string> servicesGatewayTokenCallback, bool skipConfirmation);

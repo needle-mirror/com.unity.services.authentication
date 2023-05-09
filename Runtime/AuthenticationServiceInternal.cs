@@ -1,10 +1,8 @@
 using System;
 using System.Linq;
-using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Unity.Services.Authentication.Generated.Api;
-using Unity.Services.Authentication.Generated.Model;
+using Unity.Services.Authentication.Generated;
 using Unity.Services.Authentication.Shared;
 using Unity.Services.Core;
 using Unity.Services.Core.Scheduler.Internal;
@@ -58,26 +56,25 @@ namespace Unity.Services.Authentication
         readonly IJwtDecoder m_JwtDecoder;
         readonly IAuthenticationCache m_Cache;
         readonly IActionScheduler m_Scheduler;
-        readonly IDateTimeWrapper m_DateTime;
         readonly IAuthenticationMetrics m_Metrics;
 
 
         internal event Action<AuthenticationState, AuthenticationState> StateChanged;
 
-        internal AuthenticationServiceInternal(IAuthenticationSettings settings,
-                                               IAuthenticationNetworkClient networkClient,
-                                               IPlayerNamesApi playerNamesApi,
-                                               IProfile profile,
-                                               IJwtDecoder jwtDecoder,
-                                               IAuthenticationCache cache,
-                                               IActionScheduler scheduler,
-                                               IDateTimeWrapper dateTime,
-                                               IAuthenticationMetrics metrics,
-                                               AccessTokenComponent accessToken,
-                                               EnvironmentIdComponent environmentId,
-                                               PlayerIdComponent playerId,
-                                               PlayerNameComponent playerName,
-                                               SessionTokenComponent sessionToken)
+        internal AuthenticationServiceInternal(
+            IAuthenticationSettings settings,
+            IAuthenticationNetworkClient networkClient,
+            IPlayerNamesApi playerNamesApi,
+            IProfile profile,
+            IJwtDecoder jwtDecoder,
+            IAuthenticationCache cache,
+            IActionScheduler scheduler,
+            IAuthenticationMetrics metrics,
+            AccessTokenComponent accessToken,
+            EnvironmentIdComponent environmentId,
+            PlayerIdComponent playerId,
+            PlayerNameComponent playerName,
+            SessionTokenComponent sessionToken)
         {
             Settings = settings;
             NetworkClient = networkClient;
@@ -87,7 +84,6 @@ namespace Unity.Services.Authentication
             m_JwtDecoder = jwtDecoder;
             m_Cache = cache;
             m_Scheduler = scheduler;
-            m_DateTime = dateTime;
             m_Metrics = metrics;
 
             ExceptionHandler = new AuthenticationExceptionHandler(m_Metrics);
@@ -474,7 +470,7 @@ namespace Unity.Services.Authentication
                 }
                 catch (ApiException e)
                 {
-                    if (e.Response.StatusCode == HttpStatusCode.NotFound)
+                    if (e.Response.StatusCode == 404) // HttpStatusCode.NotFound
                     {
                         PlayerNameComponent.Clear();
                         return null;
@@ -702,7 +698,7 @@ namespace Unity.Services.Authentication
                     var refreshTime = response.ExpiresIn - Settings.AccessTokenRefreshBuffer;
                     var expiryTime = response.ExpiresIn - Settings.AccessTokenExpiryBuffer;
 
-                    AccessTokenComponent.ExpiryTime = m_DateTime.UtcNow.AddSeconds(expiryTime);
+                    AccessTokenComponent.ExpiryTime = DateTime.UtcNow.AddSeconds(expiryTime);
 
                     if (enableRefresh)
                     {
@@ -727,7 +723,7 @@ namespace Unity.Services.Authentication
         {
             CancelScheduledRefresh();
 
-            if (m_DateTime.UtcNow.AddSeconds(delay) < AccessTokenComponent.ExpiryTime)
+            if (DateTime.UtcNow.AddSeconds(delay) < AccessTokenComponent.ExpiryTime)
             {
                 Logger.LogVerbose($"Scheduling refresh in {delay} seconds.");
                 RefreshActionId = m_Scheduler.ScheduleAction(ExecuteScheduledRefresh, delay);

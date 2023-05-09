@@ -1,6 +1,5 @@
 using Newtonsoft.Json;
 using System;
-using System.Net;
 using System.Text;
 using Unity.Services.Authentication.Shared;
 using Unity.Services.Core;
@@ -106,7 +105,7 @@ namespace Unity.Services.Authentication
 
             try
             {
-                var errorResponse = JsonConvert.DeserializeObject<AuthenticationErrorResponse>(exception.Message);
+                var errorResponse = IsolatedJsonConvert.DeserializeObject<AuthenticationErrorResponse>(exception.Message, SerializerSettings.DefaultSerializerSettings);
                 var errorCode = MapErrorCodes(errorResponse.Title);
 
                 return AuthenticationException.Create(errorCode, errorResponse.Detail, exception);
@@ -127,38 +126,55 @@ namespace Unity.Services.Authentication
             switch (exception?.Type)
             {
                 case ApiExceptionType.InvalidParameters:
-                    throw AuthenticationException.Create(AuthenticationErrorCodes.InvalidParameters, exception.Message);
+                    return AuthenticationException.Create(AuthenticationErrorCodes.InvalidParameters, exception.Message);
                 case ApiExceptionType.Deserialization:
                     return AuthenticationException.Create(CommonErrorCodes.Unknown, exception.Message);
                 case ApiExceptionType.Network: // 5XX
-                    switch (exception?.Response?.StatusCode)
-                    {
-                        case HttpStatusCode.ServiceUnavailable:
-                            throw AuthenticationException.Create(CommonErrorCodes.ServiceUnavailable, exception.Message);
-                        case HttpStatusCode.GatewayTimeout:
-                            throw AuthenticationException.Create(CommonErrorCodes.Timeout, exception.Message);
-                        default:
-                            throw AuthenticationException.Create(CommonErrorCodes.TransportError, exception.Message);
-                    }
+                    return CreateNetworkException(exception);
                 case ApiExceptionType.Http: // 4XX
-                    switch (exception?.Response?.StatusCode)
-                    {
-                        case HttpStatusCode.BadRequest:
-                            throw AuthenticationException.Create(CommonErrorCodes.InvalidRequest, exception.Message);
-                        case HttpStatusCode.Unauthorized:
-                            throw AuthenticationException.Create(CommonErrorCodes.InvalidToken, exception.Message);
-                        case HttpStatusCode.Forbidden:
-                            throw AuthenticationException.Create(CommonErrorCodes.Forbidden, exception.Message);
-                        case HttpStatusCode.NotFound:
-                            throw AuthenticationException.Create(CommonErrorCodes.NotFound, exception.Message);
-                        case HttpStatusCode.RequestTimeout:
-                            throw AuthenticationException.Create(CommonErrorCodes.Timeout, exception.Message);
-                        default:
-                            throw AuthenticationException.Create(CommonErrorCodes.InvalidRequest, exception.Message);
-                    }
+                    return CreateHttpException(exception);
+                default:
+                    return CreateUnknownException(exception);
             }
+        }
 
-            return AuthenticationException.Create(CommonErrorCodes.TransportError, $"Network Error: {exception.Message}", exception);
+        static RequestFailedException CreateNetworkException(ApiException exception)
+        {
+            switch (exception?.Response?.StatusCode)
+            {
+                case 503: // HttpStatusCode.ServiceUnavailable
+                    return AuthenticationException.Create(CommonErrorCodes.ServiceUnavailable, exception.Message);
+                case 504: // HttpStatusCode.GatewayTimeout
+                    return AuthenticationException.Create(CommonErrorCodes.Timeout, exception.Message);
+                default:
+                    return AuthenticationException.Create(CommonErrorCodes.TransportError, exception.Message);
+            }
+        }
+
+        static RequestFailedException CreateHttpException(ApiException exception)
+        {
+            switch (exception?.Response?.StatusCode)
+            {
+                case 400: // HttpStatusCode.BadRequest
+                    return AuthenticationException.Create(CommonErrorCodes.InvalidRequest, exception.Message);
+                case 401: // HttpStatusCode.Unauthorized
+                    return AuthenticationException.Create(CommonErrorCodes.InvalidToken, exception.Message);
+                case 403: // HttpStatusCode.Forbidden
+                    return AuthenticationException.Create(CommonErrorCodes.Forbidden, exception.Message);
+                case 404: // HttpStatusCode.NotFound
+                    return AuthenticationException.Create(CommonErrorCodes.NotFound, exception.Message);
+                case 408: // HttpStatusCode.RequestTimeout
+                    return AuthenticationException.Create(CommonErrorCodes.Timeout, exception.Message);
+                case 429: // HttpStatusCode.TooManyRequests
+                    return AuthenticationException.Create(CommonErrorCodes.TooManyRequests, exception.Message);
+                default:
+                    return AuthenticationException.Create(CommonErrorCodes.InvalidRequest, exception.Message);
+            }
+        }
+
+        static RequestFailedException CreateUnknownException(Exception exception)
+        {
+            return AuthenticationException.Create(CommonErrorCodes.Unknown, $"Unknown Error: {exception.Message}");
         }
 
         int MapErrorCodes(string serverErrorTitle)

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
-using Newtonsoft.Json;
 
 namespace Unity.Services.Authentication
 {
@@ -13,15 +12,7 @@ namespace Unity.Services.Authentication
     /// </summary>
     class JwtDecoder : IJwtDecoder
     {
-        static readonly DateTime k_UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
         static readonly char[] k_JwtSeparator = { '.' };
-
-        readonly IDateTimeWrapper m_DateTime;
-
-        internal JwtDecoder(IDateTimeWrapper dateTime)
-        {
-            m_DateTime = dateTime;
-        }
 
         public T Decode<T>(string token) where T : BaseJwt
         {
@@ -30,14 +21,7 @@ namespace Unity.Services.Authentication
             {
                 var payload = parts[1];
                 var payloadJson = Encoding.UTF8.GetString(Base64UrlDecode(payload));
-                var payloadData = JsonConvert.DeserializeObject<T>(payloadJson);
-
-                var secondsSinceEpoch = m_DateTime.SecondsSinceUnixEpoch();
-                if (payloadData != null && secondsSinceEpoch >= payloadData.ExpirationTimeUnix)
-                {
-                    Logger.LogError("Token has expired.");
-                    return null;
-                }
+                var payloadData = IsolatedJsonConvert.DeserializeObject<T>(payloadJson, SerializerSettings.DefaultSerializerSettings);
 
                 return payloadData;
             }

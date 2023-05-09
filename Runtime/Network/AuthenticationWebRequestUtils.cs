@@ -1,4 +1,3 @@
-using Newtonsoft.Json;
 using System;
 using System.Net;
 using System.Threading.Tasks;
@@ -55,7 +54,7 @@ namespace Unity.Services.Authentication
         {
             var response = new ApiResponse()
             {
-                StatusCode = (HttpStatusCode)request.responseCode,
+                StatusCode = (int)request.responseCode,
                 ErrorText = request.error,
                 RawContent = request.downloadHandler?.text,
             };
@@ -80,7 +79,7 @@ namespace Unity.Services.Authentication
         {
             var response = new ApiResponse<T>()
             {
-                StatusCode = (HttpStatusCode)request.responseCode,
+                StatusCode = (int)request.responseCode,
                 ErrorText = request.error,
                 RawContent = request.downloadHandler?.text,
             };
@@ -101,7 +100,7 @@ namespace Unity.Services.Authentication
                 {
                     if (!string.IsNullOrEmpty(request.downloadHandler?.text))
                     {
-                        response.Data = JsonConvert.DeserializeObject<T>(request.downloadHandler?.text);
+                        response.Data = IsolatedJsonConvert.DeserializeObject<T>(request.downloadHandler?.text, SerializerSettings.DefaultSerializerSettings);
                     }
                 }
                 catch (Exception)

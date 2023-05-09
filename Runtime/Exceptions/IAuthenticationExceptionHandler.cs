@@ -68,6 +68,5 @@ namespace Unity.Services.Authentication
         /// <param name="exception">The api exception to convert.</param>
         /// <returns>The converted exception.</returns>
         RequestFailedException ConvertException(ApiException exception);
-
     }
 }

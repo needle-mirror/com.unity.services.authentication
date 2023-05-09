@@ -11,5 +11,6 @@ namespace Unity.Services.Authentication.Editor
         internal const string SignInWithApple = "Sign-in with Apple";
         internal const string Steam = "Steam";
         internal const string Oculus = "Oculus";
+        internal const string UsernamePassword = "Username and Password";
     }
 }

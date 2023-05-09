@@ -111,7 +111,7 @@ namespace Unity.Services.Authentication.Editor
             (SavedValue?.OidcConfig.Issuer ?? "") != (CurrentValue?.OidcConfig.Issuer ?? "");
 
         public bool IsValid =>
-            !string.IsNullOrEmpty(CurrentValue.ClientId) &&
+            (!m_Options.NeedClientId || !string.IsNullOrEmpty(CurrentValue.ClientId)) &&
             (!m_Options.NeedClientSecret || !string.IsNullOrEmpty(CurrentValue.ClientSecret)) &&
             (m_Options.OidcConfig.Issuer == null || !string.IsNullOrEmpty(CurrentValue.OidcConfig.Issuer));
 
@@ -155,8 +155,15 @@ namespace Unity.Services.Authentication.Editor
                 EnabledToggle.RegisterCallback<ChangeEvent<bool>>(OnEnabledChanged);
 
                 ClientIdField = containerUI.Q<TextField>("id-provider-client-id");
-                ClientIdField.label = options.ClientIdDisplayName;
-                ClientIdField.RegisterCallback<ChangeEvent<string>>(OnClientIdChanged);
+                if (options.NeedClientId)
+                {
+                    ClientIdField.label = options.ClientIdDisplayName;
+                    ClientIdField.RegisterCallback<ChangeEvent<string>>(OnClientIdChanged);
+                }
+                else
+                {
+                    ClientIdField.style.display = DisplayStyle.None;
+                }
 
                 ClientSecretField = containerUI.Q<TextField>("id-provider-client-secret");
                 if (options.NeedClientSecret)
@@ -235,11 +242,23 @@ namespace Unity.Services.Authentication.Editor
                 DeleteButton.SetEnabled(false);
                 DeleteButton.style.display = DisplayStyle.None;
                 CustomSettingsElement?.SetEnabled(false);
+                if (!m_Options.NeedClientId && !m_Options.NeedClientSecret)
+                {
+                    SaveButton.SetEnabled(IsValid);
+                }
             }
             else
             {
-                DeleteButton.SetEnabled(true);
-                DeleteButton.style.display = DisplayStyle.Flex;
+                if (!m_Options.CanBeDeleted)
+                {
+                    DeleteButton.SetEnabled(false);
+                    DeleteButton.style.display = DisplayStyle.None;
+                }
+                else
+                {
+                    DeleteButton.SetEnabled(true);
+                    DeleteButton.style.display = DisplayStyle.Flex;
+                }
                 CustomSettingsElement?.SetEnabled(true);
             }
         }
