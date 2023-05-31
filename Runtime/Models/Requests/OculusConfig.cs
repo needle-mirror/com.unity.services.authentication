@@ -1,6 +1,6 @@
-using System;
 using Newtonsoft.Json;
-using UnityEngine;
+using System;
+using UnityEngine.Scripting;
 
 namespace Unity.Services.Authentication
 {
@@ -8,12 +8,18 @@ namespace Unity.Services.Authentication
     /// Configuration for an Oculus Id provider.
     /// </summary>
     [Serializable]
-    struct OculusConfig
+    class OculusConfig
     {
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        [Preserve]
+        internal OculusConfig() {}
+
         /// <summary>
         /// Oculus account userId
         /// </summary>
         [JsonProperty("userId")]
-        public string UserId { get; set; }
+        public string UserId;
     }
 }

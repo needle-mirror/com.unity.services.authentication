@@ -1,10 +1,15 @@
 using Newtonsoft.Json;
-using UnityEngine;
+using System;
+using UnityEngine.Scripting;
 
 namespace Unity.Services.Authentication
 {
+    [Serializable]
     class SignInWithOculusRequest : SignInWithExternalTokenRequest
     {
+        [Preserve]
+        internal SignInWithOculusRequest() {}
+
         /// <summary>
         /// Option to add oculus config
         /// </summary>

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using JetBrains.Annotations;
 
 namespace Unity.Services.Authentication
 {
@@ -28,6 +29,7 @@ namespace Unity.Services.Authentication
         /// </summary>
         public List<Identity> Identities { get; }
 
+
         /// <summary>
         /// Constructor
         /// </summary>
@@ -40,21 +42,23 @@ namespace Unity.Services.Authentication
         /// <summary>
         /// Constructor
         /// </summary>
-        internal PlayerInfo(PlayerInfoResponse response) : this(response.Id, response.CreatedAt, response.ExternalIds)
+        internal PlayerInfo(PlayerInfoResponse response) : this(response.Id, response.CreatedAt, response.ExternalIds,
+            response.UsernamePassword?.Username, response.UsernamePassword?.PasswordUpdatedAt)
         {
         }
 
         /// <summary>
         /// Constructor
         /// </summary>
-        internal PlayerInfo(User user) : this(user.Id, user.CreatedAt, user.ExternalIds)
+        internal PlayerInfo(User user) : this(user.Id, user.CreatedAt, user.ExternalIds,
+            user.UsernameInfo?.Username ?? user.Username, user.UsernameInfo?.PasswordUpdatedAt)
         {
         }
 
         /// <summary>
         /// Constructor
         /// </summary>
-        internal PlayerInfo(string playerId, string createdAt, List<ExternalIdentity> externalIdentities)
+        internal PlayerInfo(string playerId, string createdAt, List<ExternalIdentity> externalIdentities, string username, string lastPasswordUpdate)
         {
             Id = playerId;
             Identities = new List<Identity>();
@@ -72,6 +76,7 @@ namespace Unity.Services.Authentication
                     Identities.Add(new Identity(externalId));
                 }
             }
+
         }
 
         /// <summary>
@@ -147,6 +152,14 @@ namespace Unity.Services.Authentication
             return ValidateOpenIdConnectIdProviderName(idProviderName) ? GetIdentityId(idProviderName) : null;
         }
 
+        /// <summary>
+        /// Returns the player's Unity id if one has been linked
+        /// </summary>
+        /// <returns>The player's Unity id</returns>
+        public string GetUnityId()
+        {
+            return GetIdentityId(IdProviderKeys.Unity);
+        }
 
         /// <summary>
         /// Get all OpenID Connect id providers linked to the player

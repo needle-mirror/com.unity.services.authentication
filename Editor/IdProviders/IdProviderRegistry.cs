@@ -16,7 +16,10 @@ namespace Unity.Services.Authentication.Editor
         /// <summary>
         /// All ID provider types, sorted by alphabetical order.
         /// </summary>
-        internal static IEnumerable<string> AllNames => IdProviderOptions.Select(x => x.Value.DisplayName).OrderBy(s => s);
+        internal static IEnumerable<string> AllNames => IdProviderOptions
+        .Where(x => x.Value.DisplayName != IdProviderNames.Unity)
+        .Select(x => x.Value.DisplayName)
+        .OrderBy(s => s);
 
         /// <summary>
         /// The default set of ID provider options.
@@ -85,6 +88,14 @@ namespace Unity.Services.Authentication.Editor
                 ClientIdDisplayName = "App ID",
                 ClientSecretDisplayName = "Key",
                 NeedClientSecret = true
+            }
+            ,
+            [IdProviderKeys.Unity] = new IdProviderOptions
+            {
+                IdProviderType = IdProviderKeys.Unity,
+                DisplayName = IdProviderNames.Unity,
+                ClientIdDisplayName = "Client ID",
+                NeedClientSecret = false,
             }
         };
 

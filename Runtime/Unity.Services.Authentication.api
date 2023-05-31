@@ -58,6 +58,7 @@ namespace Unity.Services.Authentication
         public System.Threading.Tasks.Task LinkWithOculusAsync(string nonce, string userId, LinkOptions options = default(LinkOptions));
         public System.Threading.Tasks.Task LinkWithOpenIdConnectAsync(string idProviderName, string idToken, LinkOptions options = default(LinkOptions));
         public System.Threading.Tasks.Task LinkWithSteamAsync(string sessionTicket, LinkOptions options = default(LinkOptions));
+        public System.Threading.Tasks.Task LinkWithUnityAsync(string token, LinkOptions options = default(LinkOptions));
         public System.Threading.Tasks.Task SignInAnonymouslyAsync(SignInOptions options = default(SignInOptions));
         public System.Threading.Tasks.Task SignInWithAppleAsync(string idToken, SignInOptions options = default(SignInOptions));
         public System.Threading.Tasks.Task SignInWithAppleGameCenterAsync(string signature, string teamPlayerId, string publicKeyURL, string salt, System.UInt64 timestamp, SignInOptions options = default(SignInOptions));
@@ -67,6 +68,7 @@ namespace Unity.Services.Authentication
         public System.Threading.Tasks.Task SignInWithOculusAsync(string nonce, string userId, SignInOptions options = default(SignInOptions));
         public System.Threading.Tasks.Task SignInWithOpenIdConnectAsync(string idProviderName, string idToken, SignInOptions options = default(SignInOptions));
         public System.Threading.Tasks.Task SignInWithSteamAsync(string sessionTicket, SignInOptions options = default(SignInOptions));
+        public System.Threading.Tasks.Task SignInWithUnityAsync(string token, SignInOptions options = default(SignInOptions));
         public void SignOut(bool clearCredentials = false);
         public void SwitchProfile(string profile);
         public System.Threading.Tasks.Task UnlinkAppleAsync();
@@ -77,6 +79,7 @@ namespace Unity.Services.Authentication
         public System.Threading.Tasks.Task UnlinkOculusAsync();
         public System.Threading.Tasks.Task UnlinkOpenIdConnectAsync(string idProviderName);
         public System.Threading.Tasks.Task UnlinkSteamAsync();
+        public System.Threading.Tasks.Task UnlinkUnityAsync();
         public System.Threading.Tasks.Task<string> UpdatePlayerNameAsync(string name);
     }
 
@@ -106,6 +109,7 @@ namespace Unity.Services.Authentication
         public string GetOpenIdConnectId(string idProviderName);
         public System.Collections.Generic.List<Identity> GetOpenIdConnectIdProviders();
         public string GetSteamId();
+        public string GetUnityId();
     }
 
     public sealed class SignInOptions

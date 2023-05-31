@@ -159,6 +159,7 @@ namespace Unity.Services.Authentication.Editor
                 {
                     ClientIdField.label = options.ClientIdDisplayName;
                     ClientIdField.RegisterCallback<ChangeEvent<string>>(OnClientIdChanged);
+                    ClientIdField.SetEnabled(options.DisplayName != IdProviderNames.Unity);
                 }
                 else
                 {

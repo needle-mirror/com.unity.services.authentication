@@ -226,3 +226,18 @@ Clearing all `PlayerPrefs` keys will require the player to sign in again from sc
   * Returns the current player's player info, such as account creation time and linked external ids.
     * This is only partially loaded during sign in operations.
     * Use `AuthenticationService.Instance.GetPlayerInfoAsync()` to load the all the player info.
+* `SignUpWithUsernamePasswordAsync`
+  * This triggers the sign-up of the player with username and password.
+  * If you attempt to sign up while already signed in or currently signing in, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
+* `SignInWithUsernamePasswordAsync`
+  * This triggers the sign-in of the player with username and password.
+  * If you attempt to sign in while already signed in or currently signing in, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
+* `AddUsernamePasswordAsync`
+  * This function creates username and password credentials to an existing account. The player can later sign-in with the recently added username/password account.
+  * If you attempt to link with an account that is already linked with another player, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountAlreadyLinked`.
+  * If you attempt to link without being authorized, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
+* `UpdatePasswordAsync`
+  * This function updates the password for a username/password account.
+  * If you update the user password while signed out the user will still be signed out.
+  * If you update the user password while signed in the user will be signed in again.
+  * If you attempt to update the user password while currently signing in, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.

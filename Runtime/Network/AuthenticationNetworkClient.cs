@@ -13,7 +13,6 @@ namespace Unity.Services.Authentication
         const string k_LinkExternalTokenUrlStem = "/v1/authentication/link";
         const string k_UnlinkExternalTokenUrlStem = "/v1/authentication/unlink";
         const string k_UsersUrlStem = "/v1/users";
-
         internal AccessTokenComponent AccessTokenComponent { get; }
         internal ICloudProjectId CloudProjectIdComponent { get; }
         internal IEnvironments EnvironmentComponent { get; }
@@ -28,6 +27,9 @@ namespace Unity.Services.Authentication
         readonly string m_LinkExternalTokenUrl;
         readonly string m_UnlinkExternalTokenUrl;
         readonly string m_UsersUrl;
+        readonly string m_UsernamePasswordSignInUrl;
+        readonly string m_UsernamePasswordSignUpUrl;
+        readonly string m_UpdatePasswordUrl;
 
         readonly Dictionary<string, string> m_CommonHeaders;
 
@@ -48,7 +50,6 @@ namespace Unity.Services.Authentication
             m_LinkExternalTokenUrl = host + k_LinkExternalTokenUrlStem;
             m_UnlinkExternalTokenUrl = host + k_UnlinkExternalTokenUrlStem;
             m_UsersUrl = host + k_UsersUrlStem;
-
 
             m_CommonHeaders = new Dictionary<string, string>
             {

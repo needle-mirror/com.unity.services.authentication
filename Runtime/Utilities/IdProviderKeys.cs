@@ -11,5 +11,6 @@ namespace Unity.Services.Authentication
         internal const string Oculus = "oculus";
         internal const string OpenIDConnect = "oidc-";
         internal const string Steam = "steampowered.com";
+        internal const string Unity = "unity";
     }
 }

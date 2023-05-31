@@ -17,6 +17,7 @@ namespace Unity.Services.Authentication
         public event Action SignedIn;
         public event Action SignedOut;
         public event Action Expired;
+        public event Action<RequestFailedException> UpdatePasswordFailed;
 
         public bool IsSignedIn =>
             State == AuthenticationState.Authorized ||
@@ -366,6 +367,30 @@ namespace Unity.Services.Authentication
             return UnlinkExternalTokenAsync(idProviderName);
         }
 
+        public Task SignInWithUnityAsync(string token, SignInOptions options = null)
+        {
+            return SignInWithExternalTokenAsync(IdProviderKeys.Unity, new SignInWithExternalTokenRequest
+            {
+                IdProvider = IdProviderKeys.Unity,
+                Token = token,
+                SignInOnly = !options?.CreateAccount ?? false
+            });
+        }
+
+        public Task LinkWithUnityAsync(string token, LinkOptions options = null)
+        {
+            return LinkWithExternalTokenAsync(IdProviderKeys.Unity, new LinkWithExternalTokenRequest
+            {
+                IdProvider = IdProviderKeys.Unity,
+                Token = token,
+                ForceLink = options?.ForceLink ?? false
+            });
+        }
+
+        public Task UnlinkUnityAsync()
+        {
+            return UnlinkExternalTokenAsync(IdProviderKeys.Unity);
+        }
 
         public async Task DeleteAccountAsync()
         {
@@ -835,9 +860,19 @@ namespace Unity.Services.Authentication
             }
         }
 
+        void SendUpdatePasswordFailedEvent(RequestFailedException exception, bool forceSignOut)
+        {
+            UpdatePasswordFailed?.Invoke(exception);
+            if (forceSignOut)
+            {
+                SignOut();
+            }
+        }
+
         bool ValidateOpenIdConnectIdProviderName(string idProviderName)
         {
             return !string.IsNullOrEmpty(idProviderName) && Regex.Match(idProviderName, k_IdProviderNameRegex).Success;
         }
+
     }
 }

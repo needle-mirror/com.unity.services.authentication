@@ -17,21 +17,25 @@ namespace Unity.Services.Authentication
         /// <summary>
         /// AppleGameCenter teamPlayerId
         /// </summary>
-        [JsonProperty("teamPlayerId")] public string TeamPlayerId;
+        [JsonProperty("teamPlayerId")]
+        public string TeamPlayerId;
 
         /// <summary>
         /// AppleGameCenter publicKeyURL
         /// </summary>
-        [JsonProperty("publicKeyUrl")] public string PublicKeyURL;
+        [JsonProperty("publicKeyUrl")]
+        public string PublicKeyURL;
 
         /// <summary>
         /// AppleGameCenter salt
         /// </summary>
-        [JsonProperty("salt")] public string Salt;
+        [JsonProperty("salt")]
+        public string Salt;
 
         /// <summary>
         /// AppleGameCenter timestamp
         /// </summary>
-        [JsonProperty("timestamp")] public ulong Timestamp;
+        [JsonProperty("timestamp")]
+        public ulong Timestamp;
     }
 }

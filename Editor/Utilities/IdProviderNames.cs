@@ -12,5 +12,6 @@ namespace Unity.Services.Authentication.Editor
         internal const string Steam = "Steam";
         internal const string Oculus = "Oculus";
         internal const string UsernamePassword = "Username and Password";
+        internal const string Unity = "Unity Player Accounts";
     }
 }

@@ -1,6 +1,5 @@
-using System;
 using Newtonsoft.Json;
-using UnityEngine;
+using System;
 using UnityEngine.Scripting;
 
 namespace Unity.Services.Authentication

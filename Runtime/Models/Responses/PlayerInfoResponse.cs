@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using Newtonsoft.Json;
 using UnityEngine.Scripting;
 
@@ -34,5 +35,19 @@ namespace Unity.Services.Authentication
         /// </summary>
         [JsonProperty("externalIds")]
         public List<ExternalIdentity> ExternalIds;
+
+        /// <summary>
+        /// Username and Password information
+        /// </summary>
+        [JsonProperty("username")]
+        [CanBeNull]
+        public string Username;
+
+        /// <summary>
+        /// Username and Password information
+        /// </summary>
+        [JsonProperty("usernamepassword")]
+        [CanBeNull]
+        public UsernameInfo UsernamePassword;
     }
 }

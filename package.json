@@ -1,12 +1,12 @@
 {
   "name": "com.unity.services.authentication",
   "displayName": "Authentication",
-  "version": "2.5.0",
+  "version": "2.6.1",
   "unity": "2019.4",
   "description": "Client SDK offering player identity management for Unity Gaming Services.\n\nIdentity providers can be configured from the editor or the Unity Dashboard.\n\nPlayer management is available in the Unity Dashboard.",
   "dependencies": {
     "com.unity.nuget.newtonsoft-json": "3.2.1",
-    "com.unity.services.core": "1.9.0",
+    "com.unity.services.core": "1.10.1",
     "com.unity.modules.unitywebrequest": "1.0.0",
     "com.unity.ugui": "1.0.0"
   },
@@ -27,7 +27,7 @@
       "Windows 8 Universal",
       "Windows 10 Universal"
     ],
-    "changelog": "### Fixed\n- Properly disposing web request when using player names\n- Fixing exception reporting in some cases for the SignInFailed event\n- Remove time validation on client side, to prevent token expiry errors caused by the wrong date/time settings on devices. \n- Adding Preserve attributes to api models to prevent issues with code stripping for player names"
+    "changelog": "### Added\n- Added `SignInWithUnityAsync` public API.\n- Added `LinkWithUnityAsync` public API.\n- Added `UnlinkUnityAsync` public API.\n- Added Unity Player Accounts configuration in Editor settings.\n### Fixed\n- Adding Preserve attributes to api models to prevent issues with code stripping for Oculus"
   },
   "samples": [
     {
@@ -37,14 +37,14 @@
     }
   ],
   "relatedPackages": {
-    "com.unity.services.authentication.tests": "2.5.0"
+    "com.unity.services.authentication.tests": "2.6.1"
   },
   "upmCi": {
-    "footprint": "d9d5780f5e2835666c46f5a3582f579a958bf667"
+    "footprint": "414809c527ee037b4c3fcda83093b759f9933767"
   },
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/operate-services-sdk.git",
     "type": "git",
-    "revision": "8dff44bedc34fa7a78147c064baf8ed5b2108044"
+    "revision": "608305128daff56c9d3a0cbff0cb258a4c4d3739"
   }
 }

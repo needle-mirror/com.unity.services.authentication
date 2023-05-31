@@ -1,10 +1,15 @@
 using Newtonsoft.Json;
-using UnityEngine;
+using System;
+using UnityEngine.Scripting;
 
 namespace Unity.Services.Authentication
 {
+    [Serializable]
     class LinkWithOculusRequest : LinkWithExternalTokenRequest
     {
+        [Preserve]
+        internal LinkWithOculusRequest() {}
+
         /// <summary>
         /// Option to add oculus config
         /// </summary>
