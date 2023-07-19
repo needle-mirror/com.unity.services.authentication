@@ -11,5 +11,9 @@ namespace Unity.Services.Authentication
         Task<UnlinkResponse> UnlinkExternalTokenAsync(string idProvider, UnlinkRequest request);
         Task<PlayerInfoResponse> GetPlayerInfoAsync(string playerId);
         Task DeleteAccountAsync(string playerId);
+        Task<SignInResponse> SignInWithUsernamePasswordAsync(UsernamePasswordRequest credentials);
+        Task<SignInResponse> SignUpWithUsernamePasswordAsync(UsernamePasswordRequest credentials);
+        Task<SignInResponse> AddUsernamePasswordAsync(UsernamePasswordRequest credentials);
+        Task<SignInResponse> UpdatePasswordAsync(UpdatePasswordRequest credentials);
     }
 }

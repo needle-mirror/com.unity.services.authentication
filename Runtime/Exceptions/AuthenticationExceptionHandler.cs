@@ -81,6 +81,12 @@ namespace Unity.Services.Authentication
         }
 
         /// <inheritdoc/>
+        public RequestFailedException BuildInvalidCredentialsException()
+        {
+            return AuthenticationException.Create(AuthenticationErrorCodes.InvalidParameters, "Username and/or Password are not in the correct format");
+        }
+
+        /// <inheritdoc/>
         public RequestFailedException ConvertException(WebRequestException exception)
         {
             var errorLogBuilder = new StringBuilder();

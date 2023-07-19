@@ -63,6 +63,12 @@ Clearing all `PlayerPrefs` keys will require the player to sign in again from sc
     * You can provide options to control if an account should be created.
     * By default, this method will create an account if no account is currently linked.
     * If this method is called while already signed in or currently signing in, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
+* `AuthenticationService.Instance.SignInWithSteamAsync(string sessionTicket, string identity, SignInOptions options = null)`
+  * This method initiates the sign-in process for a player with their Steam account.
+  * Game developer is responsible for installing the necessary SDK, getting the session ticket from Steam and providing an identity field.
+  * You can provide options to control if an account should be created.
+  * By default, this method will create an account if no account is currently linked.
+  * If this method is called while the player is already signed in, or in the process of signing in, it will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
 *  `AuthenticationService.Instance.SignInWithOculusAsync(string nonce, string userId, SignInOptions options = null)`
    * This triggers the sign-in of the player with an Oculus account
    * Game developer is responsible for installing the necessary SDK to get the userId and nonce key.
@@ -108,10 +114,10 @@ Clearing all `PlayerPrefs` keys will require the player to sign in again from sc
     * If you attempt to link with an account that is already linked with another player, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountAlreadyLinked`.
     * If you attempt to link when there is already a facebook account linked to this account, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountLinkLimitExceeded`.
     * If you attempt to link without being authorized, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
-* `AuthenticationService.Instance.LinkWithSteamAsync(string accessToken, LinkOptions options = null)`
-    * This function links the current player with an access token from Steam. The player can later sign-in with the linked Steam account.
+* `AuthenticationService.Instance.LinkWithSteamAsync(string sessionTicket, string identity, LinkOptions options = null)`
+    * This function links the current player with a session ticket from Steam. The player can later sign-in with the linked Steam account.
     * You can provide options to force the operation in case the Steam account is already linked to another player.
-    * Game developer is responsible for installing the necessary SDK and get the token from Steam.
+    * Game developer is responsible for installing the necessary SDK, getting the session ticket from Steam and providing an identity value.
     * If you attempt to link with an account that is already linked with another player, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountAlreadyLinked`.
     * If you attempt to link when there is already a steam account linked to this account, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountLinkLimitExceeded`.
     * If you attempt to link without being authorized, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.

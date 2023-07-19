@@ -29,6 +29,17 @@ namespace Unity.Services.Authentication
         /// </summary>
         public List<Identity> Identities { get; }
 
+        /// <summary>
+        /// Username associated with the username/password account or null if none is set
+        /// </summary>
+        [CanBeNull]
+        public string Username { get; internal set; }
+
+        /// <summary>
+        /// Last time the password was updated for the username/password account or null if none is set
+        /// </summary>
+        [CanBeNull]
+        public DateTime? LastPasswordUpdate { get; internal set; }
 
         /// <summary>
         /// Constructor
@@ -77,6 +88,12 @@ namespace Unity.Services.Authentication
                 }
             }
 
+            Username = username;
+            if (double.TryParse(lastPasswordUpdate, out var lastPasswordUpdateSeconds))
+            {
+                var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                LastPasswordUpdate = epoch.AddSeconds(lastPasswordUpdateSeconds);
+            }
         }
 
         /// <summary>

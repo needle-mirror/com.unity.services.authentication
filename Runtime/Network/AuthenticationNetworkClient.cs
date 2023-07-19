@@ -13,6 +13,10 @@ namespace Unity.Services.Authentication
         const string k_LinkExternalTokenUrlStem = "/v1/authentication/link";
         const string k_UnlinkExternalTokenUrlStem = "/v1/authentication/unlink";
         const string k_UsersUrlStem = "/v1/users";
+        const string k_UsernamePasswordSignInUrlStem = "/v1/authentication/usernamepassword/sign-in";
+        const string k_UsernamePasswordSignUpUrlStem = "/v1/authentication/usernamepassword/sign-up";
+        const string k_UpdatePasswordUrlStem = "/v1/authentication/usernamepassword/update-password";
+
         internal AccessTokenComponent AccessTokenComponent { get; }
         internal ICloudProjectId CloudProjectIdComponent { get; }
         internal IEnvironments EnvironmentComponent { get; }
@@ -50,6 +54,10 @@ namespace Unity.Services.Authentication
             m_LinkExternalTokenUrl = host + k_LinkExternalTokenUrlStem;
             m_UnlinkExternalTokenUrl = host + k_UnlinkExternalTokenUrlStem;
             m_UsersUrl = host + k_UsersUrlStem;
+            m_UsernamePasswordSignInUrl = host + k_UsernamePasswordSignInUrlStem;
+            m_UsernamePasswordSignUpUrl = host + k_UsernamePasswordSignUpUrlStem;
+            m_UpdatePasswordUrl = host + k_UpdatePasswordUrlStem;
+
 
             m_CommonHeaders = new Dictionary<string, string>
             {
@@ -98,6 +106,26 @@ namespace Unity.Services.Authentication
         public Task DeleteAccountAsync(string playerId)
         {
             return NetworkHandler.DeleteAsync(CreateUserRequestUrl(playerId), WithEnvironment(WithAccessToken(GetCommonHeaders())));
+        }
+
+        public Task<SignInResponse> SignInWithUsernamePasswordAsync(UsernamePasswordRequest credentials)
+        {
+            return NetworkHandler.PostAsync<SignInResponse>(m_UsernamePasswordSignInUrl, credentials, WithEnvironment(GetCommonHeaders()));
+        }
+
+        public Task<SignInResponse> SignUpWithUsernamePasswordAsync(UsernamePasswordRequest credentials)
+        {
+            return NetworkHandler.PostAsync<SignInResponse>(m_UsernamePasswordSignUpUrl, credentials, WithEnvironment(GetCommonHeaders()));
+        }
+
+        public Task<SignInResponse> AddUsernamePasswordAsync(UsernamePasswordRequest credentials)
+        {
+            return NetworkHandler.PostAsync<SignInResponse>(m_UsernamePasswordSignUpUrl, credentials, WithEnvironment(WithAccessToken(GetCommonHeaders())));
+        }
+
+        public Task<SignInResponse> UpdatePasswordAsync(UpdatePasswordRequest credentials)
+        {
+            return NetworkHandler.PostAsync<SignInResponse>(m_UpdatePasswordUrl, credentials, WithEnvironment(WithAccessToken(GetCommonHeaders())));
         }
 
         string CreateUserRequestUrl(string user)

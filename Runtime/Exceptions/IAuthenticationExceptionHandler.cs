@@ -56,6 +56,13 @@ namespace Unity.Services.Authentication
         RequestFailedException BuildInvalidPlayerNameException();
 
         /// <summary>
+        /// Returns an exception with <c>InvalidParameters</c> error
+        /// when the username and/or password are in an incorrect format
+        /// </summary>
+        /// <returns>The exception that represents the error.</returns>
+        RequestFailedException BuildInvalidCredentialsException();
+
+        /// <summary>
         /// Convert a web request exception to an authentication or request failed exception.
         /// </summary>
         /// <param name="exception">The web request exception to convert.</param>

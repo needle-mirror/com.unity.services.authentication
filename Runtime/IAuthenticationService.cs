@@ -470,6 +470,7 @@ namespace Unity.Services.Authentication
         /// If no options are used, this will create an account if none exist.
         /// </summary>
         /// <param name="sessionTicket">Steam's session ticket</param>
+        /// <param name="identity">The identity of the calling service</param>
         /// <param name="options">Options for the operation</param>
         /// <returns>Task for the operation</returns>
         /// <exception cref="AuthenticationException">
@@ -487,12 +488,24 @@ namespace Unity.Services.Authentication
         /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.Unknown"/> if the API call failed due to unexpected response from the server. Check Unity logs for more debugging information.</description></item>
         /// </list>
         /// </exception>
+        Task SignInWithSteamAsync(string sessionTicket, string identity, SignInOptions options = null);
+
+        /// <summary>
+        /// Sign in using Steam's session ticket.
+        /// If no options are used, this will create an account if none exist.
+        /// This method is deprecated and may be removed in future versions.
+        /// </summary>
+        /// <param name="sessionTicket">Steam's session ticket</param>
+        /// <param name="options">Options for the operation</param>
+        /// <returns>Task for the operation</returns>
+        [Obsolete("This method is deprecated as of version 2.7.1. Please use the SignInWithSteamAsync method with the 'identity' parameter for better security.")]
         Task SignInWithSteamAsync(string sessionTicket, SignInOptions options = null);
 
         /// <summary>
         /// Link the current player with the Steam account using Steam's session ticket.
         /// </summary>
         /// <param name="sessionTicket">Steam's session ticket</param>
+        /// <param name="identity">The identity of the calling service</param>
         /// <param name="options">Options for the link operations.</param>
         /// <returns>Task for the operation</returns>
         /// <exception cref="AuthenticationException">
@@ -512,6 +525,16 @@ namespace Unity.Services.Authentication
         /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.Unknown"/> if the API call failed due to unexpected response from the server. Check Unity logs for more debugging information.</description></item>
         /// </list>
         /// </exception>
+        Task LinkWithSteamAsync(string sessionTicket, string identity, LinkOptions options = null);
+
+        /// <summary>
+        /// Link the current player with the Steam account using Steam's session ticket.
+        /// This method is deprecated and may be removed in future versions.
+        /// </summary>
+        /// <param name="sessionTicket">Steam's session ticket</param>
+        /// <param name="options">Options for the link operations.</param>
+        /// <returns>Task for the operation</returns>
+        [Obsolete("This method is deprecated as of version 2.7.1. Please use the LinkWithSteamAsync method with the 'identity' parameter for better security.")]
         Task LinkWithSteamAsync(string sessionTicket, LinkOptions options = null);
 
         /// <summary>
@@ -749,6 +772,93 @@ namespace Unity.Services.Authentication
         /// </list>
         /// </exception>
         Task UnlinkUnityAsync();
+
+        /// <summary>
+        /// Sign in using Username and Password credentials.
+        /// </summary>
+        /// <param name="username">Username of the player. Note that it must be unique per project and contains 3-20 characters of alphanumeric and/or these special characters [. - @ _].</param>
+        /// <param name="password">Password of the player. Note that it must contain 8-30 characters with at least 1 upper case, 1 lower case, 1 number, and 1 special character.</param>
+        /// <returns>Task for the operation</returns>
+        /// <exception cref="AuthenticationException">
+        /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
+        /// <list type="bullet">
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.InvalidParameters"/> if parameter is empty or invalid. </description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.ClientInvalidUserState"/> if the player has already signed in or a sign-in operation is in progress.</description></item>
+        /// </list>
+        /// </exception>
+        /// <exception cref="RequestFailedException">
+        /// The task fails with the exception when the task cannot complete successfully.
+        /// <list type="bullet">
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.TransportError"/> if the API call failed due to network error. Check Unity logs for more debugging information.</description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.Unknown"/> if the API call failed due to unexpected response from the server. Check Unity logs for more debugging information.</description></item>
+        /// </list>
+        /// </exception>
+        Task SignInWithUsernamePasswordAsync(string username, string password);
+
+        /// <summary>
+        /// Sign up using Username and Password credentials.
+        /// </summary>
+        /// <param name="username">Username of the player. Note that it must be unique per project and contains 3-20 characters of alphanumeric and/or these special characters [. - @ _].</param>
+        /// <param name="password">Password of the player. Note that it must contain 8-30 characters with at least 1 upper case, 1 lower case, 1 number, and 1 special character.</param>
+        /// <returns>Task for the operation</returns>
+        /// <exception cref="AuthenticationException">
+        /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
+        /// <list type="bullet">
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.InvalidParameters"/> if parameter is empty or invalid. </description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.ClientInvalidUserState"/> if the player has already signed in or a sign-in operation is in progress.</description></item>
+        /// </list>
+        /// </exception>
+        /// <exception cref="RequestFailedException">
+        /// The task fails with the exception when the task cannot complete successfully.
+        /// <list type="bullet">
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.TransportError"/> if the API call failed due to network error. Check Unity logs for more debugging information.</description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.Unknown"/> if the API call failed due to unexpected response from the server. Check Unity logs for more debugging information.</description></item>
+        /// </list>
+        /// </exception>
+        Task SignUpWithUsernamePasswordAsync(string username, string password);
+
+        /// <summary>
+        /// Sign up with a new Username/Password and add it to the current logged in user.
+        /// </summary>
+        /// <param name="username">Username of the player. Note that it must be unique per project and contains 3-20 characters of alphanumeric and/or these special characters [. - @ _].</param>
+        /// <param name="password">Password of the player. Note that it must contain 8-30 characters with at least 1 upper case, 1 lower case, 1 number, and 1 special character.</param>
+        /// <returns>Task for the operation</returns>
+        /// <exception cref="AuthenticationException">
+        /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
+        /// <list type="bullet">
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.InvalidParameters"/> if parameter is empty or invalid. </description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.ClientInvalidUserState"/> if the player has already signed in or a sign-in operation is in progress.</description></item>
+        /// </list>
+        /// </exception>
+        /// <exception cref="RequestFailedException">
+        /// The task fails with the exception when the task cannot complete successfully.
+        /// <list type="bullet">
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.TransportError"/> if the API call failed due to network error. Check Unity logs for more debugging information.</description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.Unknown"/> if the API call failed due to unexpected response from the server. Check Unity logs for more debugging information.</description></item>
+        /// </list>
+        /// </exception>
+        Task AddUsernamePasswordAsync(string username, string password);
+
+        /// <summary>
+        /// Update Password credentials for username/password user.
+        /// </summary>
+        /// <param name="currentPassword">Current password of the player. Note that it must contain 8-30 characters with at least 1 upper case, 1 lower case, 1 number, and 1 special character.</param>
+        /// <param name="newPassword">New password of the player. Note that it must contain 8-30 characters with at least 1 upper case, 1 lower case, 1 number, and 1 special character.</param>
+        /// <returns>Task for the operation</returns>
+        /// <exception cref="AuthenticationException">
+        /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
+        /// <list type="bullet">
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.InvalidParameters"/> if parameter is empty or invalid. </description></item>
+        /// </list>
+        /// </exception>
+        /// <exception cref="RequestFailedException">
+        /// The task fails with the exception when the task cannot complete successfully.
+        /// <list type="bullet">
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.TransportError"/> if the API call failed due to network error. Check Unity logs for more debugging information.</description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.Unknown"/> if the API call failed due to unexpected response from the server. Check Unity logs for more debugging information.</description></item>
+        /// </list>
+        /// </exception>
+        Task UpdatePasswordAsync(string currentPassword, string newPassword);
 
         /// <summary>
         /// Deletes the currently signed in player permanently.
