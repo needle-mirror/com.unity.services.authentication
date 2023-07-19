@@ -1,7 +1,7 @@
 {
   "name": "com.unity.services.authentication",
   "displayName": "Authentication",
-  "version": "2.7.1",
+  "version": "2.7.2",
   "unity": "2019.4",
   "description": "Client SDK offering player identity management for Unity Gaming Services.\n\nIdentity providers can be configured from the editor or the Unity Dashboard.\n\nPlayer management is available in the Unity Dashboard.",
   "dependencies": {
@@ -38,14 +38,14 @@
     }
   ],
   "relatedPackages": {
-    "com.unity.services.authentication.tests": "2.7.1"
+    "com.unity.services.authentication.tests": "2.7.2"
   },
   "upmCi": {
-    "footprint": "9f48372a5a8103222d52761fac062a4565eb4cf4"
+    "footprint": "daeafa8d10b235b265cfb61e651d758f33618434"
   },
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/operate-services-sdk.git",
     "type": "git",
-    "revision": "6f9017b7c70dbd78b7bc154fb4fcb5da6e50d96c"
+    "revision": "27cfcca47ddb40b3c45c37522a674c062ee4a43f"
   }
 }

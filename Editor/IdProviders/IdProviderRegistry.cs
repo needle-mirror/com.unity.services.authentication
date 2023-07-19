@@ -89,7 +89,6 @@ namespace Unity.Services.Authentication.Editor
                 ClientSecretDisplayName = "Key",
                 NeedClientSecret = true
             }
-#if FEATURE_AUTHENTICATION_USERNAMEPASSWORD
             ,
             [IdProviderKeys.UsernamePassword] = new IdProviderOptions
             {
@@ -99,7 +98,6 @@ namespace Unity.Services.Authentication.Editor
                 NeedClientSecret = false,
                 CanBeDeleted = false
             }
-#endif
             ,
             [IdProviderKeys.Unity] = new IdProviderOptions
             {
