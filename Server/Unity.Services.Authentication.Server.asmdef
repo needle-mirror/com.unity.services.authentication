@@ -1,0 +1,24 @@
+{
+    "name": "Unity.Services.Authentication.Server",
+    "rootNamespace": "",
+    "references": [
+        "Unity.Services.Core",
+        "Unity.Services.Core.Internal",
+        "Unity.Services.Core.Environments"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [
+        "Moq.dll",
+        "nunit.framework.dll",
+        "Newtonsoft.Json.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UNITY_SERVER || ENABLE_UCS_SERVER"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

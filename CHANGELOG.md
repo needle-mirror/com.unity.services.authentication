@@ -4,6 +4,20 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2023-08-21
+### Changed
+- Upgrading base unity version support to 2020.3
+- Updated the core SDK dependency version
+
+### Added
+- Adding event in access token component for packages to be notified of changes to the `IAccessToken` value.
+- Added `GenerateSignInCodeAsync` method to generate a sign-in code that can be used to sign-in.  
+- Added `SignInWithCodeAsync` method to sign in using the previously generated sign-in code. This method can optionally poll the server for sign-in confirmation.
+- Added `GetSignInCodeInfoAsync` method to fetch information about a given sign-in code.
+- Added `ConfirmCodeAsync` method for sending a request to confirm a provided sign-in code.
+- Added `SignInCodeReceived` which is triggered when `SignInWithCodeAsync` method successfully generates a`SignInCode`.
+- Added `SignInCodeExpired` which is invoked when the sign-in code expires.
+- Adding server authentication service which lets developers authorize operations when running on unity's game server hosting or with service accounts.
 
 ## [2.7.2] - 2023-07-19
 ### Added

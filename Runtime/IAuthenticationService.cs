@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Unity.Services.Core;
 
@@ -23,6 +24,16 @@ namespace Unity.Services.Authentication
         /// Invoked when a session expires.
         /// </summary>
         event Action Expired;
+
+        /// <summary>
+        /// Invoked when the SignInWithCodeAsync method successfully generates a SignInCode.
+        /// </summary>
+        event Action<SignInCodeInfo> SignInCodeReceived;
+
+        /// <summary>
+        /// Invoked when the sign-in code expires.
+        /// </summary>
+        event Action SignInCodeExpired;
 
         /// <summary>
         /// Invoked when a sign-in attempt has failed. The reason for failure is passed as the parameter
@@ -902,9 +913,10 @@ namespace Unity.Services.Authentication
 
         /// <summary>
         /// Returns the name of the logged in player if it has been set.
-        /// If no name has been set, this will return null.
+        /// If no name has been set, this will return null if autoGenerate is set to false.
         /// This will also cache the name locally.
         /// </summary>
+        /// <param name="autoGenerate">Option auto generate a player name if none already exist. Defaults to true</param>
         /// <returns>Task for the operation with the resulting player name</returns>
         /// <exception cref="AuthenticationException">
         /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
@@ -919,7 +931,7 @@ namespace Unity.Services.Authentication
         /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.Unknown"/> if the API call failed due to unexpected response from the server. Check Unity logs for more debugging information.</description></item>
         /// </list>
         /// </exception>
-        Task<string> GetPlayerNameAsync();
+        Task<string> GetPlayerNameAsync(bool autoGenerate = true);
 
         /// <summary>
         /// Updates the player name of the logged in player.
@@ -941,6 +953,60 @@ namespace Unity.Services.Authentication
         /// </list>
         /// </exception>
         Task<string> UpdatePlayerNameAsync(string name);
+
+        /// <summary>
+        /// Asynchronously generates a sign-in code that can be used to sign in. This method should be called before attempting to sign in using the sign-in code.
+        /// </summary>
+        /// <param name="identifier">An optional identifier. If provided, it may influence the generated sign-in code or be used for additional checks.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous generation operation. The task result contains the generated <see cref="SignInCodeInfo"/> details:
+        /// <list type="bullet">
+        ///     <item>
+        ///         <term>SignInCode</term>
+        ///         <description>The unique code generated for signing in. This code should be used in subsequent sign-in attempts.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Expiration</term>
+        ///         <description>The date and time when the generated sign-in code will expire and become invalid for sign-in attempts.</description>
+        ///     </item>
+        /// </list>
+        /// </returns>
+        /// <exception cref="AuthenticationException">Thrown when the current authentication state is invalid for this operation.</exception>
+        public Task<SignInCodeInfo> GenerateSignInCodeAsync(string identifier = null);
+
+        /// <summary>
+        ///  Asynchronously attempts to sign in using the previously generated sign-in code. This method can optionally poll the server for sign-in confirmation.
+        /// </summary>
+        /// <param name="usePolling">If set to true, the method will continuously poll the server to check if the code has been confirmed, until either the device signs in successfully, the code expires, or the CancellationToken is triggered. False by default.</param>
+        /// <param name="cancellationToken">A token used to cancel the ongoing operation, especially useful when polling is enabled.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        /// <exception cref="AuthenticationException">Thrown when the current authentication state is invalid for this operation.</exception>
+        /// <exception cref="RequestFailedException">Thrown when there's an issue with the network request.</exception>
+        public Task SignInWithCodeAsync(bool usePolling = false, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Fetches detailed information about a given sign-in code, including its associated identifier and expiration details.
+        /// </summary>
+        /// <param name="code">The sign-in code to fetch information for.</param>
+        /// <returns>The identifier associated with the provided code.</returns>
+        /// <exception cref="AuthenticationException">Thrown when the code is null or empty.</exception>
+        /// <exception cref="AuthenticationException">Thrown when the current authentication state is invalid for this operation.</exception>
+        /// <exception cref="RequestFailedException">Thrown when there's an issue with the network request.</exception>
+        public Task<SignInCodeInfo> GetSignInCodeInfoAsync(string code);
+
+        /// <summary>
+        /// Sends a request to check the status of the provided sign-in code, such as if it's been confirmed by an authenticated user or is still pending.
+        /// "Confirming" the sign-in code means the server has recognized and accepted the code as valid.
+        /// </summary>
+        /// <param name="code">The sign-in code to be confirmed.</param>
+        /// <param name="idProvider">The ID provider (optional).</param>
+        /// <param name="externalToken">The external token (optional).</param>
+        /// <returns>A <see cref="Task"/> Representing the asynchronous operation. If the operation succeeds,
+        /// the task will complete successfully (indicating a successful response from the server).
+        /// Otherwise, exceptions can be thrown as described below.</returns>
+        /// <exception cref="AuthenticationException">Thrown when the code is null or empty.</exception>
+        /// <exception cref="AuthenticationException">Thrown when the current authentication state is invalid for this operation.</exception>
+        /// <exception cref="RequestFailedException">Thrown when there's an issue with the network request.</exception>
+        public Task ConfirmCodeAsync(string code, string idProvider = null, string externalToken = null);
 
         /// <summary>
         /// Sign out the current player.

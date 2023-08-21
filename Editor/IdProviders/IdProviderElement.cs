@@ -115,7 +115,7 @@ namespace Unity.Services.Authentication.Editor
             (!m_Options.NeedClientSecret || !string.IsNullOrEmpty(CurrentValue.ClientSecret)) &&
             (m_Options.OidcConfig.Issuer == null || !string.IsNullOrEmpty(CurrentValue.OidcConfig.Issuer));
 
-        readonly string m_IdDomainId;
+        readonly string m_ProjectId;
         readonly IAuthenticationAdminClient m_AdminClient;
         readonly IdProviderOptions m_Options;
         // Whether skip the confirmation window for tests/automation.
@@ -124,14 +124,14 @@ namespace Unity.Services.Authentication.Editor
         /// <summary>
         /// Configures the Id provider element
         /// </summary>
-        /// <param name="idDomain"> The ID domain associated with the project </param>
+        /// <param name="projectId"> The project ID </param>
         /// <param name="adminClient"> API client to the Admin APIs of the Authentication service </param>
         /// <param name="savedValue"> The value saved on the server side </param>
         /// <param name="options"> The ID provider metadata that is used to render the settings UI </param>
         /// <param name="skipConfirmation"> Whether to skip the confirmation window for tests/automation </param>
-        public IdProviderElement(string idDomain, IAuthenticationAdminClient adminClient, IdProvider savedValue, IdProviderOptions options, bool skipConfirmation = false)
+        public IdProviderElement(string projectId, IAuthenticationAdminClient adminClient, IdProvider savedValue, IdProviderOptions options, bool skipConfirmation = false)
         {
-            m_IdDomainId = idDomain;
+            m_ProjectId = projectId;
             m_AdminClient = adminClient;
             m_Options = options;
             m_SkipConfirmation = skipConfirmation;
@@ -206,7 +206,7 @@ namespace Unity.Services.Authentication.Editor
 
                 if (options.CustomSettingsElementCreator != null)
                 {
-                    CustomSettingsElement = options.CustomSettingsElementCreator.Invoke(m_IdDomainId, () => m_AdminClient.GatewayToken, skipConfirmation);
+                    CustomSettingsElement = options.CustomSettingsElementCreator.Invoke(m_ProjectId, () => m_AdminClient.GatewayToken, skipConfirmation);
                     Container.Add(CustomSettingsElement);
                     CustomSettingsElement.Waiting += OnAdditionalElementWaiting;
                     CustomSettingsElement.Error += OnAdditionalElementError;
@@ -363,13 +363,13 @@ namespace Unity.Services.Authentication.Editor
                 if (SavedValue.New)
                 {
                     var request = new CreateIdProviderRequest(CurrentValue);
-                    var response = await m_AdminClient.CreateIdProviderAsync(m_IdDomainId, request);
+                    var response = await m_AdminClient.CreateIdProviderAsync(m_ProjectId, request);
                     SavedValue = new IdProvider(response);
                 }
                 else
                 {
                     var request = new UpdateIdProviderRequest(CurrentValue);
-                    var response = await m_AdminClient.UpdateIdProviderAsync(m_IdDomainId, CurrentValue.Type, request);
+                    var response = await m_AdminClient.UpdateIdProviderAsync(m_ProjectId, CurrentValue.Type, request);
                     SavedValue = new IdProvider(response);
                 }
 
@@ -390,7 +390,7 @@ namespace Unity.Services.Authentication.Editor
             if (SavedValue.Disabled != CurrentValue.Disabled)
             {
                 SavedValue.ClientSecret = CurrentValue.ClientSecret;
-                var task = CurrentValue.Disabled ? m_AdminClient.DisableIdProviderAsync(m_IdDomainId, CurrentValue.Type) : m_AdminClient.EnableIdProviderAsync(m_IdDomainId, CurrentValue.Type);
+                var task = CurrentValue.Disabled ? m_AdminClient.DisableIdProviderAsync(m_ProjectId, CurrentValue.Type) : m_AdminClient.EnableIdProviderAsync(m_ProjectId, CurrentValue.Type);
                 var response = await task;
 
                 // Only reset current value when no exception
@@ -461,7 +461,7 @@ namespace Unity.Services.Authentication.Editor
 
             try
             {
-                await m_AdminClient.DeleteIdProviderAsync(m_IdDomainId, CurrentValue.Type);
+                await m_AdminClient.DeleteIdProviderAsync(m_ProjectId, CurrentValue.Type);
                 Deleted?.Invoke(this);
                 ResetCurrentValue();
             }

@@ -36,6 +36,8 @@ namespace Unity.Services.Authentication
         public event System.Action Expired;
         public event System.Action SignedIn;
         public event System.Action SignedOut;
+        public event System.Action SignInCodeExpired;
+        public event System.Action<SignInCodeInfo> SignInCodeReceived;
         public event System.Action<Unity.Services.Core.RequestFailedException> SignInFailed;
         public string AccessToken { get; }
         public bool IsAuthorized { get; }
@@ -48,9 +50,12 @@ namespace Unity.Services.Authentication
         public bool SessionTokenExists { get; }
         public System.Threading.Tasks.Task AddUsernamePasswordAsync(string username, string password);
         public void ClearSessionToken();
+        public System.Threading.Tasks.Task ConfirmCodeAsync(string code, string idProvider = default(string), string externalToken = default(string));
         public System.Threading.Tasks.Task DeleteAccountAsync();
+        public System.Threading.Tasks.Task<SignInCodeInfo> GenerateSignInCodeAsync(string identifier = default(string));
         public System.Threading.Tasks.Task<PlayerInfo> GetPlayerInfoAsync();
-        public System.Threading.Tasks.Task<string> GetPlayerNameAsync();
+        public System.Threading.Tasks.Task<string> GetPlayerNameAsync(bool autoGenerate = true);
+        public System.Threading.Tasks.Task<SignInCodeInfo> GetSignInCodeInfoAsync(string code);
         public System.Threading.Tasks.Task LinkWithAppleAsync(string idToken, LinkOptions options = default(LinkOptions));
         public System.Threading.Tasks.Task LinkWithAppleGameCenterAsync(string signature, string teamPlayerId, string publicKeyURL, string salt, System.UInt64 timestamp, LinkOptions options = default(LinkOptions));
         public System.Threading.Tasks.Task LinkWithFacebookAsync(string accessToken, LinkOptions options = default(LinkOptions));
@@ -64,6 +69,7 @@ namespace Unity.Services.Authentication
         public System.Threading.Tasks.Task SignInAnonymouslyAsync(SignInOptions options = default(SignInOptions));
         public System.Threading.Tasks.Task SignInWithAppleAsync(string idToken, SignInOptions options = default(SignInOptions));
         public System.Threading.Tasks.Task SignInWithAppleGameCenterAsync(string signature, string teamPlayerId, string publicKeyURL, string salt, System.UInt64 timestamp, SignInOptions options = default(SignInOptions));
+        public System.Threading.Tasks.Task SignInWithCodeAsync(bool usePolling = false, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
         public System.Threading.Tasks.Task SignInWithFacebookAsync(string accessToken, SignInOptions options = default(SignInOptions));
         public System.Threading.Tasks.Task SignInWithGoogleAsync(string idToken, SignInOptions options = default(SignInOptions));
         public System.Threading.Tasks.Task SignInWithGooglePlayGamesAsync(string authCode, SignInOptions options = default(SignInOptions));
@@ -118,6 +124,14 @@ namespace Unity.Services.Authentication
         public System.Collections.Generic.List<Identity> GetOpenIdConnectIdProviders();
         public string GetSteamId();
         public string GetUnityId();
+    }
+
+    public sealed class SignInCodeInfo
+    {
+        public string Expiration { get; }
+        public string Identifier { get; }
+        public string SignInCode { get; }
+        public SignInCodeInfo() {}
     }
 
     public sealed class SignInOptions

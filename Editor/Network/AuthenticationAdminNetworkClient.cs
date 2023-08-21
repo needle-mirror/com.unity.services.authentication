@@ -5,30 +5,24 @@ namespace Unity.Services.Authentication.Editor
 {
     class AuthenticationAdminNetworkClient : IAuthenticationAdminNetworkClient
     {
-        const string k_ServicesGatewayStem = "/api/player-identity/v1/organizations/";
+        const string k_ServicesGatewayStem = "/api/player-identity/v1";
         const string k_TokenExchangeStem = "/api/auth/v1/genesis-token-exchange/unity";
 
         readonly string m_ServicesGatewayHost;
 
-        readonly string m_BaseIdDomainUrl;
-        readonly string m_GetDefaultIdDomainUrl;
+        readonly string m_BaseProjectIdUrl;
         readonly string m_TokenExchangeUrl;
-
-        readonly string m_OrganizationId;
 
         readonly INetworkHandler m_NetworkHandler;
 
         readonly Dictionary<string, string> m_CommonPlayerIdentityHeaders;
 
         internal AuthenticationAdminNetworkClient(string servicesGatewayHost,
-                                                  string organizationId,
                                                   string projectId,
                                                   INetworkHandler networkHandler)
         {
             m_ServicesGatewayHost = servicesGatewayHost;
-            m_OrganizationId = organizationId;
-            m_BaseIdDomainUrl = $"{m_ServicesGatewayHost}{k_ServicesGatewayStem}{m_OrganizationId}/iddomains";
-            m_GetDefaultIdDomainUrl = $"{m_BaseIdDomainUrl}/default";
+            m_BaseProjectIdUrl = $"{m_ServicesGatewayHost}{k_ServicesGatewayStem}/projects";
             m_TokenExchangeUrl = $"{m_ServicesGatewayHost}{k_TokenExchangeStem}";
             m_NetworkHandler = networkHandler;
 
@@ -40,11 +34,6 @@ namespace Unity.Services.Authentication.Editor
             };
         }
 
-        public Task<GetIdDomainResponse> GetDefaultIdDomainAsync(string token)
-        {
-            return m_NetworkHandler.GetAsync<GetIdDomainResponse>(m_GetDefaultIdDomainUrl, AddTokenHeader(CreateCommonHeaders(), token));
-        }
-
         public Task<TokenExchangeResponse> ExchangeTokenAsync(string token)
         {
             var body = new TokenExchangeRequest();
@@ -52,34 +41,34 @@ namespace Unity.Services.Authentication.Editor
             return m_NetworkHandler.PostAsync<TokenExchangeResponse>(m_TokenExchangeUrl, body);
         }
 
-        public Task<IdProviderResponse> CreateIdProviderAsync(CreateIdProviderRequest body, string idDomain, string token)
+        public Task<IdProviderResponse> CreateIdProviderAsync(CreateIdProviderRequest body, string projectId, string token)
         {
-            return m_NetworkHandler.PostAsync<IdProviderResponse>(GetIdProviderUrl(idDomain), body, AddTokenHeader(CreateCommonHeaders(), token));
+            return m_NetworkHandler.PostAsync<IdProviderResponse>(GetIdProviderUrl(projectId), body, AddTokenHeader(CreateCommonHeaders(), token));
         }
 
-        public Task<ListIdProviderResponse> ListIdProviderAsync(string idDomain, string token)
+        public Task<ListIdProviderResponse> ListIdProviderAsync(string projectId, string token)
         {
-            return m_NetworkHandler.GetAsync<ListIdProviderResponse>(GetIdProviderUrl(idDomain), AddTokenHeader(CreateCommonHeaders(), token));
+            return m_NetworkHandler.GetAsync<ListIdProviderResponse>(GetIdProviderUrl(projectId), AddTokenHeader(CreateCommonHeaders(), token));
         }
 
-        public Task<IdProviderResponse> UpdateIdProviderAsync(UpdateIdProviderRequest body, string idDomain, string type, string token)
+        public Task<IdProviderResponse> UpdateIdProviderAsync(UpdateIdProviderRequest body, string projectId, string type, string token)
         {
-            return m_NetworkHandler.PutAsync<IdProviderResponse>(GetIdProviderTypeUrl(idDomain, type), body, AddTokenHeader(CreateCommonHeaders(), token));
+            return m_NetworkHandler.PutAsync<IdProviderResponse>(GetIdProviderTypeUrl(projectId, type), body, AddTokenHeader(CreateCommonHeaders(), token));
         }
 
-        public Task<IdProviderResponse> EnableIdProviderAsync(string idDomain, string type, string token)
+        public Task<IdProviderResponse> EnableIdProviderAsync(string projectId, string type, string token)
         {
-            return m_NetworkHandler.PostAsync<IdProviderResponse>(GetEnableIdProviderTypeUrl(idDomain, type), AddJsonHeader(AddTokenHeader(CreateCommonHeaders(), token)));
+            return m_NetworkHandler.PostAsync<IdProviderResponse>(GetEnableIdProviderTypeUrl(projectId, type), AddJsonHeader(AddTokenHeader(CreateCommonHeaders(), token)));
         }
 
-        public Task<IdProviderResponse> DisableIdProviderAsync(string idDomain, string type, string token)
+        public Task<IdProviderResponse> DisableIdProviderAsync(string projectId, string type, string token)
         {
-            return m_NetworkHandler.PostAsync<IdProviderResponse>(GetDisableIdProviderTypeUrl(idDomain, type), AddJsonHeader(AddTokenHeader(CreateCommonHeaders(), token)));
+            return m_NetworkHandler.PostAsync<IdProviderResponse>(GetDisableIdProviderTypeUrl(projectId, type), AddJsonHeader(AddTokenHeader(CreateCommonHeaders(), token)));
         }
 
-        public Task<IdProviderResponse> DeleteIdProviderAsync(string idDomain, string type, string token)
+        public Task<IdProviderResponse> DeleteIdProviderAsync(string projectId, string type, string token)
         {
-            return m_NetworkHandler.DeleteAsync<IdProviderResponse>(GetIdProviderTypeUrl(idDomain, type), AddTokenHeader(CreateCommonHeaders(), token));
+            return m_NetworkHandler.DeleteAsync<IdProviderResponse>(GetIdProviderTypeUrl(projectId, type), AddTokenHeader(CreateCommonHeaders(), token));
         }
 
         Dictionary<string, string> CreateCommonHeaders()
@@ -99,24 +88,24 @@ namespace Unity.Services.Authentication.Editor
             return headers;
         }
 
-        string GetEnableIdProviderTypeUrl(string idDomain, string type)
+        string GetEnableIdProviderTypeUrl(string projectId, string type)
         {
-            return $"{GetIdProviderTypeUrl(idDomain, type)}/enable";
+            return $"{GetIdProviderTypeUrl(projectId, type)}/enable";
         }
 
-        string GetDisableIdProviderTypeUrl(string idDomain, string type)
+        string GetDisableIdProviderTypeUrl(string projectId, string type)
         {
-            return $"{GetIdProviderTypeUrl(idDomain, type)}/disable";
+            return $"{GetIdProviderTypeUrl(projectId, type)}/disable";
         }
 
-        string GetIdProviderTypeUrl(string idDomain, string type)
+        string GetIdProviderTypeUrl(string projectId, string type)
         {
-            return $"{GetIdProviderUrl(idDomain)}/{type}";
+            return $"{GetIdProviderUrl(projectId)}/{type}";
         }
 
-        string GetIdProviderUrl(string idDomain)
+        string GetIdProviderUrl(string projectId)
         {
-            return $"{m_BaseIdDomainUrl}/{idDomain}/idps";
+            return $"{m_BaseProjectIdUrl}/{projectId}/idps";
         }
     }
 }

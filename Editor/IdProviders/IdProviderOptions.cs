@@ -50,13 +50,13 @@ namespace Unity.Services.Authentication.Editor
         /// <summary>
         /// The delegate to create custom settings UI element for the ID provider.
         /// </summary>
-        /// <param name="idDomain">The ID domain</param>
+        /// <param name="projectId">The project ID</param>
         /// <param name="servicesGatewayTokenCallback">
         /// The callback action to get the service gateway token. It makes sure the token is up to date.
         /// </param>
         /// <param name="skipConfirmation">Whether or not to skip the UI confirmation.</param>
         /// <returns>The additional ID provider settings element.</returns>
-        public delegate IdProviderCustomSettingsElement CreateCustomSettingsElementDelegate(string idDomain, Func<string> servicesGatewayTokenCallback, bool skipConfirmation);
+        public delegate IdProviderCustomSettingsElement CreateCustomSettingsElementDelegate(string projectId, Func<string> servicesGatewayTokenCallback, bool skipConfirmation);
 
         /// <summary>
         /// The delegate to create custom settings UI element for the ID provider.

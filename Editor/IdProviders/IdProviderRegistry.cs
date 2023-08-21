@@ -41,6 +41,13 @@ namespace Unity.Services.Authentication.Editor
                 ClientIdDisplayName = "Bundle ID",
                 NeedClientSecret = false
             },
+            [IdProviderKeys.CodeLink] = new IdProviderOptions
+            {
+                IdProviderType = IdProviderKeys.CodeLink,
+                DisplayName = IdProviderNames.CodeLink,
+                NeedClientId = false,
+                NeedClientSecret = false
+            },
             [IdProviderKeys.Facebook] = new IdProviderOptions
             {
                 IdProviderType = IdProviderKeys.Facebook,

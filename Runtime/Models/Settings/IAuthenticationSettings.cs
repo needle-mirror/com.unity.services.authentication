@@ -17,5 +17,8 @@ namespace Unity.Services.Authentication
         /// The time in seconds between access token refresh retries.
         /// </summary>
         int RefreshAttemptFrequency { get; }
+
+        int CodeConfirmationAttempts { get; }
+        int CodeConfirmationDelay { get; }
     }
 }

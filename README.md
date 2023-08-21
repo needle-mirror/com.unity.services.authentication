@@ -20,7 +20,7 @@ Clearing all `PlayerPrefs` keys will require the player to sign in again from sc
 
 ## Public API
 
-### Sign-In API
+### Authentication Service API
 
 * `AuthenticationService.Instance.SignedIn`
   * This is an event to which you can subscribe to be notified when the sign-in process has completed successfully.
@@ -177,6 +177,21 @@ Clearing all `PlayerPrefs` keys will require the player to sign in again from sc
   * If you attempt to link when there is already an OpenID Connect account linked to this account, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountLinkLimitExceeded`.
   * If you attempt to unlink without being authorized, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
   * If you attempt to unlink without having an external id in the player's PlayerInfo, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientUnlinkExternalIdNotFound`.
+* `AuthenticationService.Instance.SignUpWithUsernamePasswordAsync`
+  * This triggers the sign-up of the player with username and password.
+  * If you attempt to sign up while already signed in or currently signing in, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
+* `AuthenticationService.Instance.SignInWithUsernamePasswordAsync`
+  * This triggers the sign-in of the player with username and password.
+  * If you attempt to sign in while already signed in or currently signing in, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
+* `AuthenticationService.Instance.AddUsernamePasswordAsync`
+  * This function creates username and password credentials to an existing account. The player can later sign-in with the recently added username/password account.
+  * If you attempt to link with an account that is already linked with another player, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountAlreadyLinked`.
+  * If you attempt to link without being authorized, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
+* `AuthenticationService.Instance.UpdatePasswordAsync`
+  * This function updates the password for a username/password account.
+  * If you update the user password while signed out the user will still be signed out.
+  * If you update the user password while signed in the user will be signed in again.
+  * If you attempt to update the user password while currently signing in, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
 * `AuthenticationService.Instance.DeleteAccountAsync()`
     * This function attempts to permanently delete the current player account.
     * If you attempt to delete without being authorized, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
@@ -232,18 +247,37 @@ Clearing all `PlayerPrefs` keys will require the player to sign in again from sc
   * Returns the current player's player info, such as account creation time and linked external ids.
     * This is only partially loaded during sign in operations.
     * Use `AuthenticationService.Instance.GetPlayerInfoAsync()` to load the all the player info.
-* `SignUpWithUsernamePasswordAsync`
-  * This triggers the sign-up of the player with username and password.
-  * If you attempt to sign up while already signed in or currently signing in, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
-* `SignInWithUsernamePasswordAsync`
-  * This triggers the sign-in of the player with username and password.
-  * If you attempt to sign in while already signed in or currently signing in, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
-* `AddUsernamePasswordAsync`
-  * This function creates username and password credentials to an existing account. The player can later sign-in with the recently added username/password account.
-  * If you attempt to link with an account that is already linked with another player, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.AccountAlreadyLinked`.
-  * If you attempt to link without being authorized, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
-* `UpdatePasswordAsync`
-  * This function updates the password for a username/password account.
-  * If you update the user password while signed out the user will still be signed out.
-  * If you update the user password while signed in the user will be signed in again.
-  * If you attempt to update the user password while currently signing in, this method will throw an `AuthenticationException` with `AuthenticationErrorCodes.ClientInvalidUserState`.
+
+### Server Authentication Service API
+
+The server authentication service is available when either `UNITY_SERVER` or `ENABLE_UCS_SERVER` conditions are enabled.
+
+Ensure service account credentials are secured and never get included in client applications.
+
+* `ServerAuthenticationService.Instance.Authorized`
+  * This is an event to which you can subscribe to be notified when the sign-in process has completed successfully.
+* `ServerAuthenticationService.Instance.AuthorizationFailed`
+  * This is an event to which you can subscribe to be notified when the sign-in process has failed for some reason.
+* `ServerAuthenticationService.Instance.Expired`
+  * This is an event to which you can subscribe to be notified when the sign-in session expires. The session is normally refreshed automatically, but if a session fails to refresh until the expiration time, this event will trigger.
+* `ServerAuthenticationService.Instance.SignInWithServiceAccountAsync(string apiKeyIdentifier, string apiKeySecret)`
+  * Trusted sign-in using service account credentials.
+  * Ensure these credentials are secured and never get included in client applications.
+* `ServerAuthenticationService.Instance.SignInFromServerAsync()`
+  * Retrieve a token to authorize server operations from a hosted server.
+  * Must be running on a multiplay server or with the server local proxy activated.
+* `ServerAuthenticationService.Instance.ClearCredentials()`
+    * Clears the access token and authorization state.
+* `ServerAuthenticationService.Instance.AccessToken`
+  * Returns the current access token, otherwise null.
+* `ServerAuthenticationService.Instance.IsAuthorized`
+  * Validates that the state is authorized.
+* `ServerAuthenticationService.Instance.State`
+  * Returns the current server authentication state.
+  
+  #### Server Authentication State Values: 
+  - `Authorized` : The server is currently authorized.
+  - `SigningIn` : The server is currently in the process of signing in.
+  - `Expired` : The server's authentication has expired.
+  - `Refreshing` : The server is currently refreshing its authentication.
+  - `Unauthorized` : The server is not authorized.

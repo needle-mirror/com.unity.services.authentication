@@ -1,12 +1,12 @@
 {
   "name": "com.unity.services.authentication",
   "displayName": "Authentication",
-  "version": "2.7.2",
-  "unity": "2019.4",
+  "version": "3.0.0",
+  "unity": "2020.3",
   "description": "Client SDK offering player identity management for Unity Gaming Services.\n\nIdentity providers can be configured from the editor or the Unity Dashboard.\n\nPlayer management is available in the Unity Dashboard.",
   "dependencies": {
     "com.unity.nuget.newtonsoft-json": "3.2.1",
-    "com.unity.services.core": "1.10.1",
+    "com.unity.services.core": "1.11.0",
     "com.unity.modules.unitywebrequest": "1.0.0",
     "com.unity.ugui": "1.0.0"
   },
@@ -28,7 +28,7 @@
       "Windows 8 Universal",
       "Windows 10 Universal"
     ],
-    "changelog": "### Added\n- Added `SignInWithSteamAsync` and `LinkWithSteamAsync` methods with `identity` parameter for better security.\n- Added `SignInWithUsernamePasswordAsync`, `SignUpWithUsernamePasswordAsync`, `AddUsernamePasswordAsync`, `UpdatePasswordAsync`\n### Changed\n- Marked previous versions of `SignInWithSteamAsync` and `LinkWithSteamAsync` methods as obsolete."
+    "changelog": "### Changed\n- Upgrading base unity version support to 2020.3\n- Updated the core SDK dependency version\n\n### Added\n- Adding event in access token component for packages to be notified of changes to the `IAccessToken` value.\n- Added `GenerateSignInCodeAsync` method to generate a sign-in code that can be used to sign-in.  \n- Added `SignInWithCodeAsync` method to sign in using the previously generated sign-in code. This method can optionally poll the server for sign-in confirmation.\n- Added `GetSignInCodeInfoAsync` method to fetch information about a given sign-in code.\n- Added `ConfirmCodeAsync` method for sending a request to confirm a provided sign-in code.\n- Added `SignInCodeReceived` which is triggered when `SignInWithCodeAsync` method successfully generates a`SignInCode`.\n- Added `SignInCodeExpired` which is invoked when the sign-in code expires.\n- Adding server authentication service which lets developers authorize operations when running on unity's game server hosting or with service accounts."
   },
   "samples": [
     {
@@ -38,14 +38,14 @@
     }
   ],
   "relatedPackages": {
-    "com.unity.services.authentication.tests": "2.7.2"
+    "com.unity.services.authentication.tests": "3.0.0"
   },
   "upmCi": {
-    "footprint": "daeafa8d10b235b265cfb61e651d758f33618434"
+    "footprint": "6d3295fe45d3eff6864a4c62eb553d9e4c0d77be"
   },
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/operate-services-sdk.git",
     "type": "git",
-    "revision": "27cfcca47ddb40b3c45c37522a674c062ee4a43f"
+    "revision": "0fd93587679328844bee327f93084c516f984fff"
   }
 }

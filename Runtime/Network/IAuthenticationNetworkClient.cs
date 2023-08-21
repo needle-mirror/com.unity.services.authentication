@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Unity.Services.Authentication
@@ -15,5 +16,9 @@ namespace Unity.Services.Authentication
         Task<SignInResponse> SignUpWithUsernamePasswordAsync(UsernamePasswordRequest credentials);
         Task<SignInResponse> AddUsernamePasswordAsync(UsernamePasswordRequest credentials);
         Task<SignInResponse> UpdatePasswordAsync(UpdatePasswordRequest credentials);
+        Task<GenerateCodeResponse> GenerateSignInCodeAsync(GenerateSignInCodeRequest request);
+        Task<CodeLinkConfirmResponse> ConfirmCodeAsync(ConfirmSignInCodeRequest request);
+        Task<SignInResponse> SignInWithCodeAsync(SignInWithCodeRequest request);
+        Task<CodeLinkInfoResponse> GetCodeIdentifierAsync(CodeLinkInfoRequest request);
     }
 }

@@ -4,6 +4,7 @@ namespace Unity.Services.Authentication.Editor
     {
         // Please keep them in alphabetical order
         internal const string AppleGameCenter = "Apple Game Center";
+        internal const string CodeLink = "Code-Link";
         internal const string Facebook = "Facebook";
         internal const string Google = "Google";
         internal const string GooglePlayGames = "Google Play Games";

@@ -2,8 +2,6 @@ using System;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Unity.Services.Core;
-using Unity.Services.Core.Editor.OrganizationHandler;
-using UnityEditor;
 
 namespace Unity.Services.Authentication.Editor
 {
@@ -11,7 +9,6 @@ namespace Unity.Services.Authentication.Editor
     {
         readonly IAuthenticationAdminNetworkClient m_AuthenticationAdminNetworkClient;
         readonly IGenesisTokenProvider m_GenesisTokenProvider;
-        string m_IdDomain;
 
         string GenesisToken => m_GenesisTokenProvider.Token;
         public string GatewayToken { get; internal set; }
@@ -28,7 +25,7 @@ namespace Unity.Services.Authentication.Editor
             m_GenesisTokenProvider = genesisTokenProvider;
         }
 
-        public async Task<string> GetIDDomainAsync()
+        public async Task<IdProviderResponse> CreateIdProviderAsync(string projectId, CreateIdProviderRequest body)
         {
             try
             {
@@ -37,26 +34,7 @@ namespace Unity.Services.Authentication.Editor
                     await ExchangeTokenAsync();
                 }
 
-                var response = await m_AuthenticationAdminNetworkClient.GetDefaultIdDomainAsync(GatewayToken);
-                m_IdDomain = response?.Id;
-                return m_IdDomain;
-            }
-            catch (WebRequestException e)
-            {
-                throw BuildException(e, ServiceCalled.AuthenticationAdmin);
-            }
-        }
-
-        public async Task<IdProviderResponse> CreateIdProviderAsync(string idDomain, CreateIdProviderRequest body)
-        {
-            try
-            {
-                if (string.IsNullOrEmpty(GatewayToken))
-                {
-                    await ExchangeTokenAsync();
-                }
-
-                var response = await m_AuthenticationAdminNetworkClient.CreateIdProviderAsync(body, idDomain, GatewayToken);
+                var response = await m_AuthenticationAdminNetworkClient.CreateIdProviderAsync(body, projectId, GatewayToken);
                 return response;
             }
             catch (WebRequestException e)
@@ -65,7 +43,7 @@ namespace Unity.Services.Authentication.Editor
             }
         }
 
-        public async Task<ListIdProviderResponse> ListIdProvidersAsync(string idDomain)
+        public async Task<ListIdProviderResponse> ListIdProvidersAsync(string projectId)
         {
             try
             {
@@ -74,7 +52,7 @@ namespace Unity.Services.Authentication.Editor
                     await ExchangeTokenAsync();
                 }
 
-                var response = await m_AuthenticationAdminNetworkClient.ListIdProviderAsync(idDomain, GatewayToken);
+                var response = await m_AuthenticationAdminNetworkClient.ListIdProviderAsync(projectId, GatewayToken);
                 return response;
             }
             catch (WebRequestException e)
@@ -83,7 +61,7 @@ namespace Unity.Services.Authentication.Editor
             }
         }
 
-        public async Task<IdProviderResponse> UpdateIdProviderAsync(string idDomain, string type, UpdateIdProviderRequest body)
+        public async Task<IdProviderResponse> UpdateIdProviderAsync(string projectId, string type, UpdateIdProviderRequest body)
         {
             try
             {
@@ -92,7 +70,7 @@ namespace Unity.Services.Authentication.Editor
                     await ExchangeTokenAsync();
                 }
 
-                var response = await m_AuthenticationAdminNetworkClient.UpdateIdProviderAsync(body, idDomain, type, GatewayToken);
+                var response = await m_AuthenticationAdminNetworkClient.UpdateIdProviderAsync(body, projectId, type, GatewayToken);
                 return response;
             }
             catch (WebRequestException e)
@@ -101,7 +79,7 @@ namespace Unity.Services.Authentication.Editor
             }
         }
 
-        public async Task<IdProviderResponse> EnableIdProviderAsync(string idDomain, string type)
+        public async Task<IdProviderResponse> EnableIdProviderAsync(string projectId, string type)
         {
             try
             {
@@ -110,7 +88,7 @@ namespace Unity.Services.Authentication.Editor
                     await ExchangeTokenAsync();
                 }
 
-                var response = await m_AuthenticationAdminNetworkClient.EnableIdProviderAsync(idDomain, type, GatewayToken);
+                var response = await m_AuthenticationAdminNetworkClient.EnableIdProviderAsync(projectId, type, GatewayToken);
                 return response;
             }
             catch (WebRequestException e)
@@ -119,7 +97,7 @@ namespace Unity.Services.Authentication.Editor
             }
         }
 
-        public async Task<IdProviderResponse> DisableIdProviderAsync(string idDomain, string type)
+        public async Task<IdProviderResponse> DisableIdProviderAsync(string projectId, string type)
         {
             try
             {
@@ -128,7 +106,7 @@ namespace Unity.Services.Authentication.Editor
                     await ExchangeTokenAsync();
                 }
 
-                var response = await m_AuthenticationAdminNetworkClient.DisableIdProviderAsync(idDomain, type, GatewayToken);
+                var response = await m_AuthenticationAdminNetworkClient.DisableIdProviderAsync(projectId, type, GatewayToken);
                 return response;
             }
             catch (WebRequestException e)
@@ -137,7 +115,7 @@ namespace Unity.Services.Authentication.Editor
             }
         }
 
-        public async Task<IdProviderResponse> DeleteIdProviderAsync(string idDomain, string type)
+        public async Task<IdProviderResponse> DeleteIdProviderAsync(string projectId, string type)
         {
             try
             {
@@ -146,7 +124,7 @@ namespace Unity.Services.Authentication.Editor
                     await ExchangeTokenAsync();
                 }
 
-                var response = await m_AuthenticationAdminNetworkClient.DeleteIdProviderAsync(idDomain, type, GatewayToken);
+                var response = await m_AuthenticationAdminNetworkClient.DeleteIdProviderAsync(projectId, type, GatewayToken);
                 return response;
             }
             catch (WebRequestException e)

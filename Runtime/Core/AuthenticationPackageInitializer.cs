@@ -65,6 +65,7 @@ namespace Unity.Services.Authentication
 
             AuthenticationService.Instance = authenticationService;
             registry.RegisterServiceComponent<IAccessToken>(authenticationService.AccessTokenComponent);
+            registry.RegisterServiceComponent<IAccessTokenObserver>(authenticationService.AccessTokenComponent);
             registry.RegisterServiceComponent<IEnvironmentId>(authenticationService.EnvironmentIdComponent);
             registry.RegisterServiceComponent<IPlayerId>(authenticationService.PlayerIdComponent);
 
@@ -82,6 +83,7 @@ namespace Unity.Services.Authentication
                 .DependsOn<IMetricsFactory>()
                 .ProvidesComponent<IPlayerId>()
                 .ProvidesComponent<IAccessToken>()
+                .ProvidesComponent<IAccessTokenObserver>()
                 .ProvidesComponent<IEnvironmentId>();
         }
 

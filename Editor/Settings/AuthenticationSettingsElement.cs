@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEditor.UIElements;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Unity.Services.Authentication.Editor
@@ -54,7 +55,7 @@ namespace Unity.Services.Authentication.Editor
         public VisualElement IdProviderListContainer { get; private set; }
 
         IAuthenticationAdminClient AdminClient { get; set; }
-        string IdDomainId { get; set; }
+        string ProjectId => CloudProjectSettings.projectId;
         bool SkipConfirmation { get; set; }
 
         /// <summary>
@@ -117,11 +118,6 @@ namespace Unity.Services.Authentication.Editor
 
             try
             {
-                if (IdDomainId == null)
-                {
-                    await GetIdDomainAsync();
-                }
-
                 await ListIdProvidersAsync();
             }
             catch (Exception e)
@@ -132,16 +128,13 @@ namespace Unity.Services.Authentication.Editor
             HideWaiting();
         }
 
-        async Task GetIdDomainAsync()
-        {
-            IdDomainId = await AdminClient.GetIDDomainAsync();
-        }
-
         async Task ListIdProvidersAsync()
         {
             IdProviderListContainer.Clear();
-            var response = await AdminClient.ListIdProvidersAsync(IdDomainId);
-            var results = response.Results?.ToList();
+            var response = await AdminClient.ListIdProvidersAsync(ProjectId);
+            var results = response.
+                Results?.
+                ToList();
 
             if (results != null)
             {
@@ -232,7 +225,7 @@ namespace Unity.Services.Authentication.Editor
                 return;
             }
 
-            var idProviderElement = new IdProviderElement(IdDomainId, AdminClient, idProvider, options, SkipConfirmation);
+            var idProviderElement = new IdProviderElement(ProjectId, AdminClient, idProvider, options, SkipConfirmation);
 
             IdProviderListContainer.Add(idProviderElement);
 

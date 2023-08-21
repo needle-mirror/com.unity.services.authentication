@@ -1,11 +1,13 @@
 using System;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Unity.Services.Authentication.Generated;
 using Unity.Services.Authentication.Shared;
 using Unity.Services.Core;
 using Unity.Services.Core.Scheduler.Internal;
+using Task = System.Threading.Tasks.Task;
 
 namespace Unity.Services.Authentication
 {
@@ -14,10 +16,13 @@ namespace Unity.Services.Authentication
         const string k_ProfileRegex = @"^[a-zA-Z0-9_-]{1,30}$";
         const string k_IdProviderNameRegex = @"^oidc-[a-z0-9-_\.]{1,15}$";
         const string k_SteamIdentityRegex = @"^[a-zA-Z0-9]{5,30}$";
+
         public event Action<RequestFailedException> SignInFailed;
         public event Action SignedIn;
         public event Action SignedOut;
         public event Action Expired;
+        public event Action<SignInCodeInfo> SignInCodeReceived;
+        public event Action SignInCodeExpired;
         public event Action<RequestFailedException> UpdatePasswordFailed;
 
         public bool IsSignedIn =>
@@ -53,6 +58,8 @@ namespace Unity.Services.Authentication
         internal IAuthenticationNetworkClient NetworkClient { get; set; }
         internal IPlayerNamesApi PlayerNamesApi { get; set; }
         internal IAuthenticationExceptionHandler ExceptionHandler { get; set; }
+        internal string CodeLinkSessionId { get; set; }
+        internal string CodeVerifier { get; set; }
 
         readonly IProfile m_Profile;
         readonly IJwtDecoder m_JwtDecoder;
@@ -556,14 +563,14 @@ namespace Unity.Services.Authentication
             }
         }
 
-        public async Task<string> GetPlayerNameAsync()
+        public async Task<string> GetPlayerNameAsync(bool autoGenerate = true)
         {
             if (IsAuthorized)
             {
                 try
                 {
                     PlayerNamesApi.Configuration.AccessToken = AccessTokenComponent.AccessToken;
-                    var response = await PlayerNamesApi.GetNameAsync(PlayerId);
+                    var response = await PlayerNamesApi.GetNameAsync(PlayerId, autoGenerate);
                     var player = response.Data;
                     PlayerNameComponent.PlayerName = player.Name;
                     return player.Name;
@@ -613,6 +620,169 @@ namespace Unity.Services.Authentication
                     return playerNameResult;
                 }
                 catch (ApiException e)
+                {
+                    throw ExceptionHandler.ConvertException(e);
+                }
+                catch (Exception e)
+                {
+                    throw ExceptionHandler.BuildUnknownException(e.Message);
+                }
+            }
+            else
+            {
+                throw ExceptionHandler.BuildClientInvalidStateException(State);
+            }
+        }
+
+        public async Task<SignInCodeInfo> GenerateSignInCodeAsync(string identifier = null)
+        {
+            if (State != AuthenticationState.SignedOut && State != AuthenticationState.Expired)
+            {
+                var exception = ExceptionHandler.BuildClientInvalidStateException(State);
+                SendSignInFailedEvent(exception, false);
+                throw exception;
+            }
+
+            var challengeGenerator = new CodeChallengeGenerator();
+            var codeVerifier = challengeGenerator.GenerateCode();
+            var codeChallenge = CodeChallengeGenerator.S256EncodeChallenge(codeVerifier);
+
+            var generateCodeRequest = new GenerateSignInCodeRequest
+            {
+                Identifier = identifier,
+                CodeChallenge = codeChallenge
+            };
+
+            var generateCodeResponse = await NetworkClient.GenerateSignInCodeAsync(generateCodeRequest);
+            var info = new SignInCodeInfo()
+            {
+                SignInCode = generateCodeResponse.SignInCode,
+                Expiration = generateCodeResponse.Expiration
+            };
+
+            CodeLinkSessionId = generateCodeResponse.CodeLinkSessionId;
+            CodeVerifier = codeVerifier;
+
+            SignInCodeReceived?.Invoke(info);
+            return info;
+        }
+
+        public async Task SignInWithCodeAsync(bool usePolling = false, CancellationToken cancellationToken = default)
+        {
+            if (CodeVerifier == null || CodeLinkSessionId == null)
+            {
+                throw ExceptionHandler.BuildUnknownException("SignInWithCodeAsync failed: No sign-in code has been generated. Ensure GenerateSignInCode has been called and completed successfully before attempting to sign in");
+            }
+
+            var signInRequest = new SignInWithCodeRequest() { CodeVerifier = CodeVerifier, CodeLinkSessionId = CodeLinkSessionId };
+            SignInResponse signInResponse;
+
+            try
+            {
+                if (usePolling)
+                {
+                    signInResponse = await PollForCodeConfirmationAsync(signInRequest, cancellationToken);
+                }
+                else
+                {
+                    signInResponse = await NetworkClient.SignInWithCodeAsync(signInRequest);
+                }
+
+                await HandleSignInRequestAsync(() => Task.FromResult(signInResponse));
+            }
+            catch (WebRequestException)
+            {
+                throw ExceptionHandler.BuildUnknownException("The sign-in code was not confirmed.");
+            }
+            finally
+            {
+                CodeLinkSessionId = null;
+                CodeVerifier = null;
+            }
+        }
+
+        async Task<SignInResponse> PollForCodeConfirmationAsync(SignInWithCodeRequest request, CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await DelayWithScheduler(Settings.CodeConfirmationDelay);
+
+                try
+                {
+                    var response = await NetworkClient.SignInWithCodeAsync(request);
+
+                    if (response.IdToken != null)
+                    {
+                        return response;
+                    }
+                }
+                catch (WebRequestException e)
+                {
+                    if (e.ResponseCode == 404)
+                    {
+                        SignInCodeExpired?.Invoke();
+                        throw ExceptionHandler.BuildUnknownException("The sign-in code has expired.");
+                    }
+                }
+            }
+
+            var exception = ExceptionHandler.BuildUnknownException("The operation was canceled or timed out while waiting for code confirmation.");
+            SendSignInFailedEvent(exception, true);
+            throw exception;
+        }
+
+        Task DelayWithScheduler(double delaySeconds)
+        {
+            var tcs = new TaskCompletionSource<bool>();
+            m_Scheduler.ScheduleAction(() => tcs.SetResult(true), delaySeconds);
+            return tcs.Task;
+        }
+
+        public async Task<SignInCodeInfo> GetSignInCodeInfoAsync(string code)
+        {
+            if (IsAuthorized)
+            {
+                if (string.IsNullOrEmpty(code))
+                {
+                    throw ExceptionHandler.BuildUnknownException("Code cannot be null or empty");
+                }
+
+                try
+                {
+                    var request = new CodeLinkInfoRequest() { SignInCode = code };
+                    var response = await NetworkClient.GetCodeIdentifierAsync(request);
+                    var info = new SignInCodeInfo() { SignInCode = code, Identifier = response.Identifier, Expiration = response.Expiration };
+                    return info;
+                }
+                catch (WebRequestException e)
+                {
+                    throw ExceptionHandler.ConvertException(e);
+                }
+                catch (Exception e)
+                {
+                    throw ExceptionHandler.BuildUnknownException(e.Message);
+                }
+            }
+
+            throw ExceptionHandler.BuildClientInvalidStateException(State);
+        }
+
+        public async Task ConfirmCodeAsync(string code, string idProvider = null, string externalToken = null)
+        {
+            if (string.IsNullOrEmpty(code))
+            {
+                throw ExceptionHandler.BuildUnknownException("Code cannot be null or empty");
+            }
+
+            if (IsAuthorized)
+            {
+                try
+                {
+                    var sessionToken = SessionTokenExists ? SessionTokenComponent.SessionToken : null;
+                    var request = new ConfirmSignInCodeRequest() { SignInCode = code, IdProvider = idProvider, SessionToken = sessionToken, ExternalToken = externalToken };
+                    await NetworkClient.ConfirmCodeAsync(request);
+                }
+                catch (WebRequestException e)
                 {
                     throw ExceptionHandler.ConvertException(e);
                 }
