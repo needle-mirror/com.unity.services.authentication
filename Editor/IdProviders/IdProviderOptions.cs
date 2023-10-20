@@ -43,6 +43,11 @@ namespace Unity.Services.Authentication.Editor
         public bool NeedClientSecret { get; set; }
 
         /// <summary>
+        /// Whether the relying party is needed in the target ID provider.
+        /// </summary>
+        public bool NeedRelyingParty { get; set; } = false;
+
+        /// <summary>
         /// Whether the id provider can be deleted. True by default
         /// </summary>
         public bool CanBeDeleted { get; set; } = true;

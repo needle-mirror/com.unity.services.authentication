@@ -2,9 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Unity.Services.Authentication.PlayerAccounts.Editor;
 using UnityEditor;
+// Required for older unity versions.
 using UnityEditor.UIElements;
-using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Unity.Services.Authentication.Editor
@@ -234,6 +235,18 @@ namespace Unity.Services.Authentication.Editor
             idProviderElement.Deleted += OnIdProviderDeleted;
             idProviderElement.Error += OnIdProviderError;
             idProviderElement.Initialize();
+
+            // Update Unity Player Account Client Id.
+            if (idProviderElement.Type == IdProviderKeys.Unity)
+            {
+                var settings = SettingsUtils.LoadOrCreateSettings();
+
+                if (settings != null && settings.clientId != idProviderElement.ClientIdField.value)
+                {
+                    settings.ClientId = idProviderElement.ClientIdField.value;
+                    AssetDatabase.SaveAssetIfDirty(settings);
+                }
+            }
 
             UpdateAddIdProviderList();
         }

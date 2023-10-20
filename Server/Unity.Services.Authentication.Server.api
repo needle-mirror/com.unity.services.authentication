@@ -3,7 +3,7 @@
 // make sure the XML doc file is present and located next to the scraped dll
 namespace Unity.Services.Authentication.Server
 {
-    public interface IServerAuthenticationService
+    public interface IServerAuthenticationService : Unity.Services.Core.IService
     {
         public event System.Action<ServerAuthenticationException> AuthorizationFailed;
         public event System.Action Authorized;
@@ -39,5 +39,13 @@ namespace Unity.Services.Authentication.Server
         Refreshing = 3,
         SigningIn = 1,
         Unauthorized = 4,
+    }
+}
+
+namespace Unity.Services.Core
+{
+    public static class UnityServicesExtensions
+    {
+        public static Unity.Services.Authentication.Server.IServerAuthenticationService GetServerAuthenticationService(this IUnityServices unityServices);
     }
 }

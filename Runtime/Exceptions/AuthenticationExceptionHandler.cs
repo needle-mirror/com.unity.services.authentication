@@ -171,6 +171,8 @@ namespace Unity.Services.Authentication
                     return AuthenticationException.Create(CommonErrorCodes.NotFound, exception.Message);
                 case 408: // HttpStatusCode.RequestTimeout
                     return AuthenticationException.Create(CommonErrorCodes.Timeout, exception.Message);
+                case 409: // HttpStatusCode.Conflict
+                    return AuthenticationException.Create(CommonErrorCodes.Conflict, exception.Message);
                 case 429: // HttpStatusCode.TooManyRequests
                     return AuthenticationException.Create(CommonErrorCodes.TooManyRequests, exception.Message);
                 default:

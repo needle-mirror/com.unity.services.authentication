@@ -7,7 +7,9 @@
         "Unity.Services.Core",
         "Unity.Services.Core.Internal",
         "Unity.Settings.Editor",
-        "Unity.Services.Authentication"
+        "Unity.Services.Authentication",
+        "Unity.Services.Authentication.PlayerAccounts",
+        "Unity.Services.Authentication.PlayerAccounts.Editor"
     ],
     "includePlatforms": [
         "Editor"

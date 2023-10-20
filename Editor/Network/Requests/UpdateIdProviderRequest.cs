@@ -19,6 +19,9 @@ namespace Unity.Services.Authentication.Editor
         [JsonProperty("oidcConfig")]
         public OpenIDConfig OidcConfig;
 
+        [JsonProperty("relyingParty")]
+        public string RelyingParty;
+
         [Preserve]
         public UpdateIdProviderRequest() {}
 
@@ -29,6 +32,7 @@ namespace Unity.Services.Authentication.Editor
             ClientSecret = idProvider.ClientSecret;
             Type = idProvider.Type;
             OidcConfig = idProvider.OidcConfig;
+            RelyingParty = idProvider.RelyingParty;
         }
     }
 }

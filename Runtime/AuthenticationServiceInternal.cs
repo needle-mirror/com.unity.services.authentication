@@ -1,21 +1,17 @@
 using System;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using Unity.Services.Authentication.Generated;
-using Unity.Services.Authentication.Shared;
 using Unity.Services.Core;
 using Unity.Services.Core.Scheduler.Internal;
 using Task = System.Threading.Tasks.Task;
 
 namespace Unity.Services.Authentication
 {
-    class AuthenticationServiceInternal : IAuthenticationService
+    partial class AuthenticationServiceInternal : IAuthenticationService
     {
         const string k_ProfileRegex = @"^[a-zA-Z0-9_-]{1,30}$";
-        const string k_IdProviderNameRegex = @"^oidc-[a-z0-9-_\.]{1,15}$";
-        const string k_SteamIdentityRegex = @"^[a-zA-Z0-9]{5,30}$";
 
         public event Action<RequestFailedException> SignInFailed;
         public event Action SignedIn;
@@ -42,7 +38,6 @@ namespace Unity.Services.Authentication
         public string AccessToken => AccessTokenComponent.AccessToken;
 
         public string PlayerId => PlayerIdComponent.PlayerId;
-        public string PlayerName => PlayerNameComponent.PlayerName;
         public PlayerInfo PlayerInfo { get; internal set; }
 
         internal long? ExpirationActionId { get; set; }
@@ -58,15 +53,11 @@ namespace Unity.Services.Authentication
         internal IAuthenticationNetworkClient NetworkClient { get; set; }
         internal IPlayerNamesApi PlayerNamesApi { get; set; }
         internal IAuthenticationExceptionHandler ExceptionHandler { get; set; }
-        internal string CodeLinkSessionId { get; set; }
-        internal string CodeVerifier { get; set; }
-
         readonly IProfile m_Profile;
         readonly IJwtDecoder m_JwtDecoder;
         readonly IAuthenticationCache m_Cache;
         readonly IActionScheduler m_Scheduler;
         readonly IAuthenticationMetrics m_Metrics;
-
 
         internal event Action<AuthenticationState, AuthenticationState> StateChanged;
 
@@ -155,323 +146,6 @@ namespace Unity.Services.Authentication
                 SendSignInFailedEvent(exception, false);
                 return Task.FromException(exception);
             }
-        }
-
-        public Task SignInWithAppleAsync(string idToken, SignInOptions options = null)
-        {
-            return SignInWithExternalTokenAsync(IdProviderKeys.Apple, new SignInWithExternalTokenRequest
-            {
-                IdProvider = IdProviderKeys.Apple,
-                Token = idToken,
-                SignInOnly = !options?.CreateAccount ?? false
-            });
-        }
-
-        public Task LinkWithAppleAsync(string idToken, LinkOptions options = null)
-        {
-            return LinkWithExternalTokenAsync(IdProviderKeys.Apple, new LinkWithExternalTokenRequest
-            {
-                IdProvider = IdProviderKeys.Apple,
-                Token = idToken,
-                ForceLink = options?.ForceLink ?? false
-            });
-        }
-
-        public Task UnlinkAppleAsync()
-        {
-            return UnlinkExternalTokenAsync(IdProviderKeys.Apple);
-        }
-
-        public Task SignInWithAppleGameCenterAsync(string signature, string teamPlayerId, string publicKeyURL,
-            string salt, ulong timestamp, SignInOptions options = null)
-        {
-            return SignInWithExternalTokenAsync(IdProviderKeys.AppleGameCenter, new SignInWithAppleGameCenterRequest()
-            {
-                IdProvider = IdProviderKeys.AppleGameCenter,
-                Token = signature,
-                AppleGameCenterConfig = new AppleGameCenterConfig() { TeamPlayerId = teamPlayerId, PublicKeyURL = publicKeyURL, Salt = salt, Timestamp = timestamp },
-                SignInOnly = !options?.CreateAccount ?? false
-            });
-        }
-
-        public Task LinkWithAppleGameCenterAsync(string signature, string teamPlayerId, string publicKeyURL,
-            string salt, ulong timestamp, LinkOptions options = null)
-        {
-            return LinkWithExternalTokenAsync(IdProviderKeys.AppleGameCenter, new LinkWithAppleGameCenterRequest()
-            {
-                IdProvider = IdProviderKeys.AppleGameCenter,
-                Token = signature,
-                AppleGameCenterConfig = new AppleGameCenterConfig() { TeamPlayerId = teamPlayerId, PublicKeyURL = publicKeyURL, Salt = salt, Timestamp = timestamp },
-                ForceLink = options?.ForceLink ?? false
-            });
-        }
-
-        public Task UnlinkAppleGameCenterAsync()
-        {
-            return UnlinkExternalTokenAsync(IdProviderKeys.AppleGameCenter);
-        }
-
-        public Task SignInWithGoogleAsync(string idToken, SignInOptions options = null)
-        {
-            return SignInWithExternalTokenAsync(IdProviderKeys.Google, new SignInWithExternalTokenRequest
-            {
-                IdProvider = IdProviderKeys.Google,
-                Token = idToken,
-                SignInOnly = !options?.CreateAccount ?? false
-            });
-        }
-
-        public Task LinkWithGoogleAsync(string idToken, LinkOptions options = null)
-        {
-            return LinkWithExternalTokenAsync(IdProviderKeys.Google, new LinkWithExternalTokenRequest
-            {
-                IdProvider = IdProviderKeys.Google,
-                Token = idToken,
-                ForceLink = options?.ForceLink ?? false
-            });
-        }
-
-        public Task UnlinkGoogleAsync()
-        {
-            return UnlinkExternalTokenAsync(IdProviderKeys.Google);
-        }
-
-        public Task SignInWithGooglePlayGamesAsync(string authCode, SignInOptions options = null)
-        {
-            return SignInWithExternalTokenAsync(IdProviderKeys.GooglePlayGames, new SignInWithExternalTokenRequest
-            {
-                IdProvider = IdProviderKeys.GooglePlayGames,
-                Token = authCode,
-                SignInOnly = !options?.CreateAccount ?? false
-            });
-        }
-
-        public Task LinkWithGooglePlayGamesAsync(string authCode, LinkOptions options = null)
-        {
-            return LinkWithExternalTokenAsync(IdProviderKeys.GooglePlayGames, new LinkWithExternalTokenRequest
-            {
-                IdProvider = IdProviderKeys.GooglePlayGames,
-                Token = authCode,
-                ForceLink = options?.ForceLink ?? false
-            });
-        }
-
-        public Task UnlinkGooglePlayGamesAsync()
-        {
-            return UnlinkExternalTokenAsync(IdProviderKeys.GooglePlayGames);
-        }
-
-        public Task SignInWithFacebookAsync(string accessToken, SignInOptions options = null)
-        {
-            return SignInWithExternalTokenAsync(IdProviderKeys.Facebook, new SignInWithExternalTokenRequest
-            {
-                IdProvider = IdProviderKeys.Facebook,
-                Token = accessToken,
-                SignInOnly = !options?.CreateAccount ?? false
-            });
-        }
-
-        public Task LinkWithFacebookAsync(string accessToken, LinkOptions options = null)
-        {
-            return LinkWithExternalTokenAsync(IdProviderKeys.Facebook, new LinkWithExternalTokenRequest
-            {
-                IdProvider = IdProviderKeys.Facebook,
-                Token = accessToken,
-                ForceLink = options?.ForceLink ?? false
-            });
-        }
-
-        public Task UnlinkFacebookAsync()
-        {
-            return UnlinkExternalTokenAsync(IdProviderKeys.Facebook);
-        }
-
-        [Obsolete("This method is deprecated as of version 2.7.1. Please use the SignInWithSteamAsync method with the 'identity' parameter for better security.")]
-        public Task SignInWithSteamAsync(string sessionTicket, SignInOptions options = null)
-        {
-            return SignInWithExternalTokenAsync(IdProviderKeys.Steam,
-                new SignInWithSteamRequest
-                {
-                    IdProvider = IdProviderKeys.Steam,
-                    Token = sessionTicket,
-                    SignInOnly = !options?.CreateAccount ?? false
-                });
-        }
-
-        [Obsolete("This method is deprecated as of version 2.7.1. Please use the LinkWithSteamAsync method with the 'identity' parameter for better security.")]
-        public Task LinkWithSteamAsync(string sessionTicket, LinkOptions options = null)
-        {
-            return LinkWithExternalTokenAsync(IdProviderKeys.Steam,
-                new LinkWithSteamRequest
-                {
-                    IdProvider = IdProviderKeys.Steam,
-                    Token = sessionTicket,
-                    ForceLink = options?.ForceLink ?? false
-                });
-        }
-
-        public Task SignInWithSteamAsync(string sessionTicket, string identity, SignInOptions options = null)
-        {
-            ValidateSteamIdentity(identity);
-
-            return SignInWithExternalTokenAsync(IdProviderKeys.Steam,
-                new SignInWithSteamRequest
-                {
-                    IdProvider = IdProviderKeys.Steam,
-                    Token = sessionTicket,
-                    SteamConfig = new SteamConfig() {identity = identity},
-                    SignInOnly = !options?.CreateAccount ?? false
-                });
-        }
-
-        public Task LinkWithSteamAsync(string sessionTicket, string identity, LinkOptions options = null)
-        {
-            ValidateSteamIdentity(identity);
-
-            return LinkWithExternalTokenAsync(IdProviderKeys.Steam,
-                new LinkWithSteamRequest
-                {
-                    IdProvider = IdProviderKeys.Steam,
-                    Token = sessionTicket,
-                    SteamConfig = new SteamConfig() {identity = identity},
-                    ForceLink = options?.ForceLink ?? false
-                });
-        }
-
-        void ValidateSteamIdentity(string identity)
-        {
-            if (string.IsNullOrEmpty(identity))
-            {
-                throw ExceptionHandler.BuildUnknownException("Identity cannot be null or empty.");
-            }
-
-            if (!Regex.IsMatch(identity, k_SteamIdentityRegex))
-            {
-                throw ExceptionHandler.BuildUnknownException("The provided identity must only contain alphanumeric characters and be between 5 and 30 characters in length.");
-            }
-        }
-
-        public Task UnlinkSteamAsync()
-        {
-            return UnlinkExternalTokenAsync(IdProviderKeys.Steam);
-        }
-
-        public Task SignInWithOculusAsync(string nonce, string userId, SignInOptions options = null)
-        {
-            return SignInWithExternalTokenAsync(IdProviderKeys.Oculus, new SignInWithOculusRequest
-            {
-                IdProvider = IdProviderKeys.Oculus,
-                Token = nonce,
-                OculusConfig = new OculusConfig() { UserId = userId },
-                SignInOnly = !options?.CreateAccount ?? false
-            });
-        }
-
-        public Task LinkWithOculusAsync(string nonce, string userId, LinkOptions options = null)
-        {
-            return LinkWithExternalTokenAsync(IdProviderKeys.Oculus, new LinkWithOculusRequest()
-            {
-                IdProvider = IdProviderKeys.Oculus,
-                Token = nonce,
-                OculusConfig = new OculusConfig() { UserId = userId },
-                ForceLink = options?.ForceLink ?? false
-            });
-        }
-
-        public Task UnlinkOculusAsync()
-        {
-            return UnlinkExternalTokenAsync(IdProviderKeys.Oculus);
-        }
-
-        public Task SignInWithOpenIdConnectAsync(string idProviderName, string idToken, SignInOptions options = null)
-        {
-            if (!ValidateOpenIdConnectIdProviderName(idProviderName))
-            {
-                throw ExceptionHandler.BuildInvalidIdProviderNameException();
-            }
-            return SignInWithExternalTokenAsync(idProviderName, new SignInWithExternalTokenRequest
-            {
-                IdProvider = idProviderName,
-                Token = idToken,
-                SignInOnly = !options?.CreateAccount ?? false
-            });
-        }
-
-        public Task LinkWithOpenIdConnectAsync(string idProviderName, string idToken, LinkOptions options = null)
-        {
-            if (!ValidateOpenIdConnectIdProviderName(idProviderName))
-            {
-                throw ExceptionHandler.BuildInvalidIdProviderNameException();
-            }
-            return LinkWithExternalTokenAsync(idProviderName, new LinkWithExternalTokenRequest()
-            {
-                IdProvider = idProviderName,
-                Token = idToken,
-                ForceLink = options?.ForceLink ?? false
-            });
-        }
-
-        public Task UnlinkOpenIdConnectAsync(string idProviderName)
-        {
-            if (!ValidateOpenIdConnectIdProviderName(idProviderName))
-            {
-                throw ExceptionHandler.BuildInvalidIdProviderNameException();
-            }
-            return UnlinkExternalTokenAsync(idProviderName);
-        }
-
-        public Task SignInWithUsernamePasswordAsync(string username, string password)
-        {
-            return SignInWithUsernamePasswordRequestAsync(BuildUsernamePasswordRequest(username, password));
-        }
-
-        public Task SignUpWithUsernamePasswordAsync(string username, string password)
-        {
-            return SignUpWithUsernamePasswordRequestAsync(BuildUsernamePasswordRequest(username, password));
-        }
-
-        public Task AddUsernamePasswordAsync(string username, string password)
-        {
-            return AddUsernamePasswordRequestAsync(BuildUsernamePasswordRequest(username, password));
-        }
-
-        public Task UpdatePasswordAsync(string currentPassword, string newPassword)
-        {
-            if (string.IsNullOrEmpty(currentPassword) || string.IsNullOrEmpty(newPassword))
-            {
-                throw ExceptionHandler.BuildInvalidCredentialsException();
-            }
-
-            return UpdatePasswordRequestAsync(new UpdatePasswordRequest
-            {
-                Password = currentPassword,
-                NewPassword = newPassword
-            });
-        }
-
-        public Task SignInWithUnityAsync(string token, SignInOptions options = null)
-        {
-            return SignInWithExternalTokenAsync(IdProviderKeys.Unity, new SignInWithExternalTokenRequest
-            {
-                IdProvider = IdProviderKeys.Unity,
-                Token = token,
-                SignInOnly = !options?.CreateAccount ?? false
-            });
-        }
-
-        public Task LinkWithUnityAsync(string token, LinkOptions options = null)
-        {
-            return LinkWithExternalTokenAsync(IdProviderKeys.Unity, new LinkWithExternalTokenRequest
-            {
-                IdProvider = IdProviderKeys.Unity,
-                Token = token,
-                ForceLink = options?.ForceLink ?? false
-            });
-        }
-
-        public Task UnlinkUnityAsync()
-        {
-            return UnlinkExternalTokenAsync(IdProviderKeys.Unity);
         }
 
         public async Task DeleteAccountAsync()
@@ -563,369 +237,6 @@ namespace Unity.Services.Authentication
             }
         }
 
-        public async Task<string> GetPlayerNameAsync(bool autoGenerate = true)
-        {
-            if (IsAuthorized)
-            {
-                try
-                {
-                    PlayerNamesApi.Configuration.AccessToken = AccessTokenComponent.AccessToken;
-                    var response = await PlayerNamesApi.GetNameAsync(PlayerId, autoGenerate);
-                    var player = response.Data;
-                    PlayerNameComponent.PlayerName = player.Name;
-                    return player.Name;
-                }
-                catch (ApiException e)
-                {
-                    if (e.Response.StatusCode == 404) // HttpStatusCode.NotFound
-                    {
-                        PlayerNameComponent.Clear();
-                        return null;
-                    }
-
-                    throw ExceptionHandler.ConvertException(e);
-                }
-                catch (Exception e)
-                {
-                    throw ExceptionHandler.BuildUnknownException(e.Message);
-                }
-            }
-            else
-            {
-                throw ExceptionHandler.BuildClientInvalidStateException(State);
-            }
-        }
-
-        public async Task<string> UpdatePlayerNameAsync(string playerName)
-        {
-            if (IsAuthorized)
-            {
-                if (string.IsNullOrWhiteSpace(playerName) || playerName.Any(char.IsWhiteSpace))
-                {
-                    throw ExceptionHandler.BuildInvalidPlayerNameException();
-                }
-
-                try
-                {
-                    PlayerNamesApi.Configuration.AccessToken = AccessTokenComponent.AccessToken;
-                    var response = await PlayerNamesApi.UpdateNameAsync(PlayerId, new UpdateNameRequest(playerName));
-                    var playerNameResult = response.Data?.Name;
-
-                    if (string.IsNullOrWhiteSpace(playerNameResult))
-                    {
-                        throw ExceptionHandler.BuildUnknownException("Invalid player name response");
-                    }
-
-                    PlayerNameComponent.PlayerName = playerNameResult;
-                    return playerNameResult;
-                }
-                catch (ApiException e)
-                {
-                    throw ExceptionHandler.ConvertException(e);
-                }
-                catch (Exception e)
-                {
-                    throw ExceptionHandler.BuildUnknownException(e.Message);
-                }
-            }
-            else
-            {
-                throw ExceptionHandler.BuildClientInvalidStateException(State);
-            }
-        }
-
-        public async Task<SignInCodeInfo> GenerateSignInCodeAsync(string identifier = null)
-        {
-            if (State != AuthenticationState.SignedOut && State != AuthenticationState.Expired)
-            {
-                var exception = ExceptionHandler.BuildClientInvalidStateException(State);
-                SendSignInFailedEvent(exception, false);
-                throw exception;
-            }
-
-            var challengeGenerator = new CodeChallengeGenerator();
-            var codeVerifier = challengeGenerator.GenerateCode();
-            var codeChallenge = CodeChallengeGenerator.S256EncodeChallenge(codeVerifier);
-
-            var generateCodeRequest = new GenerateSignInCodeRequest
-            {
-                Identifier = identifier,
-                CodeChallenge = codeChallenge
-            };
-
-            var generateCodeResponse = await NetworkClient.GenerateSignInCodeAsync(generateCodeRequest);
-            var info = new SignInCodeInfo()
-            {
-                SignInCode = generateCodeResponse.SignInCode,
-                Expiration = generateCodeResponse.Expiration
-            };
-
-            CodeLinkSessionId = generateCodeResponse.CodeLinkSessionId;
-            CodeVerifier = codeVerifier;
-
-            SignInCodeReceived?.Invoke(info);
-            return info;
-        }
-
-        public async Task SignInWithCodeAsync(bool usePolling = false, CancellationToken cancellationToken = default)
-        {
-            if (CodeVerifier == null || CodeLinkSessionId == null)
-            {
-                throw ExceptionHandler.BuildUnknownException("SignInWithCodeAsync failed: No sign-in code has been generated. Ensure GenerateSignInCode has been called and completed successfully before attempting to sign in");
-            }
-
-            var signInRequest = new SignInWithCodeRequest() { CodeVerifier = CodeVerifier, CodeLinkSessionId = CodeLinkSessionId };
-            SignInResponse signInResponse;
-
-            try
-            {
-                if (usePolling)
-                {
-                    signInResponse = await PollForCodeConfirmationAsync(signInRequest, cancellationToken);
-                }
-                else
-                {
-                    signInResponse = await NetworkClient.SignInWithCodeAsync(signInRequest);
-                }
-
-                await HandleSignInRequestAsync(() => Task.FromResult(signInResponse));
-            }
-            catch (WebRequestException)
-            {
-                throw ExceptionHandler.BuildUnknownException("The sign-in code was not confirmed.");
-            }
-            finally
-            {
-                CodeLinkSessionId = null;
-                CodeVerifier = null;
-            }
-        }
-
-        async Task<SignInResponse> PollForCodeConfirmationAsync(SignInWithCodeRequest request, CancellationToken cancellationToken)
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                await DelayWithScheduler(Settings.CodeConfirmationDelay);
-
-                try
-                {
-                    var response = await NetworkClient.SignInWithCodeAsync(request);
-
-                    if (response.IdToken != null)
-                    {
-                        return response;
-                    }
-                }
-                catch (WebRequestException e)
-                {
-                    if (e.ResponseCode == 404)
-                    {
-                        SignInCodeExpired?.Invoke();
-                        throw ExceptionHandler.BuildUnknownException("The sign-in code has expired.");
-                    }
-                }
-            }
-
-            var exception = ExceptionHandler.BuildUnknownException("The operation was canceled or timed out while waiting for code confirmation.");
-            SendSignInFailedEvent(exception, true);
-            throw exception;
-        }
-
-        Task DelayWithScheduler(double delaySeconds)
-        {
-            var tcs = new TaskCompletionSource<bool>();
-            m_Scheduler.ScheduleAction(() => tcs.SetResult(true), delaySeconds);
-            return tcs.Task;
-        }
-
-        public async Task<SignInCodeInfo> GetSignInCodeInfoAsync(string code)
-        {
-            if (IsAuthorized)
-            {
-                if (string.IsNullOrEmpty(code))
-                {
-                    throw ExceptionHandler.BuildUnknownException("Code cannot be null or empty");
-                }
-
-                try
-                {
-                    var request = new CodeLinkInfoRequest() { SignInCode = code };
-                    var response = await NetworkClient.GetCodeIdentifierAsync(request);
-                    var info = new SignInCodeInfo() { SignInCode = code, Identifier = response.Identifier, Expiration = response.Expiration };
-                    return info;
-                }
-                catch (WebRequestException e)
-                {
-                    throw ExceptionHandler.ConvertException(e);
-                }
-                catch (Exception e)
-                {
-                    throw ExceptionHandler.BuildUnknownException(e.Message);
-                }
-            }
-
-            throw ExceptionHandler.BuildClientInvalidStateException(State);
-        }
-
-        public async Task ConfirmCodeAsync(string code, string idProvider = null, string externalToken = null)
-        {
-            if (string.IsNullOrEmpty(code))
-            {
-                throw ExceptionHandler.BuildUnknownException("Code cannot be null or empty");
-            }
-
-            if (IsAuthorized)
-            {
-                try
-                {
-                    var sessionToken = SessionTokenExists ? SessionTokenComponent.SessionToken : null;
-                    var request = new ConfirmSignInCodeRequest() { SignInCode = code, IdProvider = idProvider, SessionToken = sessionToken, ExternalToken = externalToken };
-                    await NetworkClient.ConfirmCodeAsync(request);
-                }
-                catch (WebRequestException e)
-                {
-                    throw ExceptionHandler.ConvertException(e);
-                }
-                catch (Exception e)
-                {
-                    throw ExceptionHandler.BuildUnknownException(e.Message);
-                }
-            }
-            else
-            {
-                throw ExceptionHandler.BuildClientInvalidStateException(State);
-            }
-        }
-
-        internal Task SignInWithExternalTokenAsync(string idProvider, SignInWithExternalTokenRequest request, bool enableRefresh = true)
-        {
-            if (State == AuthenticationState.SignedOut || State == AuthenticationState.Expired)
-            {
-                return HandleSignInRequestAsync(() => NetworkClient.SignInWithExternalTokenAsync(idProvider, request), enableRefresh);
-            }
-            else
-            {
-                var exception = ExceptionHandler.BuildClientInvalidStateException(State);
-                SendSignInFailedEvent(exception, false);
-                return Task.FromException(exception);
-            }
-        }
-
-        internal async Task LinkWithExternalTokenAsync(string idProvider, LinkWithExternalTokenRequest request)
-        {
-            if (IsAuthorized)
-            {
-                try
-                {
-                    var response = await NetworkClient.LinkWithExternalTokenAsync(idProvider, request);
-                    PlayerInfo?.AddExternalIdentity(response.User?.ExternalIds?.FirstOrDefault(x => x.ProviderId == request.IdProvider));
-                }
-                catch (WebRequestException e)
-                {
-                    throw ExceptionHandler.ConvertException(e);
-                }
-            }
-            else
-            {
-                throw ExceptionHandler.BuildClientInvalidStateException(State);
-            }
-        }
-
-        internal async Task UnlinkExternalTokenAsync(string idProvider)
-        {
-            if (IsAuthorized)
-            {
-                var externalId = PlayerInfo?.GetIdentityId(idProvider);
-
-                if (externalId == null)
-                {
-                    throw ExceptionHandler.BuildClientUnlinkExternalIdNotFoundException();
-                }
-
-                try
-                {
-                    await NetworkClient.UnlinkExternalTokenAsync(idProvider, new UnlinkRequest
-                    {
-                        IdProvider = idProvider,
-                        ExternalId = externalId
-                    });
-
-                    PlayerInfo.RemoveIdentity(idProvider);
-                }
-                catch (WebRequestException e)
-                {
-                    throw ExceptionHandler.ConvertException(e);
-                }
-            }
-            else
-            {
-                throw ExceptionHandler.BuildClientInvalidStateException(State);
-            }
-        }
-
-        internal Task SignInWithUsernamePasswordRequestAsync(UsernamePasswordRequest request, bool enableRefresh = true)
-        {
-            if (State == AuthenticationState.SignedOut || State == AuthenticationState.Expired)
-            {
-                return HandleSignInRequestAsync(() => NetworkClient.SignInWithUsernamePasswordAsync(request), enableRefresh);
-            }
-
-            var exception = ExceptionHandler.BuildClientInvalidStateException(State);
-            SendSignInFailedEvent(exception, false);
-            return Task.FromException(exception);
-        }
-
-        internal Task SignUpWithUsernamePasswordRequestAsync(UsernamePasswordRequest request, bool enableRefresh = true)
-        {
-            if (State == AuthenticationState.SignedOut || State == AuthenticationState.Expired)
-            {
-                return HandleSignInRequestAsync(() => NetworkClient.SignUpWithUsernamePasswordAsync(request), enableRefresh);
-            }
-
-            var exception = ExceptionHandler.BuildClientInvalidStateException(State);
-            SendSignInFailedEvent(exception, false);
-            return Task.FromException(exception);
-        }
-
-        internal async Task AddUsernamePasswordRequestAsync(UsernamePasswordRequest request)
-        {
-            if (IsAuthorized)
-            {
-                try
-                {
-                    var response = await NetworkClient.AddUsernamePasswordAsync(request);
-                    PlayerInfo.Username = response.User?.Username;
-                    return;
-                }
-                catch (WebRequestException e)
-                {
-                    throw ExceptionHandler.ConvertException(e);
-                }
-                catch (Exception e)
-                {
-                    throw ExceptionHandler.BuildUnknownException(e.Message);
-                }
-            }
-            else
-            {
-                throw ExceptionHandler.BuildClientInvalidStateException(State);
-            }
-        }
-
-        internal Task UpdatePasswordRequestAsync(UpdatePasswordRequest request, bool enableRefresh = true)
-        {
-            if (IsAuthorized)
-            {
-                // Player is signed in, update the credentials (sessionToken, accessToken)
-                return HandleUpdatePasswordRequestAsync(() => NetworkClient.UpdatePasswordAsync(request), enableRefresh);
-            }
-            else
-            {
-                var exception = ExceptionHandler.BuildClientInvalidStateException(State);
-                return Task.FromException(exception);
-            }
-        }
-
         internal Task RefreshAccessTokenAsync()
         {
             if (IsSignedIn)
@@ -975,32 +286,6 @@ namespace Unity.Services.Authentication
             }
         }
 
-        internal async Task HandleUpdatePasswordRequestAsync(Func<Task<SignInResponse>> updatePasswordRequest, bool enableRefresh = true)
-        {
-            try
-            {
-                CompleteSignIn(await updatePasswordRequest(), enableRefresh);
-            }
-            catch (RequestFailedException e)
-            {
-                SendUpdatePasswordFailedEvent(e, false);
-                throw;
-            }
-            catch (WebRequestException e)
-            {
-                var authException = ExceptionHandler.ConvertException(e);
-
-                if (authException.ErrorCode == AuthenticationErrorCodes.InvalidSessionToken)
-                {
-                    SessionTokenComponent.Clear();
-                    Logger.Log($"The session token is invalid and has been cleared. The associated account is no longer accessible through this login method.");
-                }
-
-                SendUpdatePasswordFailedEvent(authException, false);
-                throw authException;
-            }
-        }
-
         internal async Task StartRefreshAsync(string sessionToken)
         {
             ChangeState(AuthenticationState.Refreshing);
@@ -1033,40 +318,47 @@ namespace Unity.Services.Authentication
 
         internal void CompleteSignIn(SignInResponse response, bool enableRefresh = true)
         {
+            CompleteSignIn(response.IdToken, response.SessionToken, enableRefresh, response.User);
+        }
+
+        internal void CompleteSignIn(string accessToken, string sessionToken, bool enableRefresh = true, User user = null)
+        {
             try
             {
-                var accessTokenDecoded = m_JwtDecoder.Decode<AccessToken>(response.IdToken);
+                var accessTokenDecoded = m_JwtDecoder.Decode<AccessToken>(accessToken);
                 if (accessTokenDecoded == null)
                 {
                     throw AuthenticationException.Create(CommonErrorCodes.InvalidToken, "Failed to decode and verify access token.");
                 }
-                else
+
+                AccessTokenComponent.AccessToken = accessToken;
+
+                if (accessTokenDecoded.Audience != null)
                 {
-                    AccessTokenComponent.AccessToken = response.IdToken;
+                    EnvironmentIdComponent.EnvironmentId = accessTokenDecoded.Audience.FirstOrDefault(s => s.StartsWith("envId:"))?.Substring(6);
+                }
 
-                    if (accessTokenDecoded.Audience != null)
-                    {
-                        EnvironmentIdComponent.EnvironmentId = accessTokenDecoded.Audience.FirstOrDefault(s => s.StartsWith("envId:"))?.Substring(6);
-                    }
+                PlayerInfo = user != null ? new PlayerInfo(user) : new PlayerInfo(accessTokenDecoded.Subject);
 
-                    PlayerInfo = response.User != null ? new PlayerInfo(response.User) : new PlayerInfo(response.UserId);
+                PlayerIdComponent.PlayerId = accessTokenDecoded.Subject;
+                SessionTokenComponent.SessionToken = sessionToken;
 
-                    PlayerIdComponent.PlayerId = response.UserId;
-                    SessionTokenComponent.SessionToken = response.SessionToken;
-
-                    var refreshTime = response.ExpiresIn - Settings.AccessTokenRefreshBuffer;
-                    var expiryTime = response.ExpiresIn - Settings.AccessTokenExpiryBuffer;
+                var expiresIn = accessTokenDecoded.Expiration - new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
+                if (expiresIn > 0)
+                {
+                    var refreshTime = expiresIn - Settings.AccessTokenRefreshBuffer;
+                    var expiryTime = expiresIn - Settings.AccessTokenExpiryBuffer;
 
                     AccessTokenComponent.ExpiryTime = DateTime.UtcNow.AddSeconds(expiryTime);
 
-                    if (enableRefresh)
+                    if (enableRefresh && sessionToken != null)
                     {
                         ScheduleRefresh(refreshTime);
                     }
 
                     ScheduleExpiration(expiryTime);
-                    ChangeState(AuthenticationState.Authorized);
                 }
+                ChangeState(AuthenticationState.Authorized);
             }
             catch (AuthenticationException)
             {
@@ -1192,40 +484,6 @@ namespace Unity.Services.Authentication
             {
                 SignOut();
             }
-        }
-
-        void SendUpdatePasswordFailedEvent(RequestFailedException exception, bool forceSignOut)
-        {
-            UpdatePasswordFailed?.Invoke(exception);
-            if (forceSignOut)
-            {
-                SignOut();
-            }
-        }
-
-        bool ValidateOpenIdConnectIdProviderName(string idProviderName)
-        {
-            return !string.IsNullOrEmpty(idProviderName) && Regex.Match(idProviderName, k_IdProviderNameRegex).Success;
-        }
-
-        UsernamePasswordRequest BuildUsernamePasswordRequest(string username, string password)
-        {
-            if (!ValidateCredentials(username, password))
-            {
-                throw ExceptionHandler.BuildInvalidCredentialsException();
-            }
-
-            return new UsernamePasswordRequest
-            {
-                Username = username,
-                Password = password
-            };
-        }
-
-        bool ValidateCredentials(string username, string password)
-        {
-            return !string.IsNullOrEmpty(username)
-                && !string.IsNullOrEmpty(password);
         }
     }
 }

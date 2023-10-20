@@ -1,12 +1,13 @@
 using System;
 using System.Threading.Tasks;
+using Unity.Services.Core;
 
 namespace Unity.Services.Authentication.Server
 {
     /// <summary>
     /// The functions for the Server Authentication service.
     /// </summary>
-    public interface IServerAuthenticationService
+    public interface IServerAuthenticationService : IService
     {
         /// <summary>
         /// Invoked when an authorization attempt has completed successfully.

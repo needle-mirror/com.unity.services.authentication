@@ -12,7 +12,7 @@ using UnityEngine;
 
 namespace Unity.Services.Authentication.Server
 {
-    class ServerAuthenticationInitializer : IInitializablePackage
+    class ServerAuthenticationInitializer : IInitializablePackageV2
     {
         const string k_CloudEnvironmentKey = "com.unity.services.core.cloud-environment";
         const string k_StagingEnvironment = "staging";
@@ -20,7 +20,36 @@ namespace Unity.Services.Authentication.Server
         const string k_GatewayProductionPath = "https://services.api.unity.com";
         const string k_ProxyPath = "http://localhost:8086";
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        static void InitializeOnLoad()
+        {
+            var initializer = new ServerAuthenticationInitializer();
+            initializer.Register(CorePackageRegistry.Instance);
+        }
+
+        public void Register(CorePackageRegistry registry)
+        {
+            registry.Register(this)
+                .DependsOn<ICloudProjectId>()
+                .DependsOn<IEnvironments>()
+                .DependsOn<IProjectConfiguration>()
+                .ProvidesComponent<IServerEnvironmentId>()
+                .ProvidesComponent<IServerAccessToken>();
+        }
+
         public Task Initialize(CoreRegistry registry)
+        {
+            ServerAuthenticationService.Instance = InitializeService(registry);
+            return Task.CompletedTask;
+        }
+
+        public Task InitializeInstanceAsync(CoreRegistry registry)
+        {
+            InitializeService(registry);
+            return Task.CompletedTask;
+        }
+
+        ServerAuthenticationServiceInternal InitializeService(CoreRegistry registry)
         {
             var settings = new ServerAuthenticationSettings();
             var serverAccessToken = new ServerAccessTokenComponent();
@@ -58,21 +87,11 @@ namespace Unity.Services.Authentication.Server
                 proxyApi
             );
 
-            ServerAuthenticationService.Instance = authenticationService;
+            registry.RegisterService<IServerAuthenticationService>(authenticationService);
             registry.RegisterServiceComponent<IServerAccessToken>(serverAccessToken);
             registry.RegisterServiceComponent<IServerEnvironmentId>(serverEnvironmentId);
-            return Task.CompletedTask;
-        }
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        static void Register()
-        {
-            CoreRegistry.Instance.RegisterPackage(new ServerAuthenticationInitializer())
-                .DependsOn<ICloudProjectId>()
-                .DependsOn<IEnvironments>()
-                .DependsOn<IProjectConfiguration>()
-                .ProvidesComponent<IServerEnvironmentId>()
-                .ProvidesComponent<IServerAccessToken>();
+            return authenticationService;
         }
 
         static string GetHost(IProjectConfiguration projectConfiguration)

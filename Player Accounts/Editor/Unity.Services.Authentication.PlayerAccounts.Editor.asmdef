@@ -1,0 +1,26 @@
+{
+    "name": "Unity.Services.Authentication.PlayerAccounts.Editor",
+    "rootNamespace": "",
+    "references": [
+        "Unity.Services.Authentication.PlayerAccounts",
+        "Unity.Services.Core.Configuration.Editor",
+        "Unity.Services.Core.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.services.playeraccounts",
+            "expression": "",
+            "define": "WARN_UNINSTALL_UPA"
+        }
+    ],
+    "noEngineReferences": false
+}

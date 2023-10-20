@@ -1,26 +1,25 @@
 # Unity Services Authentication SDK
 
-This package provides a service for player authenticaton for Unity Gaming Services.
-
-## Installation
-
-To install this package, make sure you [enable pre-release packages](https://docs.unity3d.com/2021.1/Documentation/Manual/class-PackageManager.html#advanced_preview) in the Unity Editor's Package Manager, and then follow the [installation instructions in the Unity User Manual](https://docs.unity3d.com/Documentation/Manual/upm-ui-install.html).
+This package provides services for player authenticaton, unity player accounts and server authentication for Unity Gaming Services.
 
 ## Integration
 
 Once you have installed the Authentication package, you must link your Unity project to a Unity Cloud Project using the Services window.
+
 You need to configure the third-party login providers that you wish to use in your project in the Services Authentication window.
 
-The Authentication SDK automatically initializes itself on game start. You can start using the Authentication API in your code right away.
-The API is exposed via the `Authentication.Instance` object in the `Unity.Services.Authentication` namespace.
+All services are initialized by using `UnityServices.InitializeAsync`.
+
+## Authentication Service
+
+The service is exposed via the `Authentication.Instance` object in the `Unity.Services.Authentication` namespace.
 
 Once the player has been signed in, the Authentication SDK will monitor the expiration time of their access token and attempt to refresh it automatically. No further action is required.
+
 The player's session token is cached locally in the `PlayerPrefs`. It is used to sign in again to the same account in the future.
 Clearing all `PlayerPrefs` keys will require the player to sign in again from scratch on their next session.
 
-## Public API
-
-### Authentication Service API
+### Public API
 
 * `AuthenticationService.Instance.SignedIn`
   * This is an event to which you can subscribe to be notified when the sign-in process has completed successfully.
@@ -248,11 +247,52 @@ Clearing all `PlayerPrefs` keys will require the player to sign in again from sc
     * This is only partially loaded during sign in operations.
     * Use `AuthenticationService.Instance.GetPlayerInfoAsync()` to load the all the player info.
 
-### Server Authentication Service API
+## Player Account Service API
+
+Unity Player Accounts is Unity’s comprehensive sign-in solution that supports persistence across games, devices and platforms.
+
+The service is exposed via the `PlayerAccountService.Instance` object in the `Unity.Services.Authentication.PlayerAccounts` namespace.
+
+### Integration
+
+- You can manually configure the settings by going to `Services->Unity Player Accounts->Configure` in the editor.
+- Your **Client ID** will automatically be configured when syncing your identity providers in the editor.
+
+### Public API
+
+* `PlayerAccountService.Instance.SignedIn`
+  * This is an event to which you can subscribe to be notified when the sign-in process has completed successfully.
+* `PlayerAccountService.Instance.SignInFailed`
+  * This is an event to which you can subscribe to be notified when the sign-in process has failed for some reason.
+* `PlayerAccountService.Instance.SignedOut`
+  * This is an event to which you can subscribe to be notified when the sign-out process has completed.
+* `PlayerAccountService.Instance.AccessToken`
+    * Gets the access token that was obtained during sign-in.
+* `PlayerAccountService.Instance.IdToken`
+    * Gets the ID token that was obtained during sign-in.
+* `PlayerAccountService.Instance.AccountPortalUrl`
+    * Get the player account portal url
+* `PlayerAccountService.Instance.IdTokenClaims`
+    * Gets the claims from the ID token that was obtained during sign-in.
+ * `PlayerAccountService.Instance.IsSignedIn`
+    * Checks whether the player is signed in or not.
+    * A player can remain signed in but have an expired session.
+* `PlayerAccountService.Instance.StartSignInAsync(bool isSigningUp = false)`
+    * Starts the sign in flow by launching the system browser to sign in the current player or sign them up.
+* `PlayerAccountService.Instance.RefreshTokenAsync()`
+    * Refreshes the current access token using the refresh token.
+* `PlayerAccountService.Instance.SignOut()`
+    * Signs out the current player and revokes the access token.
+
+## Server Authentication Service 
 
 The server authentication service is available when either `UNITY_SERVER` or `ENABLE_UCS_SERVER` conditions are enabled.
 
+The service is exposed via the `ServerAuthenticationService.Instance` object in the `Unity.Services.Authentication.Server` namespace.
+
 Ensure service account credentials are secured and never get included in client applications.
+
+### Public API
 
 * `ServerAuthenticationService.Instance.Authorized`
   * This is an event to which you can subscribe to be notified when the sign-in process has completed successfully.

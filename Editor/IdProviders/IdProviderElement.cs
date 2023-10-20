@@ -74,6 +74,11 @@ namespace Unity.Services.Authentication.Editor
         public TextField OidcIssuer { get; }
 
         /// <summary>
+        /// The text field to fill the relying party.
+        /// </summary>
+        public TextField RelyingPartyField { get; }
+
+        /// <summary>
         /// The button to save the changes.
         /// </summary>
         public Button SaveButton { get; }
@@ -108,7 +113,8 @@ namespace Unity.Services.Authentication.Editor
             SavedValue?.Disabled != CurrentValue?.Disabled ||
             (SavedValue?.ClientId ?? "") != (CurrentValue?.ClientId ?? "") ||
             (SavedValue?.ClientSecret ?? "") != (CurrentValue?.ClientSecret ?? "") ||
-            (SavedValue?.OidcConfig.Issuer ?? "") != (CurrentValue?.OidcConfig.Issuer ?? "");
+            (SavedValue?.OidcConfig.Issuer ?? "") != (CurrentValue?.OidcConfig.Issuer ?? "") ||
+            (SavedValue?.RelyingParty ?? "") != (CurrentValue?.RelyingParty ?? "");
 
         public bool IsValid =>
             (!m_Options.NeedClientId || !string.IsNullOrEmpty(CurrentValue.ClientId)) &&
@@ -190,6 +196,16 @@ namespace Unity.Services.Authentication.Editor
                 {
                     OidcIssuer.style.display = DisplayStyle.None;
                     OidcName.style.display = DisplayStyle.None;
+                }
+
+                RelyingPartyField = containerUI.Q<TextField>("id-provider-relying-party");
+                if (options.NeedRelyingParty)
+                {
+                    RelyingPartyField.RegisterCallback<ChangeEvent<string>>(OnRelyingPartyChanged);
+                }
+                else
+                {
+                    RelyingPartyField.style.display = DisplayStyle.None;
                 }
 
                 SaveButton = containerUI.Q<Button>("id-provider-save");
@@ -293,6 +309,12 @@ namespace Unity.Services.Authentication.Editor
             var currentValueOidcConfig = CurrentValue.OidcConfig;
             currentValueOidcConfig.Issuer = evt.newValue;
             CurrentValue.OidcConfig = currentValueOidcConfig;
+            RefreshButtons();
+        }
+
+        void OnRelyingPartyChanged(ChangeEvent<string> e)
+        {
+            CurrentValue.RelyingParty = e.newValue;
             RefreshButtons();
         }
 
@@ -432,6 +454,7 @@ namespace Unity.Services.Authentication.Editor
             ClientSecretField.value = CurrentValue.ClientSecret ?? "";
             OidcName.value = CurrentValue.Type ?? "";
             OidcIssuer.value = CurrentValue.OidcConfig.Issuer ?? "";
+            RelyingPartyField.value = CurrentValue.RelyingParty ?? "";
             RefreshButtons();
         }
 

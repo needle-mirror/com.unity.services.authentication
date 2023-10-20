@@ -10,6 +10,7 @@ namespace Unity.Services.Authentication.Editor
         public OpenIDConfig  OidcConfig { get; set; }
         public bool Disabled { get; set; }
         public bool New { get; set; }
+        public string RelyingParty { get; set; }
 
         public IdProvider() {}
 
@@ -20,6 +21,7 @@ namespace Unity.Services.Authentication.Editor
             ClientSecret = response.ClientSecret;
             OidcConfig = response.OidcConfig;
             Disabled = response.Disabled;
+            RelyingParty = response.RelyingParty;
             New = false;
         }
 
@@ -32,6 +34,7 @@ namespace Unity.Services.Authentication.Editor
                 ClientSecret = ClientSecret,
                 OidcConfig = OidcConfig,
                 Disabled = Disabled,
+                RelyingParty = RelyingParty,
                 New = New,
             };
         }

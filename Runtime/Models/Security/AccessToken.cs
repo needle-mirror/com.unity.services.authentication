@@ -31,5 +31,11 @@ namespace Unity.Services.Authentication
 
         [JsonProperty("sub")]
         public string Subject;
+
+        [JsonProperty("sign_in_provider")]
+        public string SignInProvider;
+
+        [JsonProperty("exp")]
+        public long Expiration;
     }
 }

@@ -12,6 +12,7 @@ namespace Unity.Services.Authentication
         public static readonly int ClientNoActiveSession = 10001;
         public static readonly int ClientUnlinkExternalIdNotFound = 10005;
         public static readonly int InvalidParameters = 10002;
+        public static readonly int InvalidProvider = 10008;
         public static readonly int InvalidSessionToken = 10007;
         public static readonly int MinValue = 10000;
     }
@@ -31,7 +32,7 @@ namespace Unity.Services.Authentication
         public static IAuthenticationService Instance { get; }
     }
 
-    public interface IAuthenticationService
+    public interface IAuthenticationService : Unity.Services.Core.IService
     {
         public event System.Action Expired;
         public event System.Action SignedIn;
@@ -66,6 +67,7 @@ namespace Unity.Services.Authentication
         [System.Obsolete(@"This method is deprecated as of version 2.7.1. Please use the LinkWithSteamAsync method with the 'identity' parameter for better security.")] public System.Threading.Tasks.Task LinkWithSteamAsync(string sessionTicket, LinkOptions options = default(LinkOptions));
         public System.Threading.Tasks.Task LinkWithSteamAsync(string sessionTicket, string identity, LinkOptions options = default(LinkOptions));
         public System.Threading.Tasks.Task LinkWithUnityAsync(string token, LinkOptions options = default(LinkOptions));
+        public void ProcessAuthenticationTokens(string accessToken, string sessionToken = default(string));
         public System.Threading.Tasks.Task SignInAnonymouslyAsync(SignInOptions options = default(SignInOptions));
         public System.Threading.Tasks.Task SignInWithAppleAsync(string idToken, SignInOptions options = default(SignInOptions));
         public System.Threading.Tasks.Task SignInWithAppleGameCenterAsync(string signature, string teamPlayerId, string publicKeyURL, string salt, System.UInt64 timestamp, SignInOptions options = default(SignInOptions));
@@ -138,5 +140,13 @@ namespace Unity.Services.Authentication
     {
         public bool CreateAccount { get; set; }
         public SignInOptions() {}
+    }
+}
+
+namespace Unity.Services.Core
+{
+    public static class UnityServicesExtensions
+    {
+        public static Unity.Services.Authentication.IAuthenticationService GetAuthenticationService(this IUnityServices unityServices);
     }
 }

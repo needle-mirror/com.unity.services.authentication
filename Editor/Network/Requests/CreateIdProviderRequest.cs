@@ -22,6 +22,9 @@ namespace Unity.Services.Authentication.Editor
         [JsonProperty("disabled")]
         public bool Disabled;
 
+        [JsonProperty("relyingParty")]
+        public string RelyingParty;
+
         [Preserve]
         public CreateIdProviderRequest() {}
 
@@ -33,6 +36,7 @@ namespace Unity.Services.Authentication.Editor
             Type = idProvider.Type;
             Disabled = idProvider.Disabled;
             OidcConfig = idProvider.OidcConfig;
+            RelyingParty = idProvider.RelyingParty;
         }
     }
 }

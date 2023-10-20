@@ -48,6 +48,13 @@ namespace Unity.Services.Authentication.Editor
                 NeedClientId = false,
                 NeedClientSecret = false
             },
+            [IdProviderKeys.CustomId] = new IdProviderOptions
+            {
+                IdProviderType = IdProviderKeys.CustomId,
+                DisplayName = IdProviderNames.CustomId,
+                NeedClientId = false,
+                NeedClientSecret = false
+            },
             [IdProviderKeys.Facebook] = new IdProviderOptions
             {
                 IdProviderType = IdProviderKeys.Facebook,

@@ -11,12 +11,45 @@ using UnityEngine;
 
 namespace Unity.Services.Authentication
 {
-    class AuthenticationPackageInitializer : IInitializablePackage
+    class AuthenticationPackageInitializer : IInitializablePackageV2
     {
         const string k_CloudEnvironmentKey = "com.unity.services.core.cloud-environment";
         const string k_StagingEnvironment = "staging";
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        static void InitializeOnLoad()
+        {
+            var initializer = new AuthenticationPackageInitializer();
+            initializer.Register(CorePackageRegistry.Instance);
+        }
+
+        public void Register(CorePackageRegistry registry)
+        {
+            registry.Register(this)
+                .DependsOn<IEnvironments>()
+                .DependsOn<IActionScheduler>()
+                .DependsOn<ICloudProjectId>()
+                .DependsOn<IProjectConfiguration>()
+                .DependsOn<IMetricsFactory>()
+                .ProvidesComponent<IPlayerId>()
+                .ProvidesComponent<IAccessToken>()
+                .ProvidesComponent<IAccessTokenObserver>()
+                .ProvidesComponent<IEnvironmentId>();
+        }
+
         public Task Initialize(CoreRegistry registry)
+        {
+            AuthenticationService.Instance = InitializeService(registry);
+            return Task.CompletedTask;
+        }
+
+        public Task InitializeInstanceAsync(CoreRegistry registry)
+        {
+            InitializeService(registry);
+            return Task.CompletedTask;
+        }
+
+        AuthenticationServiceInternal InitializeService(CoreRegistry registry)
         {
             var settings = new AuthenticationSettings();
             var scheduler = registry.GetServiceComponent<IActionScheduler>();
@@ -63,28 +96,13 @@ namespace Unity.Services.Authentication
                 playerName,
                 sessionToken);
 
-            AuthenticationService.Instance = authenticationService;
+            registry.RegisterService<IAuthenticationService>(authenticationService);
             registry.RegisterServiceComponent<IAccessToken>(authenticationService.AccessTokenComponent);
             registry.RegisterServiceComponent<IAccessTokenObserver>(authenticationService.AccessTokenComponent);
             registry.RegisterServiceComponent<IEnvironmentId>(authenticationService.EnvironmentIdComponent);
             registry.RegisterServiceComponent<IPlayerId>(authenticationService.PlayerIdComponent);
 
-            return Task.CompletedTask;
-        }
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        static void Register()
-        {
-            CoreRegistry.Instance.RegisterPackage(new AuthenticationPackageInitializer())
-                .DependsOn<IEnvironments>()
-                .DependsOn<IActionScheduler>()
-                .DependsOn<ICloudProjectId>()
-                .DependsOn<IProjectConfiguration>()
-                .DependsOn<IMetricsFactory>()
-                .ProvidesComponent<IPlayerId>()
-                .ProvidesComponent<IAccessToken>()
-                .ProvidesComponent<IAccessTokenObserver>()
-                .ProvidesComponent<IEnvironmentId>();
+            return authenticationService;
         }
 
         string GetPlayerAuthHost(IProjectConfiguration projectConfiguration)

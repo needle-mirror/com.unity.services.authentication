@@ -8,7 +8,7 @@ namespace Unity.Services.Authentication
     /// <summary>
     /// The functions for Authentication service.
     /// </summary>
-    public interface IAuthenticationService
+    public interface IAuthenticationService : IService
     {
         /// <summary>
         /// Invoked when a sign-in attempt has completed successfully.
@@ -1007,6 +1007,18 @@ namespace Unity.Services.Authentication
         /// <exception cref="AuthenticationException">Thrown when the current authentication state is invalid for this operation.</exception>
         /// <exception cref="RequestFailedException">Thrown when there's an issue with the network request.</exception>
         public Task ConfirmCodeAsync(string code, string idProvider = null, string externalToken = null);
+
+        /// <summary>
+        /// Process the accessToken issued by the Unity Authentication Service. Effectivelly setting the access token for
+        /// other UGS services to use and extracting the playerId.
+        /// If the session token is set the SDK will also process it and refresh the token at the expected intervals.
+        /// </summary>
+        /// <param name="accessToken">Unity Player Authentication accessToken used to access other UGS services</param>
+        /// <param name="sessionToken">sessionToken used to refresh the accessToken, if null the game server needs to
+        /// refresh the accessToken on its own and call this method again</param>
+        /// <exception cref="AuthenticationException">Thrown when the accessToken fails to parse.</exception>
+        /// <exception cref="RequestFailedException">Thrown when the current authentication state is invalid for this operation.</exception>
+        public void ProcessAuthenticationTokens(string accessToken, string sessionToken = null);
 
         /// <summary>
         /// Sign out the current player.

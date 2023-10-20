@@ -57,5 +57,10 @@ namespace Unity.Services.Authentication
         /// The error returned when a session token is invalid
         /// </summary>
         public static readonly int InvalidSessionToken = 10007;
+
+        /// <summary>
+        /// The request was understood but the API refused to process it because the provider was invalid for the request.
+        /// </summary>
+        public static readonly int InvalidProvider = 10008;
     }
 }

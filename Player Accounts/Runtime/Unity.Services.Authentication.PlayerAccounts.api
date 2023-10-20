@@ -1,0 +1,74 @@
+// This file is generated. Do not modify by hand.
+// XML documentation file not found. To check if public methods have XML comments,
+// make sure the XML doc file is present and located next to the scraped dll
+namespace Unity.Services.Authentication.PlayerAccounts
+{
+    public class BaseJwt
+    {
+        [Newtonsoft.Json.JsonProperty(@"exp")] public int ExpirationTimeUnix;
+        [Newtonsoft.Json.JsonProperty(@"iat")] public int IssuedAtTimeUnix;
+        [Newtonsoft.Json.JsonProperty(@"nbf")] public int NotBeforeTimeUnix;
+        [Newtonsoft.Json.JsonIgnore] public System.DateTime ExpirationTime { get; }
+        [Newtonsoft.Json.JsonIgnore] public System.DateTime IssuedAtTime { get; }
+        [Newtonsoft.Json.JsonIgnore] public System.DateTime NotBeforeTime { get; }
+    }
+
+    public class IdToken : BaseJwt
+    {
+        [Newtonsoft.Json.JsonProperty(@"aud")] public string[] Audience;
+        [Newtonsoft.Json.JsonProperty(@"iss")] public string Issuer;
+        [Newtonsoft.Json.JsonProperty(@"jti")] public string JwtId;
+        [Newtonsoft.Json.JsonProperty(@"sub")] public string Subject;
+        [Newtonsoft.Json.JsonProperty(@"email")] public string Email { get; set; }
+        [Newtonsoft.Json.JsonProperty(@"email_verified")] public bool EmailVerified { get; set; }
+        [Newtonsoft.Json.JsonProperty(@"is_private_email")] public bool IsPrivateEmail { get; set; }
+        [Newtonsoft.Json.JsonProperty(@"nonce")] public string Nonce { get; set; }
+    }
+
+    public interface IPlayerAccountService : Unity.Services.Core.IService
+    {
+        public event System.Action SignedIn;
+        public event System.Action SignedOut;
+        public event System.Action<Unity.Services.Core.RequestFailedException> SignInFailed;
+        public string AccessToken { get; }
+        public string AccountPortalUrl { get; }
+        public string IdToken { get; }
+        public IdToken IdTokenClaims { get; }
+        public bool IsSignedIn { get; }
+        public System.Threading.Tasks.Task RefreshTokenAsync();
+        public void SignOut();
+        public System.Threading.Tasks.Task StartSignInAsync(bool isSigningUp = false);
+    }
+
+    public static class PlayerAccountsErrorCodes
+    {
+        public const int InvalidClient = 10103;
+        public const int InvalidGrant = 10106;
+        public const int InvalidRequest = 10105;
+        public const int InvalidScope = 10104;
+        public const int InvalidState = 10101;
+        public const int MissingClientId = 10102;
+        public const int MissingRefreshToken = 10107;
+        public const int UnauthorizedClient = 10108;
+        public const int UnknownError = 10100;
+        public const int UnsupportedGrantType = 10109;
+        public const int UnsupportedResponseType = 10110;
+    }
+
+    public static class PlayerAccountService
+    {
+        public static IPlayerAccountService Instance { get; }
+    }
+
+    public sealed class PlayerAccountsException : Unity.Services.Core.RequestFailedException
+    {
+    }
+}
+
+namespace Unity.Services.Core
+{
+    public static class UnityServicesExtensions
+    {
+        public static Unity.Services.Authentication.PlayerAccounts.IPlayerAccountService GetPlayerAccountService(this IUnityServices unityServices);
+    }
+}

@@ -7,6 +7,7 @@ namespace Unity.Services.Authentication
         internal const string Facebook = "facebook.com";
         internal const string AppleGameCenter = "apple-game-center";
         internal const string CodeLink = "code-link";
+        internal const string CustomId = "custom";
         internal const string Google = "google.com";
         internal const string GooglePlayGames = "google-play-games";
         internal const string Oculus = "oculus";
