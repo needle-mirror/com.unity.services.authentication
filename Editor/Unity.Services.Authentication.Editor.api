@@ -24,6 +24,7 @@ namespace Unity.Services.Authentication.Editor
         public bool NeedClientId { get; set; }
         public bool NeedClientSecret { get; set; }
         public bool NeedRelyingParty { get; set; }
+        public bool SupportsAdditionalAppIds { get; set; }
         public IdProviderOptions() {}
         public delegate IdProviderCustomSettingsElement CreateCustomSettingsElementDelegate(string projectId, System.Func<string> servicesGatewayTokenCallback, bool skipConfirmation);
     }

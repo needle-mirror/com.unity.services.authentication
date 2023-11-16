@@ -179,6 +179,15 @@ namespace Unity.Services.Authentication
         }
 
         /// <summary>
+        /// Returns the player's custom id if one has been linked
+        /// </summary>
+        /// <returns>The player's custom id</returns>
+        public string GetCustomId()
+        {
+            return GetIdentityId(IdProviderKeys.CustomId);
+        }
+
+        /// <summary>
         /// Get all OpenID Connect id providers linked to the player
         /// </summary>
         /// <returns>A list of all OpenID Connect id providers</returns>

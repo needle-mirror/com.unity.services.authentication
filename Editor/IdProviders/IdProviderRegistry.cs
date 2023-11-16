@@ -32,28 +32,32 @@ namespace Unity.Services.Authentication.Editor
                 IdProviderType = IdProviderKeys.Apple,
                 DisplayName = IdProviderNames.SignInWithApple,
                 ClientIdDisplayName = "App ID",
-                NeedClientSecret = false
+                NeedClientSecret = false,
+                SupportsAdditionalAppIds = false,
             },
             [IdProviderKeys.AppleGameCenter] = new IdProviderOptions
             {
                 IdProviderType = IdProviderKeys.AppleGameCenter,
                 DisplayName = IdProviderNames.AppleGameCenter,
                 ClientIdDisplayName = "Bundle ID",
-                NeedClientSecret = false
+                NeedClientSecret = false,
+                SupportsAdditionalAppIds = false,
             },
             [IdProviderKeys.CodeLink] = new IdProviderOptions
             {
                 IdProviderType = IdProviderKeys.CodeLink,
                 DisplayName = IdProviderNames.CodeLink,
                 NeedClientId = false,
-                NeedClientSecret = false
+                NeedClientSecret = false,
+                SupportsAdditionalAppIds = false,
             },
             [IdProviderKeys.CustomId] = new IdProviderOptions
             {
                 IdProviderType = IdProviderKeys.CustomId,
                 DisplayName = IdProviderNames.CustomId,
                 NeedClientId = false,
-                NeedClientSecret = false
+                NeedClientSecret = false,
+                SupportsAdditionalAppIds = false,
             },
             [IdProviderKeys.Facebook] = new IdProviderOptions
             {
@@ -61,14 +65,16 @@ namespace Unity.Services.Authentication.Editor
                 DisplayName = IdProviderNames.Facebook,
                 ClientIdDisplayName = "App ID",
                 ClientSecretDisplayName = "App Secret",
-                NeedClientSecret = true
+                NeedClientSecret = true,
+                SupportsAdditionalAppIds = false,
             },
             [IdProviderKeys.Google] = new IdProviderOptions
             {
                 IdProviderType = IdProviderKeys.Google,
                 DisplayName = IdProviderNames.Google,
                 ClientIdDisplayName = "Client ID",
-                NeedClientSecret = false
+                NeedClientSecret = false,
+                SupportsAdditionalAppIds = false,
             },
             [IdProviderKeys.GooglePlayGames] = new IdProviderOptions
             {
@@ -76,7 +82,8 @@ namespace Unity.Services.Authentication.Editor
                 DisplayName = IdProviderNames.GooglePlayGames,
                 ClientIdDisplayName = "Client ID",
                 ClientSecretDisplayName = "Client Secret",
-                NeedClientSecret = true
+                NeedClientSecret = true,
+                SupportsAdditionalAppIds = false,
             },
             [IdProviderKeys.Oculus] = new IdProviderOptions
             {
@@ -84,7 +91,8 @@ namespace Unity.Services.Authentication.Editor
                 DisplayName = IdProviderNames.Oculus,
                 ClientIdDisplayName = "App ID",
                 ClientSecretDisplayName = "App Secret",
-                NeedClientSecret = true
+                NeedClientSecret = true,
+                SupportsAdditionalAppIds = false,
             },
             [IdProviderKeys.OpenIDConnect] = new IdProviderOptions
             {
@@ -93,7 +101,8 @@ namespace Unity.Services.Authentication.Editor
                 ClientIdDisplayName = "Client ID",
                 ClientSecretDisplayName = "Client Secret",
                 NeedClientSecret = false,
-                OidcConfig = new OpenIDConfig() { Issuer = "" }
+                OidcConfig = new OpenIDConfig() { Issuer = "" },
+                SupportsAdditionalAppIds = false,
             },
             [IdProviderKeys.Steam] = new IdProviderOptions
             {
@@ -101,16 +110,18 @@ namespace Unity.Services.Authentication.Editor
                 DisplayName = IdProviderNames.Steam,
                 ClientIdDisplayName = "App ID",
                 ClientSecretDisplayName = "Key",
-                NeedClientSecret = true
-            }
-            ,
+                NeedClientSecret = true,
+                SteamProviderConfig = new SteamProviderConfig() { AdditionalAppIds = {} },
+                SupportsAdditionalAppIds = true,
+            },
             [IdProviderKeys.UsernamePassword] = new IdProviderOptions
             {
                 IdProviderType = IdProviderKeys.UsernamePassword,
                 DisplayName = IdProviderNames.UsernamePassword,
                 NeedClientId = false,
                 NeedClientSecret = false,
-                CanBeDeleted = false
+                CanBeDeleted = false,
+                SupportsAdditionalAppIds = false,
             }
             ,
             [IdProviderKeys.Unity] = new IdProviderOptions
@@ -119,6 +130,7 @@ namespace Unity.Services.Authentication.Editor
                 DisplayName = IdProviderNames.Unity,
                 ClientIdDisplayName = "Client ID",
                 NeedClientSecret = false,
+                SupportsAdditionalAppIds = false,
             }
         };
 

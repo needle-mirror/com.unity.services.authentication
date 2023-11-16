@@ -22,6 +22,9 @@ namespace Unity.Services.Authentication.Editor
         [JsonProperty("relyingParty")]
         public string RelyingParty;
 
+        [JsonProperty("steamConfig")]
+        public SteamProviderConfig SteamProviderConfig;
+
         [Preserve]
         public UpdateIdProviderRequest() {}
 
@@ -33,6 +36,7 @@ namespace Unity.Services.Authentication.Editor
             Type = idProvider.Type;
             OidcConfig = idProvider.OidcConfig;
             RelyingParty = idProvider.RelyingParty;
+            SteamProviderConfig = idProvider.SteamProviderConfig;
         }
     }
 }

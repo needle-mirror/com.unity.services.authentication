@@ -11,6 +11,7 @@ namespace Unity.Services.Authentication.Editor
         public bool Disabled { get; set; }
         public bool New { get; set; }
         public string RelyingParty { get; set; }
+        public SteamProviderConfig SteamProviderConfig { get; set; }
 
         public IdProvider() {}
 
@@ -22,6 +23,7 @@ namespace Unity.Services.Authentication.Editor
             OidcConfig = response.OidcConfig;
             Disabled = response.Disabled;
             RelyingParty = response.RelyingParty;
+            SteamProviderConfig = response.SteamProviderConfig;
             New = false;
         }
 
@@ -35,6 +37,7 @@ namespace Unity.Services.Authentication.Editor
                 OidcConfig = OidcConfig,
                 Disabled = Disabled,
                 RelyingParty = RelyingParty,
+                SteamProviderConfig = SteamProviderConfig,
                 New = New,
             };
         }

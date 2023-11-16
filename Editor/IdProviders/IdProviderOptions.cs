@@ -33,6 +33,11 @@ namespace Unity.Services.Authentication.Editor
         internal OpenIDConfig OidcConfig { get; set; }
 
         /// <summary>
+        /// The SteamProviderConfig provider configuration struct
+        /// </summary>
+        internal SteamProviderConfig SteamProviderConfig { get; set; }
+
+        /// <summary>
         /// Whether the client id is needed in the target ID provider. True by default.
         /// </summary>
         public bool NeedClientId { get; set; } = true;
@@ -51,6 +56,11 @@ namespace Unity.Services.Authentication.Editor
         /// Whether the id provider can be deleted. True by default
         /// </summary>
         public bool CanBeDeleted { get; set; } = true;
+
+        /// <summary>
+        /// Whether the id provider supports additional appids. False by default
+        /// </summary>
+        public bool SupportsAdditionalAppIds { get; set; } = false;
 
         /// <summary>
         /// The delegate to create custom settings UI element for the ID provider.

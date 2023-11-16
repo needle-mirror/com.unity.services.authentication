@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using UnityEditor;
@@ -10,6 +12,7 @@ namespace Unity.Services.Authentication.Editor
     class IdProviderElement : VisualElement
     {
         const string k_ElementUxml = "Packages/com.unity.services.authentication/Editor/UXML/IdProviderElement.uxml";
+        const string k_StyleSheet = "Packages/com.unity.services.authentication/Editor/USS/AuthenticationStyleSheet.uss";
         const string k_IdProviderNameRegex = @"^oidc-[a-z0-9-_\.]{1,15}$";
         const string k_NewOpenIDProviderName = "New OpenId Connect";
 
@@ -108,13 +111,30 @@ namespace Unity.Services.Authentication.Editor
         /// </summary>
         public IdProvider CurrentValue { get; set; }
 
+        /// <summary>
+        /// Container to hold the Additional App IDs view
+        /// </summary>
+        Foldout AdditionalAppIdContainer;
+
+        /// <summary>
+        /// Container to hold the list of Additional App IDs
+        /// </summary>
+        VisualElement AdditionalAppIdListElement;
+
+        /// <summary>
+        /// The button to add an Additional App ID.
+        /// </summary>
+        Button AddAdditionalAppIdsButton { get; }
+
+
         public bool Changed =>
             SavedValue?.Type != CurrentValue?.Type ||
             SavedValue?.Disabled != CurrentValue?.Disabled ||
             (SavedValue?.ClientId ?? "") != (CurrentValue?.ClientId ?? "") ||
             (SavedValue?.ClientSecret ?? "") != (CurrentValue?.ClientSecret ?? "") ||
             (SavedValue?.OidcConfig.Issuer ?? "") != (CurrentValue?.OidcConfig.Issuer ?? "") ||
-            (SavedValue?.RelyingParty ?? "") != (CurrentValue?.RelyingParty ?? "");
+            (SavedValue?.RelyingParty ?? "") != (CurrentValue?.RelyingParty ?? "") ||
+            (AdditionalAppIdListElement?.Children().Any(a => (a as AdditionalAppIdElement)?.Changed ?? false) ?? false);
 
         public bool IsValid =>
             (!m_Options.NeedClientId || !string.IsNullOrEmpty(CurrentValue.ClientId)) &&
@@ -149,6 +169,15 @@ namespace Unity.Services.Authentication.Editor
             if (containerAsset != null)
             {
                 var containerUI = containerAsset.CloneTree().contentContainer;
+                var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(k_StyleSheet);
+                if (styleSheet != null)
+                {
+                    containerUI.styleSheets.Add(styleSheet);
+                }
+                else
+                {
+                    throw new Exception("Asset not found: " + k_StyleSheet);
+                }
 
                 Container = containerUI.Q<Foldout>(className: "auth-id-provider-details");
                 Container.text = m_Options.IdProviderType.Contains(IdProviderKeys.OpenIDConnect) ? savedValue.Type : m_Options.DisplayName;
@@ -206,7 +235,25 @@ namespace Unity.Services.Authentication.Editor
                 else
                 {
                     RelyingPartyField.style.display = DisplayStyle.None;
+                    RelyingPartyField.style.display = DisplayStyle.None;
                 }
+
+                AdditionalAppIdContainer = containerUI.Q<Foldout>("auth-additional-app-id-container");
+                if (AdditionalAppIdContainer != null)
+                {
+                    if (options.SupportsAdditionalAppIds)
+                    {
+                        AdditionalAppIdContainer.text = "Additional App IDs";
+                        SetupAdditionalAppIdsElements();
+                        AddAdditionalAppIdsButton = containerUI.Q<Button>("additional-appid-add");
+                        AddAdditionalAppIdsButton.clicked += CreateEmptyAdditionalAppId;
+                    }
+                    else
+                    {
+                        AdditionalAppIdContainer.style.display = DisplayStyle.None;
+                    }
+                }
+
 
                 SaveButton = containerUI.Q<Button>("id-provider-save");
                 SaveButton.SetEnabled(false);
@@ -228,6 +275,7 @@ namespace Unity.Services.Authentication.Editor
                     CustomSettingsElement.Error += OnAdditionalElementError;
                 }
 
+
                 ResetCurrentValue();
                 Add(containerUI);
             }
@@ -235,6 +283,53 @@ namespace Unity.Services.Authentication.Editor
             {
                 throw new Exception("Asset not found: " + k_ElementUxml);
             }
+        }
+
+        void SetupAdditionalAppIdsElements()
+        {
+            AdditionalAppIdListElement = AdditionalAppIdContainer.Q<VisualElement>("additional-appid-list");
+            List<AdditionalAppId> additionalAppIds = null;
+            if (SavedValue.Type == IdProviderKeys.Steam)
+            {
+                if (!(SavedValue.SteamProviderConfig is null))
+                {
+                    additionalAppIds = SavedValue.SteamProviderConfig.AdditionalAppIds;
+                }
+            }
+
+            if (additionalAppIds == null)
+                return;
+            AdditionalAppIdListElement.Clear();
+
+            foreach (var element in additionalAppIds.Select(additionalAppId => new AdditionalAppIdElement(additionalAppId, false)))
+            {
+                element.Deleted += DeletedAdditionalAppId;
+                element.ChangedValues += ChangedAdditionalAppIdValues;
+                AdditionalAppIdListElement.Add(element);
+            }
+        }
+
+        void ChangedAdditionalAppIdValues()
+        {
+            RefreshButtons();
+        }
+
+        void DeletedAdditionalAppId(AdditionalAppIdElement sender, bool isNew)
+        {
+            // AdditionalAppIdElements.Remove(sender);
+            AdditionalAppIdListElement.Remove(sender);
+            if (!isNew)
+            {
+                Save();
+            }
+        }
+
+        void CreateEmptyAdditionalAppId()
+        {
+            var element = new AdditionalAppIdElement(AdditionalAppId.EmptyAdditionalAppId(), true);
+            element.Deleted += DeletedAdditionalAppId;
+            element.ChangedValues += ChangedAdditionalAppIdValues;
+            AdditionalAppIdListElement.Add(element);
         }
 
         /// <summary>
@@ -376,12 +471,26 @@ namespace Unity.Services.Authentication.Editor
             return !string.IsNullOrEmpty(idProviderName) && Regex.Match(idProviderName, k_IdProviderNameRegex).Success;
         }
 
+        List<AdditionalAppIdElement> GetAdditionalAppIdElements()
+        {
+            return AdditionalAppIdListElement?.Children().Select(a => a as AdditionalAppIdElement).Where(a => !(a is null)).ToList();
+        }
+
         async void Save()
         {
             InvokeWaiting(true);
 
             try
             {
+                var additionalAppIdElements = GetAdditionalAppIdElements();
+                if (additionalAppIdElements.Count > 0)
+                {
+                    if (SavedValue.Type == IdProviderKeys.Steam)
+                    {
+                        CurrentValue.SteamProviderConfig ??= new SteamProviderConfig();
+                        CurrentValue.SteamProviderConfig.AdditionalAppIds = additionalAppIdElements.Select(s => s.CurrentValue).ToList();
+                    }
+                }
                 if (SavedValue.New)
                 {
                     var request = new CreateIdProviderRequest(CurrentValue);
@@ -455,6 +564,7 @@ namespace Unity.Services.Authentication.Editor
             OidcName.value = CurrentValue.Type ?? "";
             OidcIssuer.value = CurrentValue.OidcConfig.Issuer ?? "";
             RelyingPartyField.value = CurrentValue.RelyingParty ?? "";
+            SetupAdditionalAppIdsElements();
             RefreshButtons();
         }
 

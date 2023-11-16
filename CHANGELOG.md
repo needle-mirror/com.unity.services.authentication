@@ -4,9 +4,25 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [3.2.0] - 2023-11-16
+
+### Changed
+- Changed `Custom Token Exchange` ID provider to `Custom ID`.
+
+### Added
+- Added `GetCustomId` method to PlayerInfo.
+- Added `SignInWithSteamAsync` method with `appId` parameter for Multiple App Id Support
+- Added `LinkWithSteamAsync` method with `appId` parameter for Multiple App Id Support
+- Added `Additional App IDs` to Steam ID Provider for Multiple App Id support
+
+### Fixed
+- Fixed serialization of player accounts settings.
+
 ## [3.1.0] - 2023-10-20
 ### Added
-- Added `ProcessAuthenticationTokens` method to enable BYOI custom id sign-in.
+- The Unity Player Accounts functionality has been merged in this package
+- Added a warning when Unity Player Accounts package is installed with this version. It can be uninstalled
+- Added `ProcessAuthenticationTokens` method to enable BYOI custom id sign-in
 
 ## [3.0.0] - 2023-08-21
 ### Changed

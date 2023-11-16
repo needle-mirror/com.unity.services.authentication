@@ -32,7 +32,7 @@ namespace Unity.Services.Authentication
         public static IAuthenticationService Instance { get; }
     }
 
-    public interface IAuthenticationService : Unity.Services.Core.IService
+    public interface IAuthenticationService
     {
         public event System.Action Expired;
         public event System.Action SignedIn;
@@ -66,6 +66,7 @@ namespace Unity.Services.Authentication
         public System.Threading.Tasks.Task LinkWithOpenIdConnectAsync(string idProviderName, string idToken, LinkOptions options = default(LinkOptions));
         [System.Obsolete(@"This method is deprecated as of version 2.7.1. Please use the LinkWithSteamAsync method with the 'identity' parameter for better security.")] public System.Threading.Tasks.Task LinkWithSteamAsync(string sessionTicket, LinkOptions options = default(LinkOptions));
         public System.Threading.Tasks.Task LinkWithSteamAsync(string sessionTicket, string identity, LinkOptions options = default(LinkOptions));
+        public System.Threading.Tasks.Task LinkWithSteamAsync(string sessionTicket, string identity, string appId, LinkOptions options = default(LinkOptions));
         public System.Threading.Tasks.Task LinkWithUnityAsync(string token, LinkOptions options = default(LinkOptions));
         public void ProcessAuthenticationTokens(string accessToken, string sessionToken = default(string));
         public System.Threading.Tasks.Task SignInAnonymouslyAsync(SignInOptions options = default(SignInOptions));
@@ -79,6 +80,7 @@ namespace Unity.Services.Authentication
         public System.Threading.Tasks.Task SignInWithOpenIdConnectAsync(string idProviderName, string idToken, SignInOptions options = default(SignInOptions));
         [System.Obsolete(@"This method is deprecated as of version 2.7.1. Please use the SignInWithSteamAsync method with the 'identity' parameter for better security.")] public System.Threading.Tasks.Task SignInWithSteamAsync(string sessionTicket, SignInOptions options = default(SignInOptions));
         public System.Threading.Tasks.Task SignInWithSteamAsync(string sessionTicket, string identity, SignInOptions options = default(SignInOptions));
+        public System.Threading.Tasks.Task SignInWithSteamAsync(string sessionTicket, string identity, string appId, SignInOptions options = default(SignInOptions));
         public System.Threading.Tasks.Task SignInWithUnityAsync(string token, SignInOptions options = default(SignInOptions));
         public System.Threading.Tasks.Task SignInWithUsernamePasswordAsync(string username, string password);
         public void SignOut(bool clearCredentials = false);
@@ -118,6 +120,7 @@ namespace Unity.Services.Authentication
         [JetBrains.Annotations.CanBeNull] public string Username { get; }
         public string GetAppleGameCenterId();
         public string GetAppleId();
+        public string GetCustomId();
         public string GetFacebookId();
         public string GetGoogleId();
         public string GetGooglePlayGamesId();

@@ -37,10 +37,10 @@ namespace Unity.Services.Authentication.PlayerAccounts.Editor
         {
             if (IsConfigured())
             {
-                return $"https://dashboard.unity3d.com/organizations/{GetOrganizationId()}/projects/{GetProjectId()}/player-authentication/identity-providers";
+                return $"https://cloud.unity3d.com/organizations/{GetOrganizationId()}/projects/{GetProjectId()}/player-authentication/identity-providers";
             }
 
-            return $"https://dashboard.unity3d.com/player-authentication";
+            return $"https://cloud.unity3d.com/player-authentication";
         }
 
         /// <summary>

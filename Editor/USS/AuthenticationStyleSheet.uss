@@ -44,3 +44,21 @@
 .auth-danger-button {
     background-color: #8B0000;
 }
+
+.auth-inner-container {
+    margin-left: 10px;
+}
+
+.auth-additional-app-id-container {
+    flex-direction: row;
+    margin-top: 5px;
+}
+
+.auth-additional-app-id-delete-button {
+    flex-grow: 0;
+    min-width: 50px;
+}
+
+.auth-additional-app-id-text-field {
+    flex-grow: 1;
+}

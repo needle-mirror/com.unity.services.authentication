@@ -7,7 +7,7 @@ namespace Unity.Services.Authentication.Server
     /// <summary>
     /// The functions for the Server Authentication service.
     /// </summary>
-    public interface IServerAuthenticationService : IService
+    public interface IServerAuthenticationService
     {
         /// <summary>
         /// Invoked when an authorization attempt has completed successfully.

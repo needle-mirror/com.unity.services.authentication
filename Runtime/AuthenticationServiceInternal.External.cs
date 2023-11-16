@@ -217,6 +217,42 @@ namespace Unity.Services.Authentication
                 });
         }
 
+        public Task SignInWithSteamAsync(string sessionTicket, string identity, string appId, SignInOptions options = null)
+        {
+            ValidateSteamIdentity(identity);
+
+            return SignInWithExternalTokenAsync(IdProviderKeys.Steam,
+                new SignInWithSteamRequest
+                {
+                    IdProvider = IdProviderKeys.Steam,
+                    Token = sessionTicket,
+                    SteamConfig = new SteamConfig()
+                    {
+                        identity = identity,
+                        appId = appId
+                    },
+                    SignInOnly = !options?.CreateAccount ?? false
+                });
+        }
+
+        public Task LinkWithSteamAsync(string sessionTicket, string identity, string appId, LinkOptions options = null)
+        {
+            ValidateSteamIdentity(identity);
+
+            return LinkWithExternalTokenAsync(IdProviderKeys.Steam,
+                new LinkWithSteamRequest
+                {
+                    IdProvider = IdProviderKeys.Steam,
+                    Token = sessionTicket,
+                    SteamConfig = new SteamConfig()
+                    {
+                        identity = identity,
+                        appId = appId
+                    },
+                    ForceLink = options?.ForceLink ?? false
+                });
+        }
+
         void ValidateSteamIdentity(string identity)
         {
             if (string.IsNullOrEmpty(identity))

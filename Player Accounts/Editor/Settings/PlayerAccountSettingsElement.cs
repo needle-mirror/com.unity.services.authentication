@@ -95,6 +95,7 @@ namespace Unity.Services.Authentication.PlayerAccounts.Editor
 
         void Save()
         {
+            EditorUtility.SetDirty(m_Settings);
             AssetDatabase.SaveAssetIfDirty(m_Settings);
         }
     }

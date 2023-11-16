@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Scripting;
@@ -17,5 +18,12 @@ namespace Unity.Services.Authentication
         /// </summary>
         [JsonProperty("identity")]
         public string identity;
+
+        /// <summary>
+        /// App Id that was used to generate the ticket. Only required for additional app ids (e.g.: PlayTest, Demo, etc)
+        /// </summary>
+        [JsonProperty("appId")]
+        [CanBeNull]
+        public string appId;
     }
 }

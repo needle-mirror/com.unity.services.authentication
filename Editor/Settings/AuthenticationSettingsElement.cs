@@ -244,6 +244,7 @@ namespace Unity.Services.Authentication.Editor
                 if (settings != null && settings.clientId != idProviderElement.ClientIdField.value)
                 {
                     settings.ClientId = idProviderElement.ClientIdField.value;
+                    EditorUtility.SetDirty(settings);
                     AssetDatabase.SaveAssetIfDirty(settings);
                 }
             }

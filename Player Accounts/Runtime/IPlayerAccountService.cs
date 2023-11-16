@@ -7,7 +7,7 @@ namespace Unity.Services.Authentication.PlayerAccounts
     /// <summary>
     /// Represents the Player Account Service.
     /// </summary>
-    public interface IPlayerAccountService : IService
+    public interface IPlayerAccountService
     {
         /// <summary>
         /// Invoked when a sign-in attempt has completed successfully.

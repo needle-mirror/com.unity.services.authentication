@@ -44,9 +44,9 @@ namespace Unity.Services.Authentication.Editor
         {
             if (AuthenticationAdminClientManager.IsConfigured())
             {
-                return $"https://dashboard.unity3d.com/organizations/{AuthenticationAdminClientManager.GetOrganizationId()}/projects/{AuthenticationAdminClientManager.GetProjectId()}/player-authentication/identity-providers";
+                return $"https://cloud.unity3d.com/organizations/{AuthenticationAdminClientManager.GetOrganizationId()}/projects/{AuthenticationAdminClientManager.GetProjectId()}/player-authentication/identity-providers";
             }
-            return $"https://dashboard.unity3d.com/player-authentication";
+            return $"https://cloud.unity3d.com/player-authentication";
         }
     }
 }

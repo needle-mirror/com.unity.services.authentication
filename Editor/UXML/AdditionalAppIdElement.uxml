@@ -1,0 +1,7 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:VisualElement name="additional-appid-details" class="auth-additional-app-id-container" value="false">
+        <ui:TextField picking-mode="Ignore" label="Description" max-length="128" name="additional-appid-description" class="auth-additional-app-id-text-field"/>
+        <ui:TextField picking-mode="Ignore" label="App ID" max-length="128" name="additional-appid-value" class="auth-additional-app-id-text-field"/>
+        <ui:Button name="additional-appid-delete" text="Delete" class="auth-danger-button auth-additional-app-id-delete-button" display-tooltip-when-elided="true" />
+    </ui:VisualElement>
+</ui:UXML>

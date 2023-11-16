@@ -25,7 +25,7 @@ namespace Unity.Services.Authentication.PlayerAccounts
         [Newtonsoft.Json.JsonProperty(@"nonce")] public string Nonce { get; set; }
     }
 
-    public interface IPlayerAccountService : Unity.Services.Core.IService
+    public interface IPlayerAccountService
     {
         public event System.Action SignedIn;
         public event System.Action SignedOut;

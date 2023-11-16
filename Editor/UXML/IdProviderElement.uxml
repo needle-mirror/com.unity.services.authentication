@@ -6,6 +6,10 @@
         <ui:TextField picking-mode="Ignore" max-length="20" label="Oidc Name" name="oidc-name" value="oidc-" mask-character="oidc-" style="width: auto; top: 0; right: 0; left: 0; margin-top: 1px; margin-bottom: 1px; max-width: none;" />
         <ui:TextField picking-mode="Ignore" label="Issuer(URL)" max-length="128" name="oidc-issuer-url" />
         <ui:TextField picking-mode="Ignore" label="Relying Party" name="id-provider-relying-party" max-length="128" />
+        <ui:Foldout name="auth-additional-app-id-container" class="auth-inner-container">
+            <ui:VisualElement name="additional-appid-list" />
+            <ui:Button name="additional-appid-add" text="Add App ID" display-tooltip-when-elided="true" />
+        </ui:Foldout>
         <ui:VisualElement class="auth-button-container">
             <ui:Button name="id-provider-save" text="Save" display-tooltip-when-elided="true" />
             <ui:Button name="id-provider-cancel" text="Cancel" display-tooltip-when-elided="true" />

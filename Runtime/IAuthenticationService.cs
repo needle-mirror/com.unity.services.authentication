@@ -8,7 +8,7 @@ namespace Unity.Services.Authentication
     /// <summary>
     /// The functions for Authentication service.
     /// </summary>
-    public interface IAuthenticationService : IService
+    public interface IAuthenticationService
     {
         /// <summary>
         /// Invoked when a sign-in attempt has completed successfully.
@@ -547,6 +547,59 @@ namespace Unity.Services.Authentication
         /// <returns>Task for the operation</returns>
         [Obsolete("This method is deprecated as of version 2.7.1. Please use the LinkWithSteamAsync method with the 'identity' parameter for better security.")]
         Task LinkWithSteamAsync(string sessionTicket, LinkOptions options = null);
+
+        /// <summary>
+        /// Sign in using Steam's session ticket.
+        /// If no options are used, this will create an account if none exist.
+        /// </summary>
+        /// <param name="sessionTicket">Steam's session ticket</param>
+        /// <param name="identity">The identity of the calling service</param>
+        /// <param name="appId">App Id that was used to generate the ticket. Only required for additional app ids (e.g.: PlayTest, Demo, etc)</param>
+        /// <param name="options">Options for the operation</param>
+        /// <returns>Task for the operation</returns>
+        /// <exception cref="AuthenticationException">
+        /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
+        /// <list type="bullet">
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.InvalidParameters"/> if parameter is empty or invalid. </description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.ClientInvalidUserState"/> if the player has already signed in or a sign-in operation is in progress.</description></item>
+        /// </list>
+        /// </exception>
+        /// <exception cref="RequestFailedException">
+        /// The task fails with the exception when the task cannot complete successfully.
+        /// <list type="bullet">
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.InvalidToken"/> if the server side returned an invalid access token. </description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.TransportError"/> if the API call failed due to network error. Check Unity logs for more debugging information.</description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.Unknown"/> if the API call failed due to unexpected response from the server. Check Unity logs for more debugging information.</description></item>
+        /// </list>
+        /// </exception>
+        public Task SignInWithSteamAsync(string sessionTicket, string identity, string appId, SignInOptions options = null);
+
+        /// <summary>
+        /// Link the current player with the Steam account using Steam's session ticket.
+        /// </summary>
+        /// <param name="sessionTicket">Steam's session ticket</param>
+        /// <param name="identity">The identity of the calling service</param>
+        /// <param name="appId">App Id that was used to generate the ticket. Only required for additional app ids (e.g.: PlayTest, Demo, etc)</param>
+        /// <param name="options">Options for the link operations.</param>
+        /// <returns>Task for the operation</returns>
+        /// <exception cref="AuthenticationException">
+        /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
+        /// <list type="bullet">
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.AccountAlreadyLinked"/> if the player tries to link a social account while the social account is already linked with another player.</description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.InvalidParameters"/> if parameter is empty or invalid. </description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.ClientInvalidUserState"/> if the player is not authorized to perform this operation.</description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.AccountLinkLimitExceeded"/> if the player has already reached the limit of links for this provider type.</description></item>
+        /// </list>
+        /// </exception>
+        /// <exception cref="RequestFailedException">
+        /// The task fails with the exception when the task cannot complete successfully.
+        /// <list type="bullet">
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.InvalidToken"/> if access token is invalid/expired. The access token is refreshed before it expires. This may happen if the refresh fails, or the app is unpaused with an expired access token while the refresh hasn't finished.</description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.TransportError"/> if the API call failed due to network error. Check Unity logs for more debugging information.</description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.Unknown"/> if the API call failed due to unexpected response from the server. Check Unity logs for more debugging information.</description></item>
+        /// </list>
+        /// </exception>
+        public Task LinkWithSteamAsync(string sessionTicket, string identity, string appId , LinkOptions options = null);
 
         /// <summary>
         /// Unlinks the Steam account from the current player account.

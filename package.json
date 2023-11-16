@@ -1,20 +1,20 @@
 {
   "name": "com.unity.services.authentication",
   "displayName": "Authentication",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "unity": "2020.3",
   "description": "Client SDK offering player identity management for Unity Gaming Services.\n\nIdentity providers can be configured from the editor or the Unity Dashboard.\n\nPlayer management is available in the Unity Dashboard.",
   "dependencies": {
     "com.unity.nuget.newtonsoft-json": "3.2.1",
-    "com.unity.services.core": "1.12.0",
+    "com.unity.services.core": "1.12.1",
     "com.unity.modules.unitywebrequest": "1.0.0",
     "com.unity.ugui": "1.0.0"
   },
   "type": "library",
   "_upm": {
     "gameService": {
-      "genericDashboardUrl": "https://dashboard.unity3d.com/player-authentication",
-      "projectDashboardUrl": "https://dashboard.unity3d.com/organizations/{0}/projects/{1}/player-authentication/about",
+      "genericDashboardUrl": "https://cloud.unity3d.com/player-authentication",
+      "projectDashboardUrl": "https://cloud.unity3d.com/organizations/{0}/projects/{1}/player-authentication/about",
       "projectDashboardUrlType": "OrganizationKeyAndProjectGuid",
       "configurePath": "Project/Services/Authentication"
     },
@@ -28,7 +28,7 @@
       "Windows 8 Universal",
       "Windows 10 Universal"
     ],
-    "changelog": "### Added\n- Added `ProcessAuthenticationTokens` method to enable BYOI custom id sign-in."
+    "changelog": "### Changed\n- Changed `Custom Token Exchange` ID provider to `Custom ID`.\n\n### Added\n- Added `GetCustomId` method to PlayerInfo.\n- Added `SignInWithSteamAsync` method with `appId` parameter for Multiple App Id Support\n- Added `LinkWithSteamAsync` method with `appId` parameter for Multiple App Id Support\n- Added `Additional App IDs` to Steam ID Provider for Multiple App Id support\n\n### Fixed\n- Fixed serialization of player accounts settings."
   },
   "samples": [
     {
@@ -38,14 +38,14 @@
     }
   ],
   "relatedPackages": {
-    "com.unity.services.authentication.tests": "3.1.0"
+    "com.unity.services.authentication.tests": "3.2.0"
   },
   "upmCi": {
-    "footprint": "9de826ce26532c341bcde7757f03e823f60a4791"
+    "footprint": "36d6803458cb7914c95f5562e4682171ff0fcdb7"
   },
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/operate-services-sdk.git",
     "type": "git",
-    "revision": "dc900f2f42085635c80197345bb69d5aaca659d7"
+    "revision": "ff0b561775cff152a473e215179fc3dccead79d1"
   }
 }
