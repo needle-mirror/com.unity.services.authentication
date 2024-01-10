@@ -94,7 +94,8 @@ namespace Unity.Services.Authentication
                 environmentId,
                 playerId,
                 playerName,
-                sessionToken);
+                sessionToken,
+                environment);
 
             registry.RegisterService<IAuthenticationService>(authenticationService);
             registry.RegisterServiceComponent<IAccessToken>(authenticationService.AccessTokenComponent);

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Unity.Services.Core;
@@ -90,9 +91,19 @@ namespace Unity.Services.Authentication
         bool SessionTokenExists { get; }
 
         /// <summary>
+        /// The date the last notification for the player was created or null if there are no notifications
+        /// </summary>
+        string LastNotificationDate { get; }
+
+        /// <summary>
         /// Returns the current player's info, including linked identities.
         /// </summary>
         PlayerInfo PlayerInfo { get; }
+
+        /// <summary>
+        /// Returns player's notifications after GetNotificationsAsync is called successfully.
+        /// </summary>
+        List<Notification> Notifications { get; }
 
         /// <summary>
         /// Signs in the current player anonymously. No credentials are required and the session is confined to the current device.
@@ -1062,7 +1073,7 @@ namespace Unity.Services.Authentication
         public Task ConfirmCodeAsync(string code, string idProvider = null, string externalToken = null);
 
         /// <summary>
-        /// Process the accessToken issued by the Unity Authentication Service. Effectivelly setting the access token for
+        /// Process the accessToken issued by the Unity Authentication Service. Effectively setting the access token for
         /// other UGS services to use and extracting the playerId.
         /// If the session token is set the SDK will also process it and refresh the token at the expected intervals.
         /// </summary>
@@ -1106,5 +1117,16 @@ namespace Unity.Services.Authentication
         /// </list>
         /// </exception>
         void ClearSessionToken();
+
+        /// <summary>
+        /// Retrieves the Notifications that were created for the signed in player
+        /// </summary>
+        /// <exception cref="AuthenticationException">
+        /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
+        /// <list type="bullet">
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.ClientInvalidUserState"/> if the player is not signed out.</description></item>
+        /// </list>
+        /// </exception>
+        Task<List<Notification>> GetNotificationsAsync();
     }
 }

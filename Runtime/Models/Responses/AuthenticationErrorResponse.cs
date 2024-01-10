@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using UnityEngine.Scripting;
 
 namespace Unity.Services.Authentication
@@ -25,5 +27,8 @@ namespace Unity.Services.Authentication
 
         [JsonProperty("status")]
         public int Status;
+
+        [JsonProperty("details")]
+        public List<object> Details;
     }
 }

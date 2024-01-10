@@ -1,7 +1,8 @@
 using System;
+using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
+using Unity.Services.Core;
 
 namespace Unity.Services.Authentication
 {
@@ -50,12 +51,43 @@ namespace Unity.Services.Authentication
         {
             if (State == AuthenticationState.SignedOut || State == AuthenticationState.Expired)
             {
+                try
+                {
+                    ValidateAccessToken(accessToken);
+                }
+                catch (RequestFailedException)
+                {
+                    throw;
+                }
+                catch (Exception e)
+                {
+                    throw AuthenticationException.Create(CommonErrorCodes.Unknown, $"Failed validating access token: {e.Message}");
+                }
+
                 CompleteSignIn(accessToken, sessionToken);
                 return;
             }
 
             var exception = ExceptionHandler.BuildClientInvalidStateException(State);
             throw exception;
+        }
+
+        void ValidateAccessToken(string accessToken)
+        {
+            if (string.IsNullOrEmpty(accessToken))
+            {
+                throw AuthenticationException.Create(CommonErrorCodes.InvalidToken, "Empty or null access token.");
+            }
+            var accessTokenDecoded = m_JwtDecoder.Decode<AccessToken>(accessToken);
+            if (accessTokenDecoded == null)
+            {
+                throw AuthenticationException.Create(CommonErrorCodes.InvalidToken, "Failed to decode and verify access token.");
+            }
+            var envName = accessTokenDecoded.Audience.FirstOrDefault(s => s.StartsWith("envName:"))?.Replace("envName:", "");
+            if (EnvironmentComponent.Current != envName)
+            {
+                throw AuthenticationException.Create(AuthenticationErrorCodes.EnvironmentMismatch, $"The configured environment({EnvironmentComponent.Current}) and the access token one({envName ?? "null"}) don't match.");
+            }
         }
 
         bool ValidateOpenIdConnectIdProviderName(string idProviderName)

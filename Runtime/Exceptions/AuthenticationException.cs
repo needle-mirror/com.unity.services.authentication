@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using Newtonsoft.Json.Linq;
 using Unity.Services.Core;
 
 namespace Unity.Services.Authentication
@@ -13,14 +16,21 @@ namespace Unity.Services.Authentication
     public sealed class AuthenticationException : RequestFailedException
     {
         /// <summary>
+        /// Caches the player's notifications if any are available or null if none are available.
+        /// </summary>
+        public List<Notification> Notifications { get; }
+
+        /// <summary>
         /// Constructor of the AuthenticationException with the error code, a message, and inner exception.
         /// </summary>
         /// <param name="errorCode">The error code for AuthenticationException.</param>
         /// <param name="message">The additional message that helps to debug the error.</param>
         /// <param name="innerException">The inner exception reference.</param>
-        AuthenticationException(int errorCode, string message, Exception innerException = null)
+        /// <param name="notifications">List of notifications available to the player or null if none</param>
+        AuthenticationException(int errorCode, string message, Exception innerException = null, List<Notification> notifications = null)
             : base(errorCode, message, innerException)
         {
+            Notifications = notifications;
         }
 
         /// <summary>
@@ -31,8 +41,14 @@ namespace Unity.Services.Authentication
         /// <param name="errorCode">Gets the error code for the current exception</param>
         /// <param name="message">Gets a message that describes the current exception.</param>
         /// <param name="innerException">Gets the Exception instance that caused the current exception.</param>
+        /// <param name="notifications">List of notifications available to the player or null if none</param>
         /// <returns>The built exception, either an AuthenticationException or a RequestFailedException</returns>
         public static RequestFailedException Create(int errorCode, string message, Exception innerException = null)
+        {
+            return Create(errorCode, message, null, innerException);
+        }
+
+        internal static RequestFailedException Create(int errorCode, string message, List<Notification> notifications, Exception innerException = null)
         {
             if (errorCode < AuthenticationErrorCodes.MinValue)
             {
@@ -40,7 +56,7 @@ namespace Unity.Services.Authentication
             }
             else
             {
-                return new AuthenticationException(errorCode, message, innerException);
+                return new AuthenticationException(errorCode, message, innerException, notifications);
             }
         }
     }

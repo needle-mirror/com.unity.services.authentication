@@ -9,6 +9,8 @@ namespace Unity.Services.Authentication
 {
     class AuthenticationNetworkClient : IAuthenticationNetworkClient
     {
+        const string k_PlayerIdReplacement = "{PlayerId}";
+
         const string k_AnonymousUrlStem = "/v1/authentication/anonymous";
         const string k_SessionTokenUrlStem = "/v1/authentication/session-token";
         const string k_ExternalTokenUrlStem = "/v1/authentication/external-token";
@@ -22,6 +24,8 @@ namespace Unity.Services.Authentication
         const string k_ConfirmSignInCodeUrlStem = "/v1/authentication/code-link/confirm";
         const string k_GetCodeIdentifierUrlStem = "/v1/authentication/code-link/info";
         const string k_CodeSignInUrlStem = "/v1/authentication/code-link/sign-in";
+        const string k_GetNotificationsStem = "/v1/users/{PlayerId}/notifications";
+
 
         internal AccessTokenComponent AccessTokenComponent { get; }
         internal ICloudProjectId CloudProjectIdComponent { get; }
@@ -44,6 +48,7 @@ namespace Unity.Services.Authentication
         readonly string m_ConfirmSignInCodeUrl;
         readonly string m_CodeSignInUrl;
         readonly string m_GetCodeIdentifierUrl;
+        readonly string m_GetNotificationsUrl;
 
         readonly Dictionary<string, string> m_CommonHeaders;
 
@@ -72,6 +77,7 @@ namespace Unity.Services.Authentication
             m_ConfirmSignInCodeUrl = host + k_ConfirmSignInCodeUrlStem;
             m_GetCodeIdentifierUrl = host + k_GetCodeIdentifierUrlStem;
             m_CodeSignInUrl = host + k_CodeSignInUrlStem;
+            m_GetNotificationsUrl = host + k_GetNotificationsStem;
 
             m_CommonHeaders = new Dictionary<string, string>
             {
@@ -161,6 +167,11 @@ namespace Unity.Services.Authentication
         public Task<CodeLinkInfoResponse> GetCodeIdentifierAsync(CodeLinkInfoRequest request)
         {
             return NetworkHandler.PostAsync<CodeLinkInfoResponse>(m_GetCodeIdentifierUrl, request, WithEnvironment(WithAccessToken(GetCommonHeaders())));
+        }
+
+        public Task<GetNotificationsResponse> GetNotificationsAsync(string playerId)
+        {
+            return NetworkHandler.GetAsync<GetNotificationsResponse>(m_GetNotificationsUrl.Replace(k_PlayerIdReplacement, playerId), WithEnvironment(WithAccessToken(GetCommonHeaders())));
         }
 
         string CreateUserRequestUrl(string user)

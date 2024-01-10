@@ -1,4 +1,5 @@
 using System;
+using JetBrains.Annotations;
 using Newtonsoft.Json;
 using UnityEngine.Scripting;
 
@@ -24,5 +25,8 @@ namespace Unity.Services.Authentication
 
         [JsonProperty("user")]
         public User User;
+
+        [JsonProperty("lastNotificationDate")][CanBeNull]
+        public string LastNotificationDate;
     }
 }

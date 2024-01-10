@@ -4,6 +4,16 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [3.3.0] - 2024-01-10
+### Added
+- Added `LastNotificationDate` field to inform the client of the player's notifications last created date. 
+- Added `GetNotificationsAsync` method to allow the client to request the player's notifications
+- Added `Notifications` field to cache the notifications after GetNotificationsAsync is called
+- Added `BannedUser` error code to identify an exception when a user has been banned.
+
+### Fixed
+- Fixed authentication refresh and expiration scheduling relying on device time which could cause edge cases.
+
 ## [3.2.0] - 2023-11-16
 
 ### Changed

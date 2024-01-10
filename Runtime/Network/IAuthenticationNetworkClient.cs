@@ -20,5 +20,6 @@ namespace Unity.Services.Authentication
         Task<CodeLinkConfirmResponse> ConfirmCodeAsync(ConfirmSignInCodeRequest request);
         Task<SignInResponse> SignInWithCodeAsync(SignInWithCodeRequest request);
         Task<CodeLinkInfoResponse> GetCodeIdentifierAsync(CodeLinkInfoRequest request);
+        Task<GetNotificationsResponse> GetNotificationsAsync(string playerId);
     }
 }

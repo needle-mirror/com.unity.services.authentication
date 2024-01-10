@@ -7,10 +7,12 @@ namespace Unity.Services.Authentication
     {
         public static readonly int AccountAlreadyLinked = 10003;
         public static readonly int AccountLinkLimitExceeded = 10004;
+        public static readonly int BannedUser = 10009;
         public static readonly int ClientInvalidProfile = 10006;
         public static readonly int ClientInvalidUserState = 10000;
         public static readonly int ClientNoActiveSession = 10001;
         public static readonly int ClientUnlinkExternalIdNotFound = 10005;
+        public static readonly int EnvironmentMismatch = 10010;
         public static readonly int InvalidParameters = 10002;
         public static readonly int InvalidProvider = 10008;
         public static readonly int InvalidSessionToken = 10007;
@@ -19,6 +21,7 @@ namespace Unity.Services.Authentication
 
     public sealed class AuthenticationException : Unity.Services.Core.RequestFailedException
     {
+        public System.Collections.Generic.List<Notification> Notifications { get; }
         public static Unity.Services.Core.RequestFailedException Create(int errorCode, string message, System.Exception innerException = default(System.Exception));
     }
 
@@ -44,6 +47,8 @@ namespace Unity.Services.Authentication
         public bool IsAuthorized { get; }
         public bool IsExpired { get; }
         public bool IsSignedIn { get; }
+        public string LastNotificationDate { get; }
+        public System.Collections.Generic.List<Notification> Notifications { get; }
         public string PlayerId { get; }
         public PlayerInfo PlayerInfo { get; }
         public string PlayerName { get; }
@@ -54,6 +59,7 @@ namespace Unity.Services.Authentication
         public System.Threading.Tasks.Task ConfirmCodeAsync(string code, string idProvider = default(string), string externalToken = default(string));
         public System.Threading.Tasks.Task DeleteAccountAsync();
         public System.Threading.Tasks.Task<SignInCodeInfo> GenerateSignInCodeAsync(string identifier = default(string));
+        public System.Threading.Tasks.Task<System.Collections.Generic.List<Notification>> GetNotificationsAsync();
         public System.Threading.Tasks.Task<PlayerInfo> GetPlayerInfoAsync();
         public System.Threading.Tasks.Task<string> GetPlayerNameAsync(bool autoGenerate = true);
         public System.Threading.Tasks.Task<SignInCodeInfo> GetSignInCodeInfoAsync(string code);
@@ -109,6 +115,17 @@ namespace Unity.Services.Authentication
     {
         public bool ForceLink { get; set; }
         public LinkOptions() {}
+    }
+
+    public struct Notification
+    {
+        public string CaseId;
+        public string CreatedAt;
+        public string Id;
+        public string Message;
+        public string PlayerId;
+        public string ProjectId;
+        public string Type;
     }
 
     public sealed class PlayerInfo

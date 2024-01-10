@@ -84,7 +84,8 @@ namespace Unity.Services.Authentication.Editor.Shared
                 environmentId,
                 playerId,
                 playerName,
-                sessionToken);
+                sessionToken,
+                environment);
 
             return authenticationService;
         }

@@ -62,5 +62,15 @@ namespace Unity.Services.Authentication
         /// The request was understood but the API refused to process it because the provider was invalid for the request.
         /// </summary>
         public static readonly int InvalidProvider = 10008;
+
+        /// <summary>
+        /// The request was understood but the user has been banned from logging in.
+        /// </summary>
+        public static readonly int BannedUser = 10009;
+
+        /// <summary>
+        /// There is a mismatch between the requested environment and the one configured.
+        /// </summary>
+        public static readonly int EnvironmentMismatch = 10010;
     }
 }

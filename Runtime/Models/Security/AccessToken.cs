@@ -17,6 +17,9 @@ namespace Unity.Services.Authentication
         [JsonProperty("ext")]
         public AccessTokenExtraClaims Extra;
 
+        [JsonProperty("iat")]
+        public long IssuedAt;
+
         [JsonProperty("iss")]
         public string Issuer;
 

@@ -1,5 +1,6 @@
 using Unity.Services.Authentication.Generated;
 using Unity.Services.Authentication.Internal;
+using Unity.Services.Core.Environments.Internal;
 using Unity.Services.Core.Scheduler.Internal;
 
 namespace Unity.Services.Authentication.Editor.Shared
@@ -26,8 +27,10 @@ namespace Unity.Services.Authentication.Editor.Shared
                 EnvironmentIdComponent environmentId,
                 PlayerIdComponent playerId,
                 PlayerNameComponent playerName,
-                SessionTokenComponent sessionToken)
-                : base(settings, networkClient, playerNamesApi, profile, jwtDecoder, cache, scheduler, metrics, accessToken, environmentId, playerId, playerName, sessionToken)
+                SessionTokenComponent sessionToken,
+                IEnvironments environment)
+                : base(settings, networkClient, playerNamesApi, profile, jwtDecoder, cache, scheduler, metrics,
+                       accessToken, environmentId, playerId, playerName, sessionToken, environment)
             {
             }
         }

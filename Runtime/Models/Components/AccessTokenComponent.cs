@@ -13,6 +13,7 @@ namespace Unity.Services.Authentication
             internal set => SetAccessToken(value);
         }
 
+        public DateTime? RefreshTime { get; internal set; }
         public DateTime? ExpiryTime { get; internal set; }
 
         string m_AccessToken;

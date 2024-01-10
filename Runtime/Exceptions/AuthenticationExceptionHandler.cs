@@ -1,6 +1,8 @@
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Text;
+using Newtonsoft.Json.Linq;
 using Unity.Services.Authentication.Shared;
 using Unity.Services.Core;
 
@@ -113,8 +115,8 @@ namespace Unity.Services.Authentication
             {
                 var errorResponse = IsolatedJsonConvert.DeserializeObject<AuthenticationErrorResponse>(exception.Message, SerializerSettings.DefaultSerializerSettings);
                 var errorCode = MapErrorCodes(errorResponse.Title);
-
-                return AuthenticationException.Create(errorCode, errorResponse.Detail, exception);
+                var notifications = ParseNotifications(errorResponse.Details);
+                return AuthenticationException.Create(errorCode, errorResponse.Detail, notifications, exception);
             }
             catch (JsonException e)
             {
@@ -189,6 +191,9 @@ namespace Unity.Services.Authentication
         {
             switch (serverErrorTitle)
             {
+                case "BANNED_USER":
+                case "PERMANENTLY_BANNED_USER":
+                    return AuthenticationErrorCodes.BannedUser;
                 case "ENTITY_EXISTS":
                     // This is the only reason why ENTITY_EXISTS is returned so far.
                     // Include the request/API context in case it has a different meaning in the future.
@@ -210,6 +215,27 @@ namespace Unity.Services.Authentication
             }
 
             return CommonErrorCodes.Unknown;
+        }
+
+        static List<Notification> ParseNotifications(List<object> details)
+        {
+            if (details != null && details.Count > 0)
+            {
+                foreach (var errorResponseDetail in details)
+                {
+                    try
+                    {
+                        var notificationsResponse = IsolatedJsonConvert.DeserializeObject<GetNotificationsResponse>((errorResponseDetail as JObject)?.ToString());
+                        return notificationsResponse.ToNotificationList();
+                    }
+                    catch
+                    {
+                        // Do nothing
+                    }
+                }
+            }
+
+            return null;
         }
     }
 }

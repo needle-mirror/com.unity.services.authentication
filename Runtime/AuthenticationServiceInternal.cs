@@ -2,8 +2,10 @@ using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Unity.Services.Authentication.Generated;
 using Unity.Services.Core;
+using Unity.Services.Core.Environments.Internal;
 using Unity.Services.Core.Scheduler.Internal;
 using Task = System.Threading.Tasks.Task;
 
@@ -40,6 +42,9 @@ namespace Unity.Services.Authentication
         public string PlayerId => PlayerIdComponent.PlayerId;
         public PlayerInfo PlayerInfo { get; internal set; }
 
+        [CanBeNull]
+        public string LastNotificationDate { get; private set; }
+
         internal long? ExpirationActionId { get; set; }
         internal long? RefreshActionId { get; set; }
 
@@ -48,6 +53,7 @@ namespace Unity.Services.Authentication
         internal PlayerIdComponent PlayerIdComponent { get; }
         internal PlayerNameComponent PlayerNameComponent { get; }
         internal SessionTokenComponent SessionTokenComponent { get; }
+        internal IEnvironments EnvironmentComponent { get; }
         internal AuthenticationState State { get; set; }
         internal IAuthenticationSettings Settings { get; }
         internal IAuthenticationNetworkClient NetworkClient { get; set; }
@@ -74,7 +80,8 @@ namespace Unity.Services.Authentication
             EnvironmentIdComponent environmentId,
             PlayerIdComponent playerId,
             PlayerNameComponent playerName,
-            SessionTokenComponent sessionToken)
+            SessionTokenComponent sessionToken,
+            IEnvironments environment)
         {
             Settings = settings;
             NetworkClient = networkClient;
@@ -93,6 +100,7 @@ namespace Unity.Services.Authentication
             PlayerIdComponent = playerId;
             PlayerNameComponent = playerName;
             SessionTokenComponent = sessionToken;
+            EnvironmentComponent = environment;
 
             State = AuthenticationState.SignedOut;
             MigrateCache();
@@ -172,6 +180,7 @@ namespace Unity.Services.Authentication
         {
             AccessTokenComponent.Clear();
             PlayerInfo = null;
+            m_Notifications = null;
 
             if (clearCredentials)
             {
@@ -318,10 +327,10 @@ namespace Unity.Services.Authentication
 
         internal void CompleteSignIn(SignInResponse response, bool enableRefresh = true)
         {
-            CompleteSignIn(response.IdToken, response.SessionToken, enableRefresh, response.User);
+            CompleteSignIn(response.IdToken, response.SessionToken, enableRefresh, response.User, response.LastNotificationDate);
         }
 
-        internal void CompleteSignIn(string accessToken, string sessionToken, bool enableRefresh = true, User user = null)
+        void CompleteSignIn(string accessToken, string sessionToken, bool enableRefresh = true, User user = null, string lastNotificationDate = null)
         {
             try
             {
@@ -343,21 +352,21 @@ namespace Unity.Services.Authentication
                 PlayerIdComponent.PlayerId = accessTokenDecoded.Subject;
                 SessionTokenComponent.SessionToken = sessionToken;
 
-                var expiresIn = accessTokenDecoded.Expiration - new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
-                if (expiresIn > 0)
+                var expiresIn = accessTokenDecoded.Expiration - accessTokenDecoded.IssuedAt;
+                var refreshTime = expiresIn - Settings.AccessTokenRefreshBuffer;
+                var expiryTime = expiresIn - Settings.AccessTokenExpiryBuffer;
+
+                if (enableRefresh && sessionToken != null && refreshTime > 0 && refreshTime < expiryTime)
                 {
-                    var refreshTime = expiresIn - Settings.AccessTokenRefreshBuffer;
-                    var expiryTime = expiresIn - Settings.AccessTokenExpiryBuffer;
+                    ScheduleRefresh(refreshTime);
+                }
 
-                    AccessTokenComponent.ExpiryTime = DateTime.UtcNow.AddSeconds(expiryTime);
-
-                    if (enableRefresh && sessionToken != null)
-                    {
-                        ScheduleRefresh(refreshTime);
-                    }
-
+                if (expiryTime > 0)
+                {
                     ScheduleExpiration(expiryTime);
                 }
+                LastNotificationDate = lastNotificationDate;
+
                 ChangeState(AuthenticationState.Authorized);
             }
             catch (AuthenticationException)
@@ -372,26 +381,39 @@ namespace Unity.Services.Authentication
 
         internal void ScheduleRefresh(double delay)
         {
-            CancelScheduledRefresh();
-
-            if (DateTime.UtcNow.AddSeconds(delay) < AccessTokenComponent.ExpiryTime)
+            if (delay >= 0)
             {
+                CancelScheduledRefresh();
                 Logger.LogVerbose($"Scheduling refresh in {delay} seconds.");
                 RefreshActionId = m_Scheduler.ScheduleAction(ExecuteScheduledRefresh, delay);
+                AccessTokenComponent.RefreshTime = DateTime.UtcNow.AddSeconds(delay);
+            }
+            else
+            {
+                Logger.LogError($"Schedule delay for refresh is invalid ({delay}).");
             }
         }
 
         internal void ScheduleExpiration(double delay)
         {
-            Logger.LogVerbose($"Scheduling expiration in {delay} seconds.");
-            CancelScheduledExpiration();
-            ExpirationActionId = m_Scheduler.ScheduleAction(ExecuteScheduledExpiration, delay);
+            if (delay >= 0)
+            {
+                CancelScheduledExpiration();
+                Logger.LogVerbose($"Scheduling expiration in {delay} seconds.");
+                ExpirationActionId = m_Scheduler.ScheduleAction(ExecuteScheduledExpiration, delay);
+                AccessTokenComponent.ExpiryTime = DateTime.UtcNow.AddSeconds(delay);
+            }
+            else
+            {
+                Logger.LogError($"Schedule delay for expiration is invalid ({delay}).");
+            }
         }
 
         internal void ExecuteScheduledRefresh()
         {
             Logger.LogVerbose($"Executing scheduled refresh.");
             RefreshActionId = null;
+            AccessTokenComponent.RefreshTime = null;
             RefreshAccessTokenAsync();
         }
 
@@ -399,6 +421,7 @@ namespace Unity.Services.Authentication
         {
             Logger.LogVerbose($"Executing scheduled expiration.");
             ExpirationActionId = null;
+            AccessTokenComponent.ExpiryTime = null;
             Expire();
         }
 
@@ -408,6 +431,7 @@ namespace Unity.Services.Authentication
             {
                 m_Scheduler.CancelAction(RefreshActionId.Value);
                 RefreshActionId = null;
+                AccessTokenComponent.RefreshTime = null;
             }
         }
 
@@ -417,6 +441,7 @@ namespace Unity.Services.Authentication
             {
                 m_Scheduler.CancelAction(ExpirationActionId.Value);
                 ExpirationActionId = null;
+                AccessTokenComponent.ExpiryTime = null;
             }
         }
 
