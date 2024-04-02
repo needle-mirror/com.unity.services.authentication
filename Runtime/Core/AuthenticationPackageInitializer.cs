@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Unity.Services.Authentication.Generated;
 using Unity.Services.Authentication.Internal;
@@ -15,6 +16,9 @@ namespace Unity.Services.Authentication
     {
         const string k_CloudEnvironmentKey = "com.unity.services.core.cloud-environment";
         const string k_StagingEnvironment = "staging";
+        const string k_DefaultProfile = "default";
+        const string k_EditorModeArg = "-editor-mode";
+        const string k_NameArg = "-name";
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void InitializeOnLoad()
@@ -56,7 +60,7 @@ namespace Unity.Services.Authentication
             var environment = registry.GetServiceComponent<IEnvironments>();
             var projectId = registry.GetServiceComponent<ICloudProjectId>();
             var projectConfiguration = registry.GetServiceComponent<IProjectConfiguration>();
-            var profile = new ProfileComponent(projectConfiguration.GetString(AuthenticationExtensions.ProfileKey, "default"));
+            var profile = new ProfileComponent(GetProfile(projectConfiguration));
             var metricsFactory = registry.GetServiceComponent<IMetricsFactory>();
             var metrics = new AuthenticationMetrics(metricsFactory);
             var jwtDecoder = new JwtDecoder();
@@ -104,6 +108,46 @@ namespace Unity.Services.Authentication
             registry.RegisterServiceComponent<IPlayerId>(authenticationService.PlayerIdComponent);
 
             return authenticationService;
+        }
+
+        string GetProfile(IProjectConfiguration projectConfiguration)
+        {
+            var profile = projectConfiguration.GetString(AuthenticationExtensions.ProfileKey, k_DefaultProfile);
+
+#if UNITY_EDITOR
+            if (profile == k_DefaultProfile)
+            {
+                try
+                {
+                    var cliArgs = Environment.GetCommandLineArgs();
+                    var nameArgIndex = -1;
+                    var hasEditorModeArg = false;
+                    for (var i = 0; i < cliArgs.Length; i++)
+                    {
+                        if (cliArgs[i] == k_EditorModeArg)
+                        {
+                            hasEditorModeArg = true;
+                        }
+                        if (cliArgs[i] == k_NameArg)
+                        {
+                            nameArgIndex = i;
+                        }
+                    }
+                    if (hasEditorModeArg)
+                    {
+                        if (nameArgIndex > 0)
+                        {
+                            profile = cliArgs[nameArgIndex + 1];
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }
+            }
+#endif
+            return profile;
         }
 
         string GetPlayerAuthHost(IProjectConfiguration projectConfiguration)

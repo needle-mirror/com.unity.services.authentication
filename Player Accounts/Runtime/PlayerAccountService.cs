@@ -23,7 +23,8 @@ namespace Unity.Services.Authentication.PlayerAccounts
                 if (s_Instance == null)
                 {
                     throw new ServicesInitializationException("Singleton is not initialized. " +
-                        "Please call UnityServices.InitializeAsync() to initialize.");
+                        "Please call UnityServices.InitializeAsync() to initialize. " +
+                        "Please make sure Player Accounts is configured in the Unity Editor Settings");
                 }
 
                 return s_Instance;

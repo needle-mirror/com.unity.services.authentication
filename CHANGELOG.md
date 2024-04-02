@@ -4,6 +4,14 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [3.3.1] - 2024-04-02
+
+### Added
+- Added the Apple Privacy Manifest file (PrivacyInfo.xcprivacy)
+
+### Fixed
+- Fixed `AuthenticationState` is in invalid state when access token is changed after sign-out or sign-in
+
 ## [3.3.0] - 2024-01-10
 ### Added
 - Added `LastNotificationDate` field to inform the client of the player's notifications last created date. 

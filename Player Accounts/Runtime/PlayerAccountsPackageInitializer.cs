@@ -35,6 +35,8 @@ namespace Unity.Services.Authentication.PlayerAccounts
         PlayerAccountServiceInternal InitializeService(CoreRegistry registry)
         {
             var settings = UnityPlayerAccountSettings.Load();
+            if (settings is null) return null;
+
             var network = new NetworkHandler();
             var dateTime = new DateTimeWrapper();
             var jwtDecoder = new JwtDecoder(dateTime);

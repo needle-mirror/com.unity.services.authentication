@@ -33,7 +33,14 @@ namespace Unity.Services.Authentication
             if (m_AccessToken != accessToken)
             {
                 m_AccessToken = accessToken;
-                AccessTokenChanged?.Invoke(m_AccessToken);
+                try
+                {
+                    AccessTokenChanged?.Invoke(m_AccessToken);
+                }
+                catch (Exception e)
+                {
+                    Logger.LogException(e);
+                }
             }
         }
     }

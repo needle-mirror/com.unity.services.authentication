@@ -60,7 +60,8 @@ namespace Unity.Services.Authentication.PlayerAccounts.Tests
                 catch (ServicesInitializationException e)
                 {
                     Assert.AreEqual("Singleton is not initialized. " +
-                        "Please call UnityServices.InitializeAsync() to initialize.", e.Message);
+                        "Please call UnityServices.InitializeAsync() to initialize. " +
+                        "Please make sure Player Accounts is configured in the Unity Editor Settings", e.Message);
                 }
             }
         }

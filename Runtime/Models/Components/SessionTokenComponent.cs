@@ -3,18 +3,21 @@ namespace Unity.Services.Authentication
     class SessionTokenComponent
     {
         const string k_CacheKey = "session_token";
+        string m_SessionToken;
 
-        internal string SessionToken { get => GetSessionToken(); set => SetSessionToken(value); }
+        internal string SessionToken { get => m_SessionToken; set => SetSessionToken(value); }
 
         readonly IAuthenticationCache m_Cache;
 
         internal SessionTokenComponent(IAuthenticationCache cache)
         {
             m_Cache = cache;
+            m_SessionToken = GetSessionToken();
         }
 
         internal void Clear()
         {
+            m_SessionToken = null;
             m_Cache.DeleteKey(k_CacheKey);
         }
 
@@ -30,6 +33,7 @@ namespace Unity.Services.Authentication
 
         void SetSessionToken(string sessionToken)
         {
+            m_SessionToken = sessionToken;
             m_Cache.SetString(k_CacheKey, sessionToken);
         }
     }

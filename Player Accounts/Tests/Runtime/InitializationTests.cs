@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEditor;
 using Moq;
 using NUnit.Framework;
 using Unity.Services.Core.Configuration.Internal;
@@ -13,12 +14,14 @@ namespace Unity.Services.Authentication.PlayerAccounts.Tests
 {
     class InitializationTests
     {
+        const string k_AssetPath = "Assets/Resources";
         PlayerAccountsPackageInitializer m_Package;
         // Start is called before the first frame update
 
         [SetUp]
         public void Setup()
         {
+            LoadOrCreateSettings();
             m_Package = new PlayerAccountsPackageInitializer();
             PlayerAccountService.Instance = null;
         }
@@ -27,6 +30,22 @@ namespace Unity.Services.Authentication.PlayerAccounts.Tests
         public void TearDown()
         {
             PlayerAccountService.Instance = null;
+        }
+
+        static void LoadOrCreateSettings()
+        {
+            var settings = UnityPlayerAccountSettings.Load();
+
+            if (settings == null)
+            {
+                if (!AssetDatabase.IsValidFolder(k_AssetPath))
+                {
+                    AssetDatabase.CreateFolder("Assets", "Resources");
+                }
+
+                settings = ScriptableObject.CreateInstance<UnityPlayerAccountSettings>();
+                AssetDatabase.CreateAsset(settings, $"{k_AssetPath}/{nameof(UnityPlayerAccountSettings)}.asset");
+            }
         }
 
         /// <summary>

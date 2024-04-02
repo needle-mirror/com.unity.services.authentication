@@ -18,7 +18,14 @@ namespace Unity.Services.Authentication
         public void SetProfile(string profile)
         {
             _current = profile;
-            ProfileChange?.Invoke(new ProfileEventArgs(_current));
+            try
+            {
+                ProfileChange?.Invoke(new ProfileEventArgs(_current));
+            }
+            catch (Exception e)
+            {
+                Logger.LogException(e);
+            }
         }
     }
 }
