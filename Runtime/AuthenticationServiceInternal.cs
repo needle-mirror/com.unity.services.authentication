@@ -201,6 +201,8 @@ namespace Unity.Services.Authentication
                 if (!string.IsNullOrEmpty(profile) && Regex.Match(profile, k_ProfileRegex).Success)
                 {
                     m_Profile.Current = profile;
+                    PlayerIdComponent.Refresh();
+                    SessionTokenComponent.Refresh();
                 }
                 else
                 {

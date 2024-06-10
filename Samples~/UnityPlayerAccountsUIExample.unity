@@ -947,7 +947,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 779719247}
-  - component: {fileID: 779719246}
+  - component: {fileID: 779719248}
   m_Layer: 0
   m_Name: CloudDiagnosticsUserReportingSceneHelper
   m_TagString: Untagged
@@ -955,18 +955,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &779719246
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 779719245}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8eececa5ddd4400e96fad4adb304ffc5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!4 &779719247
 Transform:
   m_ObjectHideFlags: 0
@@ -982,6 +970,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &779719248
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 779719245}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a4a3f06ee566f140978eee8a4734310, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_StatusText: {fileID: 0}
+  m_ExceptionText: {fileID: 0}
+  m_SignOut: {fileID: 0}
+  m_PlayerAccountSignOut: {fileID: 0}
 --- !u!1 &891475584
 GameObject:
   m_ObjectHideFlags: 0

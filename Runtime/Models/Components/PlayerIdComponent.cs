@@ -25,6 +25,11 @@ namespace Unity.Services.Authentication
             m_Cache.DeleteKey(k_CacheKey);
         }
 
+        internal void Refresh()
+        {
+            m_PlayerId = GetPlayerId();
+        }
+
         string GetPlayerId()
         {
             return m_Cache.GetString(k_CacheKey);

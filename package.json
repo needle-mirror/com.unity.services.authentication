@@ -1,12 +1,12 @@
 {
   "name": "com.unity.services.authentication",
   "displayName": "Authentication",
-  "version": "3.3.1",
+  "version": "3.3.3",
   "unity": "2020.3",
   "description": "Client SDK offering player identity management for Unity Gaming Services.\n\nIdentity providers can be configured from the editor or the Unity Dashboard.\n\nPlayer management is available in the Unity Dashboard.",
   "dependencies": {
     "com.unity.nuget.newtonsoft-json": "3.2.1",
-    "com.unity.services.core": "1.12.5",
+    "com.unity.services.core": "1.13.0",
     "com.unity.modules.unitywebrequest": "1.0.0",
     "com.unity.ugui": "1.0.0"
   },
@@ -28,7 +28,7 @@
       "Windows 8 Universal",
       "Windows 10 Universal"
     ],
-    "changelog": "### Added\n- Added the Apple Privacy Manifest file (PrivacyInfo.xcprivacy)\n\n### Fixed\n- Fixed `AuthenticationState` is in invalid state when access token is changed after sign-out or sign-in"
+    "changelog": "### Fixed\n- Fixed an issue where `IAuthenticationService.SwitchProfile()` was not working properly"
   },
   "samples": [
     {
@@ -38,14 +38,14 @@
     }
   ],
   "relatedPackages": {
-    "com.unity.services.authentication.tests": "3.3.1"
+    "com.unity.services.authentication.tests": "3.3.3"
   },
   "upmCi": {
-    "footprint": "6106579c645801135429bdf5b60fe7e00be834ff"
+    "footprint": "479d63fd8522308c437b7eda59167fbdcce2703f"
   },
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/operate-services-sdk.git",
     "type": "git",
-    "revision": "bb7734f89176ed469c23149b350d729bb24f5d66"
+    "revision": "e86f4e34afa8432d41879e433d2d43de6d1895d9"
   }
 }

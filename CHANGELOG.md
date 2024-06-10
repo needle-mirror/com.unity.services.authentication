@@ -4,13 +4,22 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [3.3.1] - 2024-04-02
+## [3.3.3] - 2024-06-10
+### Fixed
+- Fixed an issue where `IAuthenticationService.SwitchProfile()` was not working properly
 
+## [3.3.2] - 2024-05-29
+### Fixed
+- Fixed missing script reference in Player Accounts sample
+
+## [3.3.1] - 2024-04-02
 ### Added
 - Added the Apple Privacy Manifest file (PrivacyInfo.xcprivacy)
+- Added support for running different profiles when using Multiplayer Player Mode.
 
 ### Fixed
 - Fixed `AuthenticationState` is in invalid state when access token is changed after sign-out or sign-in
+- Fixed `NullReferenceException` in Player Accounts SDK if not properly set up and the application received a deep-link request.
 
 ## [3.3.0] - 2024-01-10
 ### Added

@@ -26,6 +26,11 @@ namespace Unity.Services.Authentication
             m_Cache.Migrate(k_CacheKey);
         }
 
+        internal void Refresh()
+        {
+            m_SessionToken = GetSessionToken();
+        }
+
         string GetSessionToken()
         {
             return m_Cache.GetString(k_CacheKey);
