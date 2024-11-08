@@ -108,7 +108,7 @@ namespace Unity.Services.Authentication
         /// <summary>
         /// Returns the player's steam id if one has been linked.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The player's Steam id</returns>
         public string GetSteamId()
         {
             return GetIdentityId(IdProviderKeys.Steam);

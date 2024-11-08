@@ -13,7 +13,7 @@ namespace Unity.Services.Authentication
         /// The default singleton instance to access the Authentication service.
         /// </summary>
         /// <exception cref="ServicesInitializationException">
-        /// This exception is thrown if the <code>UnityServices.InitializeAsync()</code>
+        /// This exception is thrown if the <c>UnityServices.InitializeAsync()</c>
         /// has not finished before accessing the singleton.
         /// </exception>
         public static IAuthenticationService Instance

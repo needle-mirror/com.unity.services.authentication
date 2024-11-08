@@ -5,10 +5,16 @@ using UnityEngine;
 
 namespace Unity.Services.Authentication.PlayerAccounts.EditorTests
 {
+    /// <summary>
+    /// SettingsTests
+    /// </summary>
     public class SettingsTests
     {
         const string k_AssetPath = "Assets/Resources";
 
+        /// <summary>
+        /// Tests opening player account settings
+        /// </summary>
         [Test]
         public void OpenSettings_OpensSettingsAsset()
         {

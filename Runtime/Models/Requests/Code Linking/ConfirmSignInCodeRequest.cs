@@ -7,7 +7,7 @@ namespace Unity.Services.Authentication
     class ConfirmSignInCodeRequest
     {
         [JsonProperty("signInCode")]
-        public string SignInCode { get; set; }
+        public string SignInCode;
 
         [JsonProperty("idProvider")]
         public string IdProvider;

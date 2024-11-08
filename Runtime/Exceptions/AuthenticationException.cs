@@ -41,7 +41,6 @@ namespace Unity.Services.Authentication
         /// <param name="errorCode">Gets the error code for the current exception</param>
         /// <param name="message">Gets a message that describes the current exception.</param>
         /// <param name="innerException">Gets the Exception instance that caused the current exception.</param>
-        /// <param name="notifications">List of notifications available to the player or null if none</param>
         /// <returns>The built exception, either an AuthenticationException or a RequestFailedException</returns>
         public static RequestFailedException Create(int errorCode, string message, Exception innerException = null)
         {

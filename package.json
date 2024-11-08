@@ -1,16 +1,15 @@
 {
   "name": "com.unity.services.authentication",
   "displayName": "Authentication",
-  "version": "3.3.3",
-  "unity": "2020.3",
+  "version": "3.4.0",
+  "unity": "2021.3",
   "description": "Client SDK offering player identity management for Unity Gaming Services.\n\nIdentity providers can be configured from the editor or the Unity Dashboard.\n\nPlayer management is available in the Unity Dashboard.",
   "dependencies": {
     "com.unity.nuget.newtonsoft-json": "3.2.1",
-    "com.unity.services.core": "1.13.0",
+    "com.unity.services.core": "1.14.0",
     "com.unity.modules.unitywebrequest": "1.0.0",
     "com.unity.ugui": "1.0.0"
   },
-  "type": "library",
   "_upm": {
     "gameService": {
       "genericDashboardUrl": "https://cloud.unity3d.com/player-authentication",
@@ -28,7 +27,7 @@
       "Windows 8 Universal",
       "Windows 10 Universal"
     ],
-    "changelog": "### Fixed\n- Fixed an issue where `IAuthenticationService.SwitchProfile()` was not working properly"
+    "changelog": "### Added\n- Added `PlayerAuthentication` component to manage authentication in the scene authoring.\n\n### Changed\n- Updated the minimum supported Editor version to 2021.3."
   },
   "samples": [
     {
@@ -38,14 +37,15 @@
     }
   ],
   "relatedPackages": {
-    "com.unity.services.authentication.tests": "3.3.3"
+    "com.unity.services.authentication.tests": "3.4.0"
   },
   "upmCi": {
-    "footprint": "479d63fd8522308c437b7eda59167fbdcce2703f"
+    "footprint": "bad90cc58f6412e643deaecbe50b5ffe0c7ccd4c"
   },
+  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.services.authentication@3.4/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/operate-services-sdk.git",
     "type": "git",
-    "revision": "e86f4e34afa8432d41879e433d2d43de6d1895d9"
+    "revision": "7c64fb37cabe29e3c36db3668924e045d2e6a6b1"
   }
 }

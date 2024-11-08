@@ -2,9 +2,6 @@ using Unity.Services.Authentication.Server;
 
 namespace Unity.Services.Core
 {
-    /// <summary>
-    /// Authentication extension methods
-    /// </summary>
     public static class UnityServicesExtensions
     {
         /// <summary>

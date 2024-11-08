@@ -2,6 +2,7 @@
     "name": "Unity.Services.Authentication",
     "references": [
         "Unity.Services.Core",
+        "Unity.Services.Core.Components",
         "Unity.Services.Core.Internal",
         "Unity.Services.Core.Environments"
     ],

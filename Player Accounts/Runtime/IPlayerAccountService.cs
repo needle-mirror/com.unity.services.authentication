@@ -49,7 +49,6 @@ namespace Unity.Services.Authentication.PlayerAccounts
         /// Checks whether the player is signed in or not.
         /// A player can remain signed in but have an expired session.
         /// </summary>
-        /// <returns>Returns true if player is signed in, else false.</returns>
         bool IsSignedIn { get; }
 
         /// <summary>

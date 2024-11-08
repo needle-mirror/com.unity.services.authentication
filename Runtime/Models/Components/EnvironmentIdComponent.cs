@@ -4,7 +4,20 @@ namespace Unity.Services.Authentication
 {
     class EnvironmentIdComponent : IEnvironmentId
     {
-        public string EnvironmentId { get; internal set; }
+        string m_EnvironmentId;
+
+        public string EnvironmentId
+        {
+            get => m_EnvironmentId;
+            internal set
+            {
+                m_EnvironmentId = value;
+
+#if ENABLE_CLOUD_SERVICES_IDENTIFIERS
+                UnityEngine.Connect.Identifiers.SetEnvironmentId(value);
+#endif
+            }
+        }
 
         internal EnvironmentIdComponent()
         {

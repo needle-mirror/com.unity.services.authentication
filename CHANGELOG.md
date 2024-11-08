@@ -4,6 +4,18 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [3.4.0] - 2024-11-08
+
+### Added
+- Added `PlayerAuthentication` component to manage authentication in the scene authoring.
+
+### Changed
+- Updated the minimum supported Editor version to 2021.3.
+
+## [3.3.4] - 2024-09-18
+### Fixed
+- Fixed an issue where `IAuthenticationService.Instance.GetSignInCodeInfoAsync()` and `IAuthenticationService.Instance.ConfirmCodeAsync()` was not working properly on iOS devices
+
 ## [3.3.3] - 2024-06-10
 ### Fixed
 - Fixed an issue where `IAuthenticationService.SwitchProfile()` was not working properly

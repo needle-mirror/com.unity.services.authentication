@@ -2,9 +2,6 @@ using Unity.Services.Authentication.PlayerAccounts;
 
 namespace Unity.Services.Core
 {
-    /// <summary>
-    /// Player Account extension methods
-    /// </summary>
     public static class UnityServicesExtensions
     {
         /// <summary>

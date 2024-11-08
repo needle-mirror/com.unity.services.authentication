@@ -33,7 +33,6 @@ namespace Unity.Services.Authentication.Server
         /// <summary>
         /// Validates that the state is authorized.
         /// </summary>
-        /// <returns>Returns true if there is a valid non-expired token.</returns>
         bool IsAuthorized { get; }
 
         /// <summary>
