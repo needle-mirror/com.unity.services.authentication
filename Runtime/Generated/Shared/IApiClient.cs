@@ -151,7 +151,7 @@ namespace Unity.Services.Authentication.Shared
         /// <typeparam name="T">The return type.</typeparam>
         /// <returns>A task eventually representing the response data, decorated with <see cref="ApiResponse{T}"/></returns>
         Task<ApiResponse<T>> PatchAsync<T>(string path, ApiRequestOptions options, IApiConfiguration configuration = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
-        
+
         /// <summary>
         /// Executes a non-blocking call to some <paramref name="path"/> using the PATCH http verb.
         /// </summary>

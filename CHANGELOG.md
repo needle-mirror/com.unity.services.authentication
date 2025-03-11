@@ -4,6 +4,12 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [3.4.1] - 2025-03-11
+
+### Fixed
+- Fixed an issue where the player name does not update correctly when calling `IAuthenticationService.SwitchProfile()`
+- Fixed an unexpected error log in the Player Accounts sample
+
 ## [3.4.0] - 2024-11-08
 
 ### Added
@@ -35,7 +41,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [3.3.0] - 2024-01-10
 ### Added
-- Added `LastNotificationDate` field to inform the client of the player's notifications last created date. 
+- Added `LastNotificationDate` field to inform the client of the player's notifications last created date.
 - Added `GetNotificationsAsync` method to allow the client to request the player's notifications
 - Added `Notifications` field to cache the notifications after GetNotificationsAsync is called
 - Added `BannedUser` error code to identify an exception when a user has been banned.
@@ -70,7 +76,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 - Adding event in access token component for packages to be notified of changes to the `IAccessToken` value.
-- Added `GenerateSignInCodeAsync` method to generate a sign-in code that can be used to sign-in.  
+- Added `GenerateSignInCodeAsync` method to generate a sign-in code that can be used to sign-in.
 - Added `SignInWithCodeAsync` method to sign in using the previously generated sign-in code. This method can optionally poll the server for sign-in confirmation.
 - Added `GetSignInCodeInfoAsync` method to fetch information about a given sign-in code.
 - Added `ConfirmCodeAsync` method for sending a request to confirm a provided sign-in code.
@@ -98,7 +104,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - Properly disposing web request when using player names
 - Fixing exception reporting in some cases for the SignInFailed event
-- Remove time validation on client side, to prevent token expiry errors caused by the wrong date/time settings on devices. 
+- Remove time validation on client side, to prevent token expiry errors caused by the wrong date/time settings on devices.
 - Adding Preserve attributes to api models to prevent issues with code stripping for player names
 
 ## [2.5.0-pre.3] - 2023-03-01
@@ -137,7 +143,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [2.1.1] - 2022-06-22
 ### Changed
 - Updated the core SDK dependency to latest version.
-  
+
 ## [2.1.0] - 2022-06-07
 ### Added
 - Added `SignInWithGooglePlayGames`, `LinkWithGooglePlayGames`, `UnlinkGooglePlayGames`
@@ -293,7 +299,7 @@ Added profile support. Profiles allow managing multiple accounts at the same tim
 ## [0.3.1-preview] - 2021-04-23
 ### Changed
 - Change the `SignInFailed` event to take `AuthenticationException` instead of a string as parameter. It can provide more information for debugging purposes.
-- Fixed the `com.unity.services.core` package dependency version. 
+- Fixed the `com.unity.services.core` package dependency version.
 
 ## [0.3.0-preview] - 2021-04-21
 ### Added

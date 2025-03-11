@@ -776,9 +776,9 @@ namespace Unity.Services.Authentication
         Task UnlinkOpenIdConnectAsync(string idProviderName);
 
         /// <summary>
-        /// Sign in using Unity Player Login's access token
+        /// Sign in using a Unity Player Accounts access token. The token needs to be retrieved using the PlayerAccountService API.
         /// </summary>
-        /// <param name="token">Unity Player Login's access token</param>
+        /// <param name="token">Unity Player Accounts access token</param>
         /// <param name="options">Options for the operation</param>
         /// <returns>Task for the async operation</returns>
         /// <exception cref="AuthenticationException">
@@ -799,9 +799,9 @@ namespace Unity.Services.Authentication
         Task SignInWithUnityAsync(string token, SignInOptions options = null);
 
         /// <summary>
-        /// Link the current player with Unity account using Unity's access token
+        /// Link the current player with a Unity Player Accounts account using the Unity Player Accounts access token. The token needs to be retrieved using the PlayerAccountService API.
         /// </summary>
-        /// <param name="token">Unity's access token</param>
+        /// <param name="token">Unity Player Accounts access token</param>
         /// <param name="options">Options for the link operations</param>
         /// <returns>Task for the operation</returns>
         /// <exception cref="AuthenticationException">

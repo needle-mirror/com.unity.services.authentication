@@ -12,10 +12,6 @@ namespace Unity.Services.Authentication
             internal set
             {
                 m_EnvironmentId = value;
-
-#if ENABLE_CLOUD_SERVICES_IDENTIFIERS
-                UnityEngine.Connect.Identifiers.SetEnvironmentId(value);
-#endif
             }
         }
 

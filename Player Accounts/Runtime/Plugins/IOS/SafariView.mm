@@ -11,10 +11,10 @@ extern "C"
         SFSafariViewController *sfvc = [[SFSafariViewController alloc] initWithURL:URL];
         [uvc presentViewController:sfvc animated:YES completion:nil];
     }
-	
+
     void dismissUnityPlayerAccount()
-	{
-		UIViewController *uvc = UnityGetGLViewController();
-		[uvc dismissViewControllerAnimated:YES completion:nil];
-	}
+    {
+        UIViewController *uvc = UnityGetGLViewController();
+        [uvc dismissViewControllerAnimated:YES completion:nil];
+    }
 }

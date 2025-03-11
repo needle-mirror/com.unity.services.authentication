@@ -1,0 +1,34 @@
+{
+    "name": "Unity.Services.Authentication.PlayerAccounts.EditorTests",
+    "rootNamespace": "",
+    "references": [
+        "UnityEditor.TestRunner",
+        "Unity.Services.Core.Internal",
+        "Unity.Services.Core",
+        "UnityEngine.TestRunner",
+        "Unity.Services.Authentication.PlayerAccounts",
+        "Unity.Services.Authentication.PlayerAccounts.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll",
+        "Newtonsoft.Json.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [
+        {
+            "name": "Select...",
+            "expression": "",
+            "define": ""
+        }
+    ],
+    "noEngineReferences": false
+}

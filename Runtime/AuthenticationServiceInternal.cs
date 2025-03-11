@@ -203,6 +203,7 @@ namespace Unity.Services.Authentication
                     m_Profile.Current = profile;
                     PlayerIdComponent.Refresh();
                     SessionTokenComponent.Refresh();
+                    PlayerNameComponent.Refresh();
                 }
                 else
                 {

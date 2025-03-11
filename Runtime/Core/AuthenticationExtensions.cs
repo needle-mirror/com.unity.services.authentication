@@ -12,10 +12,12 @@ namespace Unity.Services.Authentication
         const string k_ProfileRegex = @"^[a-zA-Z0-9_-]{1,30}$";
 
         /// <summary>
-        /// An extension to set the profile to use.
+        /// An extension to set the profile name to use. The profile is a namespace in PlayerPrefs where the values from the Authentication SDK are saved.
+        /// Setting a profile name in this way is optional, by default the value "default" is used.
+        /// The profile name must be alphanumeric, '-', or '_', and no longer than 30 characters.
         /// </summary>
         /// <param name="options">The InitializationOptions object to modify</param>
-        /// <param name="profile">The profile to use</param>
+        /// <param name="profile">The profile name to use</param>
         /// <exception cref="AuthenticationException">
         /// the method will fail with an AuthenticationException if an invalid profile name is passed
         /// <list type="bullet">

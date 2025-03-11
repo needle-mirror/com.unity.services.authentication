@@ -26,6 +26,11 @@ namespace Unity.Services.Authentication
             m_Cache.DeleteKey(k_CacheKey);
         }
 
+        internal void Refresh()
+        {
+            m_PlayerName = GetPlayerName();
+        }
+
         string GetPlayerName()
         {
             return m_Cache.GetString(k_CacheKey);
