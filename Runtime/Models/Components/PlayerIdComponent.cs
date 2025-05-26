@@ -16,21 +16,20 @@ namespace Unity.Services.Authentication
         internal PlayerIdComponent(IAuthenticationCache cache)
         {
             m_Cache = cache;
-            m_PlayerId = GetPlayerId();
+            m_PlayerId = GetPlayerIdFromCache();
         }
 
         internal void Clear()
         {
-            m_PlayerId = null;
-            m_Cache.DeleteKey(k_CacheKey);
+            SetPlayerId(null);
         }
 
         internal void Refresh()
         {
-            m_PlayerId = GetPlayerId();
+            SetPlayerId(GetPlayerIdFromCache());
         }
 
-        string GetPlayerId()
+        string GetPlayerIdFromCache()
         {
             return m_Cache.GetString(k_CacheKey);
         }
@@ -40,10 +39,19 @@ namespace Unity.Services.Authentication
             if (PlayerId != playerId)
             {
                 m_PlayerId = playerId;
-                m_Cache.SetString(k_CacheKey, playerId);
+
+                if (m_PlayerId == null)
+                {
+                    m_Cache.DeleteKey(k_CacheKey);
+                }
+                else
+                {
+                    m_Cache.SetString(k_CacheKey, m_PlayerId);
+                }
+
                 try
                 {
-                    PlayerIdChanged?.Invoke(playerId);
+                    PlayerIdChanged?.Invoke(m_PlayerId);
                 }
                 catch (Exception e)
                 {

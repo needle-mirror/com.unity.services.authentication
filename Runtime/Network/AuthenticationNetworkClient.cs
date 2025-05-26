@@ -57,7 +57,8 @@ namespace Unity.Services.Authentication
                                              ICloudProjectId cloudProjectId,
                                              IEnvironments environment,
                                              INetworkHandler networkHandler,
-                                             AccessTokenComponent accessToken)
+                                             AccessTokenComponent accessToken
+                                                     )
         {
             AccessTokenComponent = accessToken;
             CloudProjectIdComponent = cloudProjectId;
@@ -89,7 +90,7 @@ namespace Unity.Services.Authentication
 
         public Task<SignInResponse> SignInAnonymouslyAsync()
         {
-            return NetworkHandler.PostAsync<SignInResponse>(m_AnonymousUrl, WithEnvironment(GetCommonHeaders()));
+            return NetworkHandler.PostAsync<SignInResponse>(m_AnonymousUrl, WithEnvironmentAndRelease(GetCommonHeaders()));
         }
 
         public Task<SignInResponse> SignInWithSessionTokenAsync(string token)
@@ -97,25 +98,25 @@ namespace Unity.Services.Authentication
             return NetworkHandler.PostAsync<SignInResponse>(m_SessionTokenUrl, new SessionTokenRequest
             {
                 SessionToken = token
-            }, WithEnvironment(GetCommonHeaders()));
+            }, WithEnvironmentAndRelease(GetCommonHeaders()));
         }
 
         public Task<SignInResponse> SignInWithExternalTokenAsync(string idProvider, SignInWithExternalTokenRequest externalToken)
         {
             var url = $"{m_ExternalTokenUrl}/{idProvider}";
-            return NetworkHandler.PostAsync<SignInResponse>(url, externalToken, WithEnvironment(GetCommonHeaders()));
+            return NetworkHandler.PostAsync<SignInResponse>(url, externalToken, WithEnvironmentAndRelease(GetCommonHeaders()));
         }
 
         public Task<LinkResponse> LinkWithExternalTokenAsync(string idProvider, LinkWithExternalTokenRequest externalToken)
         {
             var url = $"{m_LinkExternalTokenUrl}/{idProvider}";
-            return NetworkHandler.PostAsync<LinkResponse>(url, externalToken, WithEnvironment(WithAccessToken(GetCommonHeaders())));
+            return NetworkHandler.PostAsync<LinkResponse>(url, externalToken, WithEnvironmentAndRelease(WithAccessToken(GetCommonHeaders())));
         }
 
         public Task<UnlinkResponse> UnlinkExternalTokenAsync(string idProvider, UnlinkRequest request)
         {
             var url = $"{m_UnlinkExternalTokenUrl}/{idProvider}";
-            return NetworkHandler.PostAsync<UnlinkResponse>(url, request, WithEnvironment(WithAccessToken(GetCommonHeaders())));
+            return NetworkHandler.PostAsync<UnlinkResponse>(url, request, WithEnvironmentAndRelease(WithAccessToken(GetCommonHeaders())));
         }
 
         public Task<PlayerInfoResponse> GetPlayerInfoAsync(string playerId)
@@ -125,53 +126,53 @@ namespace Unity.Services.Authentication
 
         public Task DeleteAccountAsync(string playerId)
         {
-            return NetworkHandler.DeleteAsync(CreateUserRequestUrl(playerId), WithEnvironment(WithAccessToken(GetCommonHeaders())));
+            return NetworkHandler.DeleteAsync(CreateUserRequestUrl(playerId), WithEnvironmentAndRelease(WithAccessToken(GetCommonHeaders())));
         }
 
         public Task<SignInResponse> SignInWithUsernamePasswordAsync(UsernamePasswordRequest credentials)
         {
-            return NetworkHandler.PostAsync<SignInResponse>(m_UsernamePasswordSignInUrl, credentials, WithEnvironment(GetCommonHeaders()));
+            return NetworkHandler.PostAsync<SignInResponse>(m_UsernamePasswordSignInUrl, credentials, WithEnvironmentAndRelease(GetCommonHeaders()));
         }
 
         public Task<SignInResponse> SignUpWithUsernamePasswordAsync(UsernamePasswordRequest credentials)
         {
-            return NetworkHandler.PostAsync<SignInResponse>(m_UsernamePasswordSignUpUrl, credentials, WithEnvironment(GetCommonHeaders()));
+            return NetworkHandler.PostAsync<SignInResponse>(m_UsernamePasswordSignUpUrl, credentials, WithEnvironmentAndRelease(GetCommonHeaders()));
         }
 
         public Task<SignInResponse> AddUsernamePasswordAsync(UsernamePasswordRequest credentials)
         {
-            return NetworkHandler.PostAsync<SignInResponse>(m_UsernamePasswordSignUpUrl, credentials, WithEnvironment(WithAccessToken(GetCommonHeaders())));
+            return NetworkHandler.PostAsync<SignInResponse>(m_UsernamePasswordSignUpUrl, credentials, WithEnvironmentAndRelease(WithAccessToken(GetCommonHeaders())));
         }
 
         public Task<SignInResponse> UpdatePasswordAsync(UpdatePasswordRequest credentials)
         {
-            return NetworkHandler.PostAsync<SignInResponse>(m_UpdatePasswordUrl, credentials, WithEnvironment(WithAccessToken(GetCommonHeaders())));
+            return NetworkHandler.PostAsync<SignInResponse>(m_UpdatePasswordUrl, credentials, WithEnvironmentAndRelease(WithAccessToken(GetCommonHeaders())));
         }
 
         public Task<GenerateCodeResponse> GenerateSignInCodeAsync(GenerateSignInCodeRequest request)
         {
-            return NetworkHandler.PostAsync<GenerateCodeResponse>(m_GenerateSignInCodeUrl, request, WithEnvironment(GetCommonHeaders()));
+            return NetworkHandler.PostAsync<GenerateCodeResponse>(m_GenerateSignInCodeUrl, request, WithEnvironmentAndRelease(GetCommonHeaders()));
         }
 
         public Task<CodeLinkConfirmResponse> ConfirmCodeAsync(ConfirmSignInCodeRequest request)
         {
-            return NetworkHandler.PostAsync<CodeLinkConfirmResponse>(m_ConfirmSignInCodeUrl, request, WithEnvironment(WithAccessToken(GetCommonHeaders())));
+            return NetworkHandler.PostAsync<CodeLinkConfirmResponse>(m_ConfirmSignInCodeUrl, request, WithEnvironmentAndRelease(WithAccessToken(GetCommonHeaders())));
         }
 
         public Task<SignInResponse> SignInWithCodeAsync(SignInWithCodeRequest request)
         {
             var url = $"{m_CodeSignInUrl}/{request.CodeLinkSessionId}";
-            return NetworkHandler.PostAsync<SignInResponse>(url, request, WithEnvironment(GetCommonHeaders()));
+            return NetworkHandler.PostAsync<SignInResponse>(url, request, WithEnvironmentAndRelease(GetCommonHeaders()));
         }
 
         public Task<CodeLinkInfoResponse> GetCodeIdentifierAsync(CodeLinkInfoRequest request)
         {
-            return NetworkHandler.PostAsync<CodeLinkInfoResponse>(m_GetCodeIdentifierUrl, request, WithEnvironment(WithAccessToken(GetCommonHeaders())));
+            return NetworkHandler.PostAsync<CodeLinkInfoResponse>(m_GetCodeIdentifierUrl, request, WithEnvironmentAndRelease(WithAccessToken(GetCommonHeaders())));
         }
 
         public Task<GetNotificationsResponse> GetNotificationsAsync(string playerId)
         {
-            return NetworkHandler.GetAsync<GetNotificationsResponse>(m_GetNotificationsUrl.Replace(k_PlayerIdReplacement, playerId), WithEnvironment(WithAccessToken(GetCommonHeaders())));
+            return NetworkHandler.GetAsync<GetNotificationsResponse>(m_GetNotificationsUrl.Replace(k_PlayerIdReplacement, playerId), WithEnvironmentAndRelease(WithAccessToken(GetCommonHeaders())));
         }
 
         string CreateUserRequestUrl(string user)
@@ -185,7 +186,7 @@ namespace Unity.Services.Authentication
             return headers;
         }
 
-        Dictionary<string, string> WithEnvironment(Dictionary<string, string> headers)
+        Dictionary<string, string> WithEnvironmentAndRelease(Dictionary<string, string> headers)
         {
             var environmentName = EnvironmentName;
 
@@ -193,6 +194,7 @@ namespace Unity.Services.Authentication
             {
                 headers["UnityEnvironment"] = environmentName;
             }
+
 
             return headers;
         }

@@ -27,7 +27,7 @@ namespace Unity.Services.Authentication.Server.Shared
         /// <summary>
         /// Gets or sets the base path for API access.
         /// </summary>
-        public virtual string BasePath
+        public virtual string BasePath 
         {
             get { return _basePath; }
             set { _basePath = value; }

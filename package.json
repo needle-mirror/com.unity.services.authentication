@@ -1,12 +1,12 @@
 {
   "name": "com.unity.services.authentication",
   "displayName": "Authentication",
-  "version": "3.4.1",
+  "version": "3.5.1",
   "unity": "2021.3",
   "description": "Client SDK offering player identity management for Unity Gaming Services.\n\nIdentity providers can be configured from the editor or the Unity Dashboard.\n\nPlayer management is available in the Unity Dashboard.",
   "dependencies": {
     "com.unity.nuget.newtonsoft-json": "3.2.1",
-    "com.unity.services.core": "1.14.0",
+    "com.unity.services.core": "1.15.1",
     "com.unity.modules.unitywebrequest": "1.0.0",
     "com.unity.ugui": "1.0.0"
   },
@@ -27,7 +27,7 @@
       "Windows 8 Universal",
       "Windows 10 Universal"
     ],
-    "changelog": "### Fixed\n- Fixed an issue where the player name does not update correctly when calling `IAuthenticationService.SwitchProfile()`\n- Fixed an unexpected error log in the Player Accounts sample"
+    "changelog": "### Added\n- Added event `IAuthenticationService.PlayerInfoChanged` for when the instance of `PlayerInfo` is set.\n- Added event `PlayerInfo.Changed` for when the values within `PlayerInfo` are updated.\n- Added event `IAuthenticationService.PlayerNameChanged` for when the player name changes.\n- Added event `IAuthenticationService.PlayerIdChanged` for when the player id changes.\n- Added more details to server exception messages."
   },
   "samples": [
     {
@@ -37,15 +37,15 @@
     }
   ],
   "relatedPackages": {
-    "com.unity.services.authentication.tests": "3.4.1"
+    "com.unity.services.authentication.tests": "3.5.1"
   },
   "upmCi": {
-    "footprint": "dc5f91918bb4b9fb05536d8602f3359f7d7a4261"
+    "footprint": "a7c36131b44f7748d4b0526f6691c232f175c697"
   },
-  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.services.authentication@3.4/manual/index.html",
+  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.services.authentication@3.5/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/operate-services-sdk.git",
     "type": "git",
-    "revision": "1c1263b1c99361fae1d58b0990fadda0597ca1c7"
+    "revision": "09780e68ffae81ddcda923c77243b12f7814cf13"
   }
 }

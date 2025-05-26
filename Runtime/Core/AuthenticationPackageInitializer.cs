@@ -36,9 +36,11 @@ namespace Unity.Services.Authentication
                 .DependsOn<IProjectConfiguration>()
                 .DependsOn<IMetricsFactory>()
                 .ProvidesComponent<IPlayerId>()
+                .ProvidesComponent<IPlayerNameComponent>()
                 .ProvidesComponent<IAccessToken>()
                 .ProvidesComponent<IAccessTokenObserver>()
-                .ProvidesComponent<IEnvironmentId>();
+                .ProvidesComponent<IEnvironmentId>()
+;
         }
 
         public Task Initialize(CoreRegistry registry)
@@ -84,7 +86,8 @@ namespace Unity.Services.Authentication
                 projectId,
                 environment,
                 networkHandler,
-                accessToken);
+                accessToken
+                        );
             var authenticationService = new AuthenticationServiceInternal(
                 settings,
                 networkClient,
@@ -106,6 +109,7 @@ namespace Unity.Services.Authentication
             registry.RegisterServiceComponent<IAccessTokenObserver>(authenticationService.AccessTokenComponent);
             registry.RegisterServiceComponent<IEnvironmentId>(authenticationService.EnvironmentIdComponent);
             registry.RegisterServiceComponent<IPlayerId>(authenticationService.PlayerIdComponent);
+            registry.RegisterServiceComponent<IPlayerNameComponent>(authenticationService.PlayerNameComponent);
 
             return authenticationService;
         }

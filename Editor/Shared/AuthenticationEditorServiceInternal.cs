@@ -29,8 +29,20 @@ namespace Unity.Services.Authentication.Editor.Shared
                 PlayerNameComponent playerName,
                 SessionTokenComponent sessionToken,
                 IEnvironments environment)
-                : base(settings, networkClient, playerNamesApi, profile, jwtDecoder, cache, scheduler, metrics,
-                       accessToken, environmentId, playerId, playerName, sessionToken, environment)
+                : base(settings,
+                    networkClient,
+                    playerNamesApi,
+                    profile,
+                    jwtDecoder,
+                    cache,
+                    scheduler,
+                    metrics,
+                    accessToken,
+                    environmentId,
+                    playerId,
+                    playerName,
+                    sessionToken,
+                    environment)
             {
             }
         }

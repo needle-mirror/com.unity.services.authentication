@@ -15,6 +15,8 @@ namespace Unity.Services.Authentication
     {
         const string k_ProfileRegex = @"^[a-zA-Z0-9_-]{1,30}$";
 
+        PlayerInfo m_PlayerInfo;
+
         public event Action<RequestFailedException> SignInFailed;
         public event Action SignedIn;
         public event Action SignedOut;
@@ -22,6 +24,20 @@ namespace Unity.Services.Authentication
         public event Action<SignInCodeInfo> SignInCodeReceived;
         public event Action SignInCodeExpired;
         public event Action<RequestFailedException> UpdatePasswordFailed;
+
+        public event Action<PlayerInfo> PlayerInfoChanged;
+
+        public event Action<string> PlayerNameChanged
+        {
+            add => PlayerNameComponent.PlayerNameChanged += value;
+            remove => PlayerNameComponent.PlayerNameChanged -= value;
+        }
+
+        public event Action<string> PlayerIdChanged
+        {
+            add => PlayerIdComponent.PlayerIdChanged += value;
+            remove => PlayerIdComponent.PlayerIdChanged -= value;
+        }
 
         public bool IsSignedIn =>
             State == AuthenticationState.Authorized ||
@@ -40,7 +56,19 @@ namespace Unity.Services.Authentication
         public string AccessToken => AccessTokenComponent.AccessToken;
 
         public string PlayerId => PlayerIdComponent.PlayerId;
-        public PlayerInfo PlayerInfo { get; internal set; }
+
+        public PlayerInfo PlayerInfo
+        {
+            get => m_PlayerInfo;
+            internal set
+            {
+                if (m_PlayerInfo != value)
+                {
+                    m_PlayerInfo = value;
+                    PlayerInfoChanged?.Invoke(value);
+                }
+            }
+        }
 
         [CanBeNull]
         public string LastNotificationDate { get; private set; }

@@ -17,7 +17,7 @@ namespace Unity.Services.Authentication.Server.Shared
         private string _baseUrl;
         private string _path;
         private string _query = "?";
-
+        
         /// <summary>
         /// The URI builder constructor
         /// </summary>

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Unity.Services.Authentication.Generated;
 using Unity.Services.Core;
 
 namespace Unity.Services.Authentication
@@ -42,6 +43,21 @@ namespace Unity.Services.Authentication
         /// <see cref="AuthenticationException"/>.
         /// </summary>
         event Action<RequestFailedException> SignInFailed;
+
+        /// <summary>
+        /// Invoked when the name of the player changes. The new name is passed as the parameter.
+        /// </summary>
+        event Action<string> PlayerNameChanged;
+
+        /// <summary>
+        /// Invoked when the ID of the player changes. The new ID is passed as the parameter.
+        /// </summary>
+        event Action<string> PlayerIdChanged;
+
+        /// <summary>
+        /// Invoked when the PlayerInfo is set. The new PlayerInfo is passed as the parameter.
+        /// </summary>
+        event Action<PlayerInfo> PlayerInfoChanged;
 
         /// <summary>
         /// Checks whether the player is signed in or not.

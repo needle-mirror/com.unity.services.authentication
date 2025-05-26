@@ -12,13 +12,12 @@ namespace Unity.Services.Authentication
         internal SessionTokenComponent(IAuthenticationCache cache)
         {
             m_Cache = cache;
-            m_SessionToken = GetSessionToken();
+            m_SessionToken = GetSessionTokenFromCache();
         }
 
         internal void Clear()
         {
-            m_SessionToken = null;
-            m_Cache.DeleteKey(k_CacheKey);
+            SetSessionToken(null);
         }
 
         internal void Migrate()
@@ -28,18 +27,29 @@ namespace Unity.Services.Authentication
 
         internal void Refresh()
         {
-            m_SessionToken = GetSessionToken();
+            SetSessionToken(GetSessionTokenFromCache());
         }
 
-        string GetSessionToken()
+        string GetSessionTokenFromCache()
         {
             return m_Cache.GetString(k_CacheKey);
         }
 
         void SetSessionToken(string sessionToken)
         {
-            m_SessionToken = sessionToken;
-            m_Cache.SetString(k_CacheKey, sessionToken);
+            if (m_SessionToken != sessionToken)
+            {
+                m_SessionToken = sessionToken;
+
+                if (m_SessionToken == null)
+                {
+                    m_Cache.DeleteKey(k_CacheKey);
+                }
+                else
+                {
+                    m_Cache.SetString(k_CacheKey, m_SessionToken);
+                }
+            }
         }
     }
 }

@@ -11,9 +11,9 @@ namespace Unity.Services.Authentication.Server
             switch (exception?.Type)
             {
                 case ApiExceptionType.InvalidParameters:
-                    return ServerAuthenticationException.Create(ServerAuthenticationErrorCodes.InvalidParameters, exception.Message);
+                    return ServerAuthenticationException.Create(ServerAuthenticationErrorCodes.InvalidParameters, exception);
                 case ApiExceptionType.Deserialization:
-                    return ServerAuthenticationException.Create(CommonErrorCodes.Unknown, exception.Message);
+                    return ServerAuthenticationException.Create(CommonErrorCodes.Unknown, exception);
                 case ApiExceptionType.Network: // 5XX
                     return CreateNetworkException(exception);
                 case ApiExceptionType.Http: // 4XX
@@ -57,11 +57,11 @@ namespace Unity.Services.Authentication.Server
             switch (exception?.Response?.StatusCode)
             {
                 case 503: // HttpStatusCode.ServiceUnavailable
-                    return ServerAuthenticationException.Create(CommonErrorCodes.ServiceUnavailable, exception.Message);
+                    return ServerAuthenticationException.Create(CommonErrorCodes.ServiceUnavailable, exception);
                 case 504: // HttpStatusCode.GatewayTimeout
-                    return ServerAuthenticationException.Create(CommonErrorCodes.Timeout, exception.Message);
+                    return ServerAuthenticationException.Create(CommonErrorCodes.Timeout, exception);
                 default:
-                    return ServerAuthenticationException.Create(CommonErrorCodes.TransportError, exception.Message);
+                    return ServerAuthenticationException.Create(CommonErrorCodes.TransportError, exception);
             }
         }
 
@@ -70,19 +70,19 @@ namespace Unity.Services.Authentication.Server
             switch (exception?.Response?.StatusCode)
             {
                 case 400: // HttpStatusCode.BadRequest
-                    return ServerAuthenticationException.Create(CommonErrorCodes.InvalidRequest, exception.Message);
+                    return ServerAuthenticationException.Create(CommonErrorCodes.InvalidRequest, exception);
                 case 401: // HttpStatusCode.Unauthorized
-                    return ServerAuthenticationException.Create(CommonErrorCodes.InvalidToken, exception.Message);
+                    return ServerAuthenticationException.Create(CommonErrorCodes.InvalidToken, exception);
                 case 403: // HttpStatusCode.Forbidden
-                    return ServerAuthenticationException.Create(CommonErrorCodes.Forbidden, exception.Message);
+                    return ServerAuthenticationException.Create(CommonErrorCodes.Forbidden, exception);
                 case 404: // HttpStatusCode.NotFound
-                    return ServerAuthenticationException.Create(CommonErrorCodes.NotFound, exception.Message);
+                    return ServerAuthenticationException.Create(CommonErrorCodes.NotFound, exception);
                 case 408: // HttpStatusCode.RequestTimeout
-                    return ServerAuthenticationException.Create(CommonErrorCodes.Timeout, exception.Message);
+                    return ServerAuthenticationException.Create(CommonErrorCodes.Timeout, exception);
                 case 429: // HttpStatusCode.TooManyRequests
-                    return ServerAuthenticationException.Create(CommonErrorCodes.TooManyRequests, exception.Message);
+                    return ServerAuthenticationException.Create(CommonErrorCodes.TooManyRequests, exception);
                 default:
-                    return ServerAuthenticationException.Create(CommonErrorCodes.InvalidRequest, exception.Message);
+                    return ServerAuthenticationException.Create(CommonErrorCodes.InvalidRequest, exception);
             }
         }
 

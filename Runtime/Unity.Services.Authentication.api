@@ -38,6 +38,9 @@ namespace Unity.Services.Authentication
     public interface IAuthenticationService
     {
         public event System.Action Expired;
+        public event System.Action<string> PlayerIdChanged;
+        public event System.Action<PlayerInfo> PlayerInfoChanged;
+        public event System.Action<string> PlayerNameChanged;
         public event System.Action SignedIn;
         public event System.Action SignedOut;
         public event System.Action SignInCodeExpired;
@@ -130,6 +133,7 @@ namespace Unity.Services.Authentication
 
     public sealed class PlayerInfo
     {
+        public event System.Action<PlayerInfo> InfoChanged;
         public System.Nullable<System.DateTime> CreatedAt { get; }
         public string Id { get; }
         public System.Collections.Generic.List<Identity> Identities { get; }

@@ -23,7 +23,7 @@ namespace Unity.Services.Authentication.Server.ServiceAuth.Generated
         /// Token Exchange API
         /// </summary>
         /// <remarks>
-        /// Exchange a Service Account Key ID and Secret Key pair to a Stateless Access Token. The access token is always scoped to a project and optionally even to an environment. Following the principle of least privilege it is a good practice to scope the token to both project and environment ID if applicable. &lt;br/&gt;&lt;br/&gt; The request can optionally contain a list of permissions that should be scoped to the access token. If left out then all scopes will be included by default. &lt;br/&gt;&lt;br/&gt; The returned access token is a standard [RFC 7519 JWT](https://www.rfc-editor.org/rfc/rfc7519) &lt;br /&gt;&lt;br /&gt; The Token Exchange API has a maximum limit of 100 permissions that can be included in the Stateless Access Token. Because all permissions are included by default this cap can be hit when no &#x60;scopes&#x60; are being specified in the request. This might happen if the Service Account has been assigned multiple roles that each grant their own permissions. If the permission cap is reached the API will return an error. In this case it&#39;s required to specify the exact permissions that the Stateless Access Token should have when using the exchange API.
+        /// Exchange a Service Account Key ID and Secret Key pair to a Stateless Access Token. The access token is always scoped to a project and optionally even to an environment. Following the principle of least privilege it is a good practice to scope the token to both project and environment ID if applicable. &lt;br/&gt;&lt;br/&gt; The request can optionally contain a list of permissions that should be scoped to the access token. If left out then all scopes will be included by default. &lt;br/&gt;&lt;br/&gt; The returned access token is a standard [RFC 7519 JWT](https://www.rfc-editor.org/rfc/rfc7519) &lt;br /&gt;&lt;br /&gt; The Token Exchange API has a maximum limit of 100 permissions that can be included in the Stateless Access Token. Because all permissions are included by default this cap can be hit when no &#x60;scopes&#x60; are being specified in the request. This might happen if the Service Account has been assigned multiple roles that each grant their own permissions. If the permission cap is reached the API will return an error. In this case it&#39;s required to specify the exact permissions that the Stateless Access Token should have when using the exchange API. 
         /// </remarks>
         /// <exception cref="ApiException">Thrown when fails to make API call</exception>
         /// <param name="projectId">ID for Unity project that the access token is scoped to.</param>
@@ -38,12 +38,12 @@ namespace Unity.Services.Authentication.Server.ServiceAuth.Generated
     /// Represents a collection of functions to interact with the API endpoints
     /// </summary>
     internal partial class ServiceAuthenticationApi : IServiceAuthenticationApi
-    {
+    {        
         /// <summary>
         /// The client for accessing this underlying API asynchronously.
         /// </summary>
         public IApiClient Client { get; }
-
+        
         /// <summary>
         /// Gets the configuration object
         /// </summary>
@@ -56,7 +56,7 @@ namespace Unity.Services.Authentication.Server.ServiceAuth.Generated
         /// </summary>
         /// <param name="apiClient">The client interface for synchronous API access.</param>
         public ServiceAuthenticationApi(IApiClient apiClient)
-        {
+        {      
             if (apiClient == null) throw new ArgumentNullException("apiClient");
 
             this.Client = apiClient;
@@ -73,7 +73,7 @@ namespace Unity.Services.Authentication.Server.ServiceAuth.Generated
         /// <param name="apiClient">The client interface for synchronous API access.</param>
         /// <param name="apiConfiguration">The configuration object.</param>
         public ServiceAuthenticationApi(IApiClient apiClient, IApiConfiguration apiConfiguration)
-        {
+        {      
             if (apiClient == null) throw new ArgumentNullException("apiClient");
             if (apiConfiguration == null) throw new ArgumentNullException("apiConfiguration");
 
@@ -91,7 +91,7 @@ namespace Unity.Services.Authentication.Server.ServiceAuth.Generated
         }
 
         /// <summary>
-        /// Token Exchange API Exchange a Service Account Key ID and Secret Key pair to a Stateless Access Token. The access token is always scoped to a project and optionally even to an environment. Following the principle of least privilege it is a good practice to scope the token to both project and environment ID if applicable. &lt;br/&gt;&lt;br/&gt; The request can optionally contain a list of permissions that should be scoped to the access token. If left out then all scopes will be included by default. &lt;br/&gt;&lt;br/&gt; The returned access token is a standard [RFC 7519 JWT](https://www.rfc-editor.org/rfc/rfc7519) &lt;br /&gt;&lt;br /&gt; The Token Exchange API has a maximum limit of 100 permissions that can be included in the Stateless Access Token. Because all permissions are included by default this cap can be hit when no &#x60;scopes&#x60; are being specified in the request. This might happen if the Service Account has been assigned multiple roles that each grant their own permissions. If the permission cap is reached the API will return an error. In this case it&#39;s required to specify the exact permissions that the Stateless Access Token should have when using the exchange API.
+        /// Token Exchange API Exchange a Service Account Key ID and Secret Key pair to a Stateless Access Token. The access token is always scoped to a project and optionally even to an environment. Following the principle of least privilege it is a good practice to scope the token to both project and environment ID if applicable. &lt;br/&gt;&lt;br/&gt; The request can optionally contain a list of permissions that should be scoped to the access token. If left out then all scopes will be included by default. &lt;br/&gt;&lt;br/&gt; The returned access token is a standard [RFC 7519 JWT](https://www.rfc-editor.org/rfc/rfc7519) &lt;br /&gt;&lt;br /&gt; The Token Exchange API has a maximum limit of 100 permissions that can be included in the Stateless Access Token. Because all permissions are included by default this cap can be hit when no &#x60;scopes&#x60; are being specified in the request. This might happen if the Service Account has been assigned multiple roles that each grant their own permissions. If the permission cap is reached the API will return an error. In this case it&#39;s required to specify the exact permissions that the Stateless Access Token should have when using the exchange API. 
         /// </summary>
         /// <exception cref="ApiException">Thrown when fails to make API call</exception>
         /// <param name="projectId">ID for Unity project that the access token is scoped to.</param>

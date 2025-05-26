@@ -3,7 +3,7 @@ using Unity.Services.Authentication.Internal;
 
 namespace Unity.Services.Authentication
 {
-    class PlayerNameComponent : IPlayerName
+    class PlayerNameComponent : IPlayerName, IPlayerNameComponent
     {
         const string k_CacheKey = "player_name";
         string m_PlayerName;
@@ -17,21 +17,20 @@ namespace Unity.Services.Authentication
         internal PlayerNameComponent(IAuthenticationCache cache)
         {
             m_Cache = cache;
-            m_PlayerName = GetPlayerName();
+            m_PlayerName = GetPlayerNameFromCache();
         }
 
         internal void Clear()
         {
-            m_PlayerName = null;
-            m_Cache.DeleteKey(k_CacheKey);
+            SetPlayerName(null);
         }
 
         internal void Refresh()
         {
-            m_PlayerName = GetPlayerName();
+            SetPlayerName(GetPlayerNameFromCache());
         }
 
-        string GetPlayerName()
+        string GetPlayerNameFromCache()
         {
             return m_Cache.GetString(k_CacheKey);
         }
@@ -41,7 +40,16 @@ namespace Unity.Services.Authentication
             if (PlayerName != playerName)
             {
                 m_PlayerName = playerName;
-                m_Cache.SetString(k_CacheKey, playerName);
+
+                if (m_PlayerName == null)
+                {
+                    m_Cache.DeleteKey(k_CacheKey);
+                }
+                else
+                {
+                    m_Cache.SetString(k_CacheKey, m_PlayerName);
+                }
+
                 try
                 {
                     PlayerNameChanged?.Invoke(playerName);
