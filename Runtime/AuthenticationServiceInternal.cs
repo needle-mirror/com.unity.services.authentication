@@ -52,6 +52,8 @@ namespace Unity.Services.Authentication
 
         public bool SessionTokenExists => !string.IsNullOrEmpty(SessionTokenComponent.SessionToken);
 
+        public string SessionToken => SessionTokenComponent.SessionToken;
+
         public string Profile => m_Profile.Current;
         public string AccessToken => AccessTokenComponent.AccessToken;
 

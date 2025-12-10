@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Unity.Services.Core;
 
@@ -42,6 +43,7 @@ namespace Unity.Services.Authentication.Server
 
         /// <summary>
         /// Trusted sign-in using service account credentials
+        /// Assign all scopes associated to the service account
         /// </summary>
         /// <param name="apiKeyIdentifier">The service account key id</param>
         /// <param name="apiKeySecret">The service account key secret</param>
@@ -50,6 +52,18 @@ namespace Unity.Services.Authentication.Server
         /// The task fails with the exception when the task cannot complete successfully.
         /// </exception>
         Task SignInWithServiceAccountAsync(string apiKeyIdentifier, string apiKeySecret);
+
+        /// <summary>
+        /// Trusted sign-in using service account credentials
+        /// </summary>
+        /// <param name="apiKeyIdentifier">The service account key id</param>
+        /// <param name="apiKeySecret">The service account key secret</param>
+        /// <param name="scopes">The scopes to request</param>
+        /// <returns>Task for the operation</returns>
+        /// <exception cref="ServerAuthenticationException">
+        /// The task fails with the exception when the task cannot complete successfully.
+        /// </exception>
+        Task SignInWithServiceAccountAsync(string apiKeyIdentifier, string apiKeySecret, List<string> scopes);
 
         /// <summary>
         /// Retrieve a token to authorize server operations from a hosted server.

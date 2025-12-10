@@ -56,6 +56,7 @@ namespace Unity.Services.Authentication
         public PlayerInfo PlayerInfo { get; }
         public string PlayerName { get; }
         public string Profile { get; }
+        public string SessionToken { get; }
         public bool SessionTokenExists { get; }
         public System.Threading.Tasks.Task AddUsernamePasswordAsync(string username, string password);
         public void ClearSessionToken();

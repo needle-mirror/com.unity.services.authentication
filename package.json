@@ -1,1 +1,51 @@
-{"name":"com.unity.services.authentication","displayName":"Authentication","version":"3.5.2","unity":"2021.3","description":"Client SDK offering player identity management for Unity Gaming Services.\n\nIdentity providers can be configured from the editor or the Unity Dashboard.\n\nPlayer management is available in the Unity Dashboard.","dependencies":{"com.unity.nuget.newtonsoft-json":"3.2.1","com.unity.services.core":"1.15.1","com.unity.modules.unitywebrequest":"1.0.0","com.unity.ugui":"1.0.0"},"_upm":{"gameService":{"genericDashboardUrl":"https://cloud.unity3d.com/player-authentication","projectDashboardUrl":"https://cloud.unity3d.com/organizations/{0}/projects/{1}/player-authentication/about","projectDashboardUrlType":"OrganizationKeyAndProjectGuid","configurePath":"Project/Services/Authentication"},"supportedPlatforms":["Android","iOS","Linux","Mac","PC","WebGL","Windows 8 Universal","Windows 10 Universal"],"changelog":"### Added\n- Added event `IAuthenticationService.PlayerInfoChanged` for when the instance of `PlayerInfo` is set.\n- Added event `PlayerInfo.Changed` for when the values within `PlayerInfo` are updated.\n- Added event `IAuthenticationService.PlayerNameChanged` for when the player name changes.\n- Added event `IAuthenticationService.PlayerIdChanged` for when the player id changes.\n- Added more details to server exception messages."},"samples":[{"displayName":"UI Example","description":"Example scripts and UI elements demonstrating the Authentication package. This sample requires the com.unity.ugui package.","path":"Samples~"}],"relatedPackages":{"com.unity.services.authentication.tests":"3.5.1"},"upmCi":{"footprint":"a7c36131b44f7748d4b0526f6691c232f175c697"},"documentationUrl":"https://docs.unity3d.com/Packages/com.unity.services.authentication@3.5/manual/index.html","repository":{"url":"https://github.cds.internal.unity3d.com/unity/operate-services-sdk.git","type":"git","revision":"09780e68ffae81ddcda923c77243b12f7814cf13"}}
+{
+  "name": "com.unity.services.authentication",
+  "displayName": "Authentication",
+  "version": "3.6.0",
+  "unity": "2021.3",
+  "description": "Client SDK offering player identity management for Unity Gaming Services.\n\nIdentity providers can be configured from the editor or the Unity Dashboard.\n\nPlayer management is available in the Unity Dashboard.",
+  "dependencies": {
+    "com.unity.nuget.newtonsoft-json": "3.2.1",
+    "com.unity.services.core": "1.15.1",
+    "com.unity.modules.unitywebrequest": "1.0.0",
+    "com.unity.ugui": "1.0.0"
+  },
+  "_upm": {
+    "gameService": {
+      "genericDashboardUrl": "https://cloud.unity3d.com/player-authentication",
+      "projectDashboardUrl": "https://cloud.unity3d.com/organizations/{0}/projects/{1}/player-authentication/about",
+      "projectDashboardUrlType": "OrganizationKeyAndProjectGuid",
+      "configurePath": "Project/Services/Authentication"
+    },
+    "supportedPlatforms": [
+      "Android",
+      "iOS",
+      "Linux",
+      "Mac",
+      "PC",
+      "WebGL",
+      "Windows 8 Universal",
+      "Windows 10 Universal"
+    ],
+    "changelog": "### Added\n- Added ability to specify scopes when signing in with a service account in the server authentication service. The base method now provides all scopes associated to the service account.\n\n### Fixed\n- Fixed an issue with ID token validation during code-link to check for both null and empty string values, ensuring proper handling of invalid tokens.\n\n### Changed\n- Changed the `SessionToken` value to be public for easier access."
+  },
+  "samples": [
+    {
+      "displayName": "UI Example",
+      "description": "Example scripts and UI elements demonstrating the Authentication package. This sample requires the com.unity.ugui package.",
+      "path": "Samples~"
+    }
+  ],
+  "relatedPackages": {
+    "com.unity.services.authentication.tests": "3.6.0"
+  },
+  "upmCi": {
+    "footprint": "fc59af4ddd9fe61cf6d63f9cd53a80505dc94285"
+  },
+  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.services.authentication@3.6/manual/index.html",
+  "repository": {
+    "url": "https://github.cds.internal.unity3d.com/unity/operate-services-sdk.git",
+    "type": "git",
+    "revision": "e47aa79f3da5544ec4650f2716ccc8f0c4876ed2"
+  }
+}

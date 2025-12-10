@@ -104,6 +104,11 @@ namespace Unity.Services.Authentication
         bool SessionTokenExists { get; }
 
         /// <summary>
+        /// Returns the current player's session token if it exists, otherwise null.
+        /// </summary>
+        string SessionToken { get; }
+
+        /// <summary>
         /// The date the last notification for the player was created or null if there are no notifications
         /// </summary>
         string LastNotificationDate { get; }

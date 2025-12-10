@@ -76,7 +76,12 @@ namespace Unity.Services.Authentication.Server
             State = ServerAuthenticationState.Unauthorized;
         }
 
-        public async Task SignInWithServiceAccountAsync(string apiKeyIdentifier, string apiKeySecret)
+        public Task SignInWithServiceAccountAsync(string apiKeyIdentifier, string apiKeySecret)
+        {
+            return SignInWithServiceAccountAsync(apiKeyIdentifier, apiKeySecret, null);
+        }
+
+        public async Task SignInWithServiceAccountAsync(string apiKeyIdentifier, string apiKeySecret, List<string> scopes)
         {
             if (State == ServerAuthenticationState.Unauthorized || State == ServerAuthenticationState.Expired)
             {
@@ -104,7 +109,7 @@ namespace Unity.Services.Authentication.Server
                         ServerEnvironmentIdComponent.EnvironmentId = environmentResponse.Id.ToString();
                     }
 
-                    var request = new ExchangeRequest(new List<string>());
+                    var request = new ExchangeRequest(scopes);
                     var response = await m_ServiceAuthApi.ExchangeToStatelessAsync(m_CloudProjectId.GetCloudProjectId(), ServerEnvironmentIdComponent.EnvironmentId, request);
 
                     ProcessResponse(response.Data.AccessToken);

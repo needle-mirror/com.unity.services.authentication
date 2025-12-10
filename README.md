@@ -284,7 +284,7 @@ The service is exposed via the `PlayerAccountService.Instance` object in the `Un
 * `PlayerAccountService.Instance.SignOut()`
     * Signs out the current player and revokes the access token.
 
-## Server Authentication Service 
+## Server Authentication Service
 
 The server authentication service is available when either `UNITY_SERVER` or `ENABLE_UCS_SERVER` conditions are enabled.
 
@@ -314,8 +314,8 @@ Ensure service account credentials are secured and never get included in client 
   * Validates that the state is authorized.
 * `ServerAuthenticationService.Instance.State`
   * Returns the current server authentication state.
-  
-  #### Server Authentication State Values: 
+
+  #### Server Authentication State Values:
   - `Authorized` : The server is currently authorized.
   - `SigningIn` : The server is currently in the process of signing in.
   - `Expired` : The server's authentication has expired.

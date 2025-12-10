@@ -50,12 +50,12 @@ namespace Unity.Services.Authentication.Generated
     /// Represents a collection of functions to interact with the API endpoints
     /// </summary>
     internal partial class PlayerNamesApi : IPlayerNamesApi
-    {        
+    {
         /// <summary>
         /// The client for accessing this underlying API asynchronously.
         /// </summary>
         public IApiClient Client { get; }
-        
+
         /// <summary>
         /// Gets the configuration object
         /// </summary>
@@ -68,7 +68,7 @@ namespace Unity.Services.Authentication.Generated
         /// </summary>
         /// <param name="apiClient">The client interface for synchronous API access.</param>
         public PlayerNamesApi(IApiClient apiClient)
-        {      
+        {
             if (apiClient == null) throw new ArgumentNullException("apiClient");
 
             this.Client = apiClient;
@@ -85,7 +85,7 @@ namespace Unity.Services.Authentication.Generated
         /// <param name="apiClient">The client interface for synchronous API access.</param>
         /// <param name="apiConfiguration">The configuration object.</param>
         public PlayerNamesApi(IApiClient apiClient, IApiConfiguration apiConfiguration)
-        {      
+        {
             if (apiClient == null) throw new ArgumentNullException("apiClient");
             if (apiConfiguration == null) throw new ArgumentNullException("apiConfiguration");
 

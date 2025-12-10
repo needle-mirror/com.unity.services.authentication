@@ -62,7 +62,7 @@ namespace Unity.Services.Authentication
                 else
                 {
                     signInResponse = await NetworkClient.SignInWithCodeAsync(signInRequest);
-                    if (signInResponse.IdToken == null)
+                    if (string.IsNullOrEmpty(signInResponse.IdToken))
                     {
                         Logger.LogWarning("Sign In Code has not been confirmed.");
                         return;
@@ -89,7 +89,7 @@ namespace Unity.Services.Authentication
                 try
                 {
                     var response = await NetworkClient.SignInWithCodeAsync(request);
-                    if (response.IdToken != null)
+                    if (!string.IsNullOrEmpty(response.IdToken))
                     {
                         return response;
                     }

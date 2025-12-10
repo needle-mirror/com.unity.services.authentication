@@ -35,12 +35,12 @@ namespace Unity.Services.Authentication.Server.Proxy.Generated
     /// Represents a collection of functions to interact with the API endpoints
     /// </summary>
     internal partial class ProxyApi : IProxyApi
-    {        
+    {
         /// <summary>
         /// The client for accessing this underlying API asynchronously.
         /// </summary>
         public IApiClient Client { get; }
-        
+
         /// <summary>
         /// Gets the configuration object
         /// </summary>
@@ -53,7 +53,7 @@ namespace Unity.Services.Authentication.Server.Proxy.Generated
         /// </summary>
         /// <param name="apiClient">The client interface for synchronous API access.</param>
         public ProxyApi(IApiClient apiClient)
-        {      
+        {
             if (apiClient == null) throw new ArgumentNullException("apiClient");
 
             this.Client = apiClient;
@@ -70,7 +70,7 @@ namespace Unity.Services.Authentication.Server.Proxy.Generated
         /// <param name="apiClient">The client interface for synchronous API access.</param>
         /// <param name="apiConfiguration">The configuration object.</param>
         public ProxyApi(IApiClient apiClient, IApiConfiguration apiConfiguration)
-        {      
+        {
             if (apiClient == null) throw new ArgumentNullException("apiClient");
             if (apiConfiguration == null) throw new ArgumentNullException("apiConfiguration");
 
