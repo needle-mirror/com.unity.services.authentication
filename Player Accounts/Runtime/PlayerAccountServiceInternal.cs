@@ -164,11 +164,16 @@ namespace Unity.Services.Authentication.PlayerAccounts
             return authorizationRequest;
         }
 
-        void OnDeepLinkActivated(string url)
+        internal void OnDeepLinkActivated(string url)
         {
             var uri = new Uri(url);
 
             if (uri.Scheme != m_Settings.DeepLinkUriScheme)
+            {
+                return;
+            }
+
+            if (SignInState != PlayerAccountState.SigningIn)
             {
                 return;
             }
@@ -192,6 +197,11 @@ namespace Unity.Services.Authentication.PlayerAccounts
             if (!string.IsNullOrEmpty(error))
             {
                 throw PlayerAccountsExceptionHandler.HandleError(error);
+            }
+
+            if (string.IsNullOrEmpty(code))
+            {
+                return;
             }
 
 #if UNITY_IOS

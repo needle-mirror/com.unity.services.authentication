@@ -24,5 +24,6 @@ namespace Unity.Services.Authentication
         /// </summary>
         [JsonProperty("newPassword")]
         public string NewPassword;
+
     }
 }

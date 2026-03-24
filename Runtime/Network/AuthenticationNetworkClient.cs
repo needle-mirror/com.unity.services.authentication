@@ -88,17 +88,14 @@ namespace Unity.Services.Authentication
             };
         }
 
-        public Task<SignInResponse> SignInAnonymouslyAsync()
+        public Task<SignInResponse> SignInAnonymouslyAsync(SignInAnonymouslyRequest request)
         {
-            return NetworkHandler.PostAsync<SignInResponse>(m_AnonymousUrl, WithEnvironmentAndRelease(GetCommonHeaders()));
+            return NetworkHandler.PostAsync<SignInResponse>(m_AnonymousUrl, request, WithEnvironmentAndRelease(GetCommonHeaders()));
         }
 
-        public Task<SignInResponse> SignInWithSessionTokenAsync(string token)
+        public Task<SignInResponse> SignInWithSessionTokenAsync(SessionTokenRequest request)
         {
-            return NetworkHandler.PostAsync<SignInResponse>(m_SessionTokenUrl, new SessionTokenRequest
-            {
-                SessionToken = token
-            }, WithEnvironmentAndRelease(GetCommonHeaders()));
+            return NetworkHandler.PostAsync<SignInResponse>(m_SessionTokenUrl, request, WithEnvironmentAndRelease(GetCommonHeaders()));
         }
 
         public Task<SignInResponse> SignInWithExternalTokenAsync(string idProvider, SignInWithExternalTokenRequest externalToken)

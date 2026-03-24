@@ -4,9 +4,11 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Unity.Services.Authentication.Generated;
+using Unity.Services.Authentication.Internal;
 using Unity.Services.Core;
 using Unity.Services.Core.Environments.Internal;
 using Unity.Services.Core.Scheduler.Internal;
+using UnityEngine;
 using Task = System.Threading.Tasks.Task;
 
 namespace Unity.Services.Authentication
@@ -74,6 +76,7 @@ namespace Unity.Services.Authentication
 
         [CanBeNull]
         public string LastNotificationDate { get; private set; }
+
 
         internal long? ExpirationActionId { get; set; }
         internal long? RefreshActionId { get; set; }
@@ -162,13 +165,15 @@ namespace Unity.Services.Authentication
 
                     Logger.LogVerbose("Continuing existing session with cached token.");
 
-                    return HandleSignInRequestAsync(() => NetworkClient.SignInWithSessionTokenAsync(sessionToken));
+                    var request = new SessionTokenRequest{ SessionToken = sessionToken };
+                    return HandleSignInRequestAsync(() => NetworkClient.SignInWithSessionTokenAsync(request));
                 }
 
                 // Default behavior is to create an account.
                 if (options?.CreateAccount ?? true)
                 {
-                    return HandleSignInRequestAsync(NetworkClient.SignInAnonymouslyAsync);
+                    var request = new SignInAnonymouslyRequest();
+                    return HandleSignInRequestAsync(() => NetworkClient.SignInAnonymouslyAsync(request));
                 }
                 else
                 {
@@ -334,7 +339,11 @@ namespace Unity.Services.Authentication
 
             try
             {
-                var response = await NetworkClient.SignInWithSessionTokenAsync(sessionToken);
+                var request = new SessionTokenRequest
+                {
+                    SessionToken = sessionToken,
+                };
+                var response = await NetworkClient.SignInWithSessionTokenAsync(request);
                 CompleteSignIn(response);
             }
             catch (RequestFailedException)
@@ -498,7 +507,7 @@ namespace Unity.Services.Authentication
             }
         }
 
-        void ChangeState(AuthenticationState newState)
+        internal void ChangeState(AuthenticationState newState)
         {
             if (State == newState)
                 return;
@@ -535,7 +544,7 @@ namespace Unity.Services.Authentication
             }
         }
 
-        void SendSignInFailedEvent(RequestFailedException exception, bool forceSignOut)
+        internal void SendSignInFailedEvent(RequestFailedException exception, bool forceSignOut)
         {
             SignInFailed?.Invoke(exception);
             if (forceSignOut)

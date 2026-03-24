@@ -20,5 +20,15 @@ namespace Unity.Services.Authentication
                 return s_Instance;
             }
         }
+
+        #if UNITY_EDITORs
+
+        [RuntimeInitializeOnLoadMethod]
+        private static void ResetStaticsOnLoad()
+        {
+            s_Instance = null;
+        }
+
+        #endif
     }
 }

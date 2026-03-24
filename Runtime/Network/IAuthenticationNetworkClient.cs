@@ -5,8 +5,8 @@ namespace Unity.Services.Authentication
 {
     interface IAuthenticationNetworkClient
     {
-        Task<SignInResponse> SignInAnonymouslyAsync();
-        Task<SignInResponse> SignInWithSessionTokenAsync(string token);
+        Task<SignInResponse> SignInAnonymouslyAsync(SignInAnonymouslyRequest request);
+        Task<SignInResponse> SignInWithSessionTokenAsync(SessionTokenRequest request);
         Task<SignInResponse> SignInWithExternalTokenAsync(string idProvider, SignInWithExternalTokenRequest externalToken);
         Task<LinkResponse> LinkWithExternalTokenAsync(string idProvider, LinkWithExternalTokenRequest externalToken);
         Task<UnlinkResponse> UnlinkExternalTokenAsync(string idProvider, UnlinkRequest request);

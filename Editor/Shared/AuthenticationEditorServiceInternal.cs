@@ -28,7 +28,8 @@ namespace Unity.Services.Authentication.Editor.Shared
                 PlayerIdComponent playerId,
                 PlayerNameComponent playerName,
                 SessionTokenComponent sessionToken,
-                IEnvironments environment)
+                IEnvironments environment
+                )
                 : base(settings,
                     networkClient,
                     playerNamesApi,
@@ -42,7 +43,8 @@ namespace Unity.Services.Authentication.Editor.Shared
                     playerId,
                     playerName,
                     sessionToken,
-                    environment)
+                    environment
+                    )
             {
             }
         }

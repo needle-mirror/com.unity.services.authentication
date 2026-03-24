@@ -120,6 +120,68 @@ namespace Unity.Services.Authentication.PlayerAccounts.Tests
             Assert.AreEqual(PlayerAccountState.SignedOut, m_PlayerAccounts.SignInState);
         }
 
+        [Test]
+        public void OnDeepLinkActivated_WrongScheme_IsIgnored()
+        {
+            // Arrange
+            m_PlayerAccounts.SignInState = PlayerAccountState.SigningIn;
+
+            // Act & Assert - should not throw
+            m_PlayerAccounts.OnDeepLinkActivated("otherscheme://host?code=test_code");
+
+            Assert.AreEqual(PlayerAccountState.SigningIn, m_PlayerAccounts.SignInState);
+            m_MockNetwork.VerifyNoOtherCalls();
+        }
+
+        [Test]
+        public void OnDeepLinkActivated_NotSigningIn_IsIgnored()
+        {
+            // Arrange
+            m_PlayerAccounts.SignInState = PlayerAccountState.SignedOut;
+
+            // Act & Assert - should not throw even though RedirectUri is null
+            m_PlayerAccounts.OnDeepLinkActivated("unitydl://host?code=test_code");
+
+            Assert.AreEqual(PlayerAccountState.SignedOut, m_PlayerAccounts.SignInState);
+            m_MockNetwork.VerifyNoOtherCalls();
+        }
+
+        [Test]
+        public void OnDeepLinkActivated_Authorized_IsIgnored()
+        {
+            // Arrange
+            m_PlayerAccounts.SignInState = PlayerAccountState.Authorized;
+
+            // Act & Assert - should not throw even though RedirectUri is null
+            m_PlayerAccounts.OnDeepLinkActivated("unitydl://host?code=test_code");
+
+            Assert.AreEqual(PlayerAccountState.Authorized, m_PlayerAccounts.SignInState);
+            m_MockNetwork.VerifyNoOtherCalls();
+        }
+
+        [Test]
+        public void OnDeepLinkActivated_NoCodeParameter_IsIgnored()
+        {
+            // Arrange
+            m_PlayerAccounts.SignInState = PlayerAccountState.SigningIn;
+
+            // Act & Assert - should not throw
+            m_PlayerAccounts.OnDeepLinkActivated("unitydl://host?other_param=value");
+
+            m_MockNetwork.VerifyNoOtherCalls();
+        }
+
+        [Test]
+        public void OnDeepLinkActivated_WithError_ThrowsException()
+        {
+            // Arrange
+            m_PlayerAccounts.SignInState = PlayerAccountState.SigningIn;
+
+            // Act & Assert
+            Assert.Throws<PlayerAccountsException>(() =>
+                m_PlayerAccounts.OnDeepLinkActivated("unitydl://host?error=invalid_request"));
+        }
+
         static IEnumerator AsCoroutine(Func<Task> test)
         {
             var task = test();

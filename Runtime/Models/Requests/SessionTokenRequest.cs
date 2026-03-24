@@ -12,5 +12,6 @@ namespace Unity.Services.Authentication
 
         [JsonProperty("sessionToken")]
         public string SessionToken;
+
     }
 }

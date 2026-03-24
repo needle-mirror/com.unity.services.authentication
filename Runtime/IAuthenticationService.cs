@@ -113,6 +113,7 @@ namespace Unity.Services.Authentication
         /// </summary>
         string LastNotificationDate { get; }
 
+
         /// <summary>
         /// Returns the current player's info, including linked identities.
         /// </summary>

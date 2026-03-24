@@ -34,5 +34,6 @@ namespace Unity.Services.Authentication
         /// </summary>
         [JsonProperty("signInOnly")]
         public bool SignInOnly;
+
     }
 }

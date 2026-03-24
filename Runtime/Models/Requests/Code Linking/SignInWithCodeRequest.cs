@@ -11,5 +11,6 @@ namespace Unity.Services.Authentication
 
         [JsonProperty("codeVerifier")]
         public string CodeVerifier;
+
     }
 }

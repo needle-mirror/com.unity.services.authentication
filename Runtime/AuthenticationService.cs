@@ -1,4 +1,5 @@
 using Unity.Services.Core;
+using UnityEngine;
 
 namespace Unity.Services.Authentication
 {
@@ -30,5 +31,15 @@ namespace Unity.Services.Authentication
             }
             internal set => s_Instance = value;
         }
+
+        //#if UNITY_EDITOR
+
+        [RuntimeInitializeOnLoadMethod]
+        private static void ResetStaticsOnLoad()
+        {
+            s_Instance = null;
+        }
+
+        //#endif
     }
 }
