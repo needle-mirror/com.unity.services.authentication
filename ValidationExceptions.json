@@ -1,4 +1,10 @@
 {
-    "ErrorExceptions": [],
+    "ErrorExceptions": [
+      {
+        "ValidationTest": "API Validation",
+        "ExceptionMessage": "Assembly \"Unity.Services.Authentication.Editor.Shared\" no longer exists or is no longer included in build. This change requires a new major version.",
+        "PackageVersion": "3.7.0"
+      }
+    ],
     "WarningExceptions": []
 }

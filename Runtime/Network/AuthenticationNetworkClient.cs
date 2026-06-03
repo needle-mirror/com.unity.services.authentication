@@ -98,6 +98,13 @@ namespace Unity.Services.Authentication
             return NetworkHandler.PostAsync<SignInResponse>(m_SessionTokenUrl, request, WithEnvironmentAndRelease(GetCommonHeaders()));
         }
 
+        public Task<SignInResponse> GenerateRestrictedTokenAsync(SessionTokenRequest request)
+        {
+            // Same endpoint as refresh; distinct method so the response is returned to the caller
+            // rather than updating the cached session.
+            return NetworkHandler.PostAsync<SignInResponse>(m_SessionTokenUrl, request, WithEnvironmentAndRelease(GetCommonHeaders()));
+        }
+
         public Task<SignInResponse> SignInWithExternalTokenAsync(string idProvider, SignInWithExternalTokenRequest externalToken)
         {
             var url = $"{m_ExternalTokenUrl}/{idProvider}";

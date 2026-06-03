@@ -1,3 +1,4 @@
+using System;
 using Newtonsoft.Json;
 using UnityEngine;
 
@@ -6,6 +7,7 @@ namespace Unity.Services.Authentication.Editor
     /// <summary>
     /// OpenID connect Id provider configuration.
     /// </summary>
+    [Serializable]
     struct OpenIDConfig
     {
         /// <summary>

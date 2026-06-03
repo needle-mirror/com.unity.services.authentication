@@ -7,5 +7,10 @@ namespace Unity.Services.Authentication
     /// </summary>
     internal class SignInAnonymouslyRequest
     {
+        /// <summary>
+        /// Attributes to be considered when determining player variant tags.
+        /// </summary>
+        [JsonProperty("attributes")]
+        public Attributes Attributes;
     }
 }

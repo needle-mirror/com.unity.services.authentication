@@ -68,7 +68,7 @@ namespace Unity.Services.Authentication
         public System.Threading.Tasks.Task<string> GetPlayerNameAsync(bool autoGenerate = true);
         public System.Threading.Tasks.Task<SignInCodeInfo> GetSignInCodeInfoAsync(string code);
         public System.Threading.Tasks.Task LinkWithAppleAsync(string idToken, LinkOptions options = default(LinkOptions));
-        public System.Threading.Tasks.Task LinkWithAppleGameCenterAsync(string signature, string teamPlayerId, string publicKeyURL, string salt, System.UInt64 timestamp, LinkOptions options = default(LinkOptions));
+        public System.Threading.Tasks.Task LinkWithAppleGameCenterAsync(string signature, string teamPlayerId, string publicKeyURL, string salt, ulong timestamp, LinkOptions options = default(LinkOptions));
         public System.Threading.Tasks.Task LinkWithFacebookAsync(string accessToken, LinkOptions options = default(LinkOptions));
         public System.Threading.Tasks.Task LinkWithGoogleAsync(string idToken, LinkOptions options = default(LinkOptions));
         public System.Threading.Tasks.Task LinkWithGooglePlayGamesAsync(string authCode, LinkOptions options = default(LinkOptions));
@@ -81,7 +81,7 @@ namespace Unity.Services.Authentication
         public void ProcessAuthenticationTokens(string accessToken, string sessionToken = default(string));
         public System.Threading.Tasks.Task SignInAnonymouslyAsync(SignInOptions options = default(SignInOptions));
         public System.Threading.Tasks.Task SignInWithAppleAsync(string idToken, SignInOptions options = default(SignInOptions));
-        public System.Threading.Tasks.Task SignInWithAppleGameCenterAsync(string signature, string teamPlayerId, string publicKeyURL, string salt, System.UInt64 timestamp, SignInOptions options = default(SignInOptions));
+        public System.Threading.Tasks.Task SignInWithAppleGameCenterAsync(string signature, string teamPlayerId, string publicKeyURL, string salt, ulong timestamp, SignInOptions options = default(SignInOptions));
         public System.Threading.Tasks.Task SignInWithCodeAsync(bool usePolling = false, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
         public System.Threading.Tasks.Task SignInWithFacebookAsync(string accessToken, SignInOptions options = default(SignInOptions));
         public System.Threading.Tasks.Task SignInWithGoogleAsync(string idToken, SignInOptions options = default(SignInOptions));
@@ -119,6 +119,12 @@ namespace Unity.Services.Authentication
     {
         public bool ForceLink { get; set; }
         public LinkOptions() {}
+    }
+
+    public static class NintendoSwitch2AuthenticationExtensions
+    {
+        public static string GetNintendoSwitch2Id(this PlayerInfo playerInfo);
+        public static System.Threading.Tasks.Task SignInWithNintendoSwitch2Async(this IAuthenticationService authenticationService, string idToken, SignInOptions options = default(SignInOptions));
     }
 
     public struct Notification
@@ -172,7 +178,7 @@ namespace Unity.Services.Authentication.Components
 {
     [UnityEngine.AddComponentMenu(@"Services/Player Authentication")] public class PlayerAuthentication : Unity.Services.Core.Components.ServicesBehaviour
     {
-        [UnityEngine.Header(@"Events")] [UnityEngine.SerializeField] public PlayerAuthenticationEvents Events;
+        [UnityEngine.Header(@"Events")] [UnityEngine.SerializeField] public PlayerAuthenticationEvents Events = new();
         [UnityEngine.Header(@"On Sign In")] [UnityEngine.SerializeField] [UnityEngine.Tooltip(@"Fetches the player info upon sign in. This provides the player creation time, username, etc.")] public bool FetchPlayerInfo;
         [UnityEngine.SerializeField] [UnityEngine.Tooltip(@"Fetches the player name upon sign in.")] public bool FetchPlayerName;
         [Unity.Services.Core.Internal.Visibility(@"FetchPlayerName", true)] [UnityEngine.SerializeField] [UnityEngine.Tooltip(@"Pass in the option to autogenerate the name if none exist.")] public bool GenerateName;
@@ -181,18 +187,18 @@ namespace Unity.Services.Authentication.Components
         [UnityEngine.SerializeField] [UnityEngine.Tooltip(@"Option to sign in anonymously automatically after services initialization.")] public bool SignInAnonymously;
         public IAuthenticationService AuthenticationService { get; }
         protected override void Cleanup();
-        protected override void OnServicesInitialized();
+        protected override async void OnServicesInitialized();
         protected override void OnServicesReady();
     }
 
     public class PlayerAuthenticationEvents
     {
-        [UnityEngine.SerializeField] public UnityEngine.Events.UnityEvent Expired;
-        [UnityEngine.SerializeField] public UnityEngine.Events.UnityEvent SignedIn;
-        [UnityEngine.SerializeField] public UnityEngine.Events.UnityEvent SignedOut;
-        [UnityEngine.SerializeField] public UnityEngine.Events.UnityEvent SignInCodeExpired;
-        [UnityEngine.SerializeField] public UnityEngine.Events.UnityEvent<SignInCodeInfo> SignInCodeReceived;
-        [UnityEngine.SerializeField] public UnityEngine.Events.UnityEvent<System.Exception> SignInFailed;
+        [UnityEngine.SerializeField] public UnityEngine.Events.UnityEvent Expired = new();
+        [UnityEngine.SerializeField] public UnityEngine.Events.UnityEvent SignedIn = new();
+        [UnityEngine.SerializeField] public UnityEngine.Events.UnityEvent SignedOut = new();
+        [UnityEngine.SerializeField] public UnityEngine.Events.UnityEvent SignInCodeExpired = new();
+        [UnityEngine.SerializeField] public UnityEngine.Events.UnityEvent<SignInCodeInfo> SignInCodeReceived = new();
+        [UnityEngine.SerializeField] public UnityEngine.Events.UnityEvent<System.Exception> SignInFailed = new();
         public PlayerAuthenticationEvents() {}
     }
 }

@@ -8,6 +8,7 @@ namespace Unity.Services.Authentication.Editor
     /// <summary>
     /// SteamProviderConfig configuration.
     /// </summary>
+    [Serializable]
     class SteamProviderConfig
     {
         /// <summary>
@@ -17,6 +18,7 @@ namespace Unity.Services.Authentication.Editor
         public List<AdditionalAppId> AdditionalAppIds { get; set; }
     }
 
+    [Serializable]
     class AdditionalAppId
     {
         [JsonProperty("description")]

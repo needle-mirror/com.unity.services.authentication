@@ -12,5 +12,10 @@ namespace Unity.Services.Authentication
         [JsonProperty("codeVerifier")]
         public string CodeVerifier;
 
+        /// <summary>
+        /// Attributes to be considered when determining player variant tags.
+        /// </summary>
+        [JsonProperty("attributes")]
+        public Attributes Attributes;
     }
 }

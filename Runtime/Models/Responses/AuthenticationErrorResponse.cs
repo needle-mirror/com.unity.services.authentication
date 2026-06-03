@@ -29,6 +29,8 @@ namespace Unity.Services.Authentication
         public int Status;
 
         [JsonProperty("details")]
+#pragma warning disable UAC1001
         public List<object> Details;
+#pragma warning restore UAC1001
     }
 }

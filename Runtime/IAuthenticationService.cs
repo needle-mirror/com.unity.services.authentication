@@ -113,6 +113,10 @@ namespace Unity.Services.Authentication
         /// </summary>
         string LastNotificationDate { get; }
 
+        /// <summary>
+        /// Allows for enablement and configuration of Targeting functionality
+        /// </summary>
+        TargetingComponent Targeting { get; }
 
         /// <summary>
         /// Returns the current player's info, including linked identities.
@@ -1148,5 +1152,28 @@ namespace Unity.Services.Authentication
         /// </list>
         /// </exception>
         Task<List<Notification>> GetNotificationsAsync();
+
+        /// <summary>
+        /// Issues a session token configured by the supplied options, returned to the caller
+        /// rather than applied to the current session. Does not change the calling player's
+        /// signed-in state or cached tokens.
+        /// </summary>
+        /// <param name="options">Restrictions to apply to the issued token.</param>
+        /// <returns>Task for the operation with the resulting <see cref="RestrictedTokenResponse"/>.</returns>
+        /// <exception cref="AuthenticationException">
+        /// The task fails with the exception when the task cannot complete successfully due to Authentication specific errors.
+        /// <list type="bullet">
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.ClientInvalidUserState"/> if the player is not currently signed in and authorized.</description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="AuthenticationErrorCodes.ClientNoActiveSession"/> if no session token is available.</description></item>
+        /// </list>
+        /// </exception>
+        /// <exception cref="RequestFailedException">
+        /// The task fails with the exception when the task cannot complete successfully.
+        /// <list type="bullet">
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.InvalidRequest"/> if the server rejects the supplied options.</description></item>
+        /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.TransportError"/> if the API call failed due to a network error.</description></item>
+        /// </list>
+        /// </exception>
+        Task<RestrictedTokenResponse> GenerateRestrictedTokenAsync(RestrictedTokenOptions options);
     }
 }

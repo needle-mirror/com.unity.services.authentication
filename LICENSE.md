@@ -1,4 +1,4 @@
-com.unity.services.authentication copyright © 2021 Unity Technologies.
+com.unity.services.authentication copyright © 2026 Unity Technologies.
 
 This software is subject to, and made available under, the Unity Terms of Service (see https://unity.com/legal ). Your use of this software constitutes your acceptance of such terms.
 

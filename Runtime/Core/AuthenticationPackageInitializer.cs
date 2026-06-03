@@ -40,22 +40,29 @@ namespace Unity.Services.Authentication
                 .ProvidesComponent<IAccessToken>()
                 .ProvidesComponent<IAccessTokenObserver>()
                 .ProvidesComponent<IEnvironmentId>()
-;
+                .ProvidesComponent<ITargetingActivation>()
+                .ProvidesComponent<ITargetingContext>();
         }
 
         public Task Initialize(CoreRegistry registry)
+            => Initialize(new CoreRegistryAdapter(registry));
+
+        public Task InitializeInstanceAsync(CoreRegistry registry)
+            => InitializeInstanceAsync(new CoreRegistryAdapter(registry));
+
+        internal Task Initialize(ICoreRegistry registry)
         {
             AuthenticationService.Instance = InitializeService(registry);
             return Task.CompletedTask;
         }
 
-        public Task InitializeInstanceAsync(CoreRegistry registry)
+        internal Task InitializeInstanceAsync(ICoreRegistry registry)
         {
             InitializeService(registry);
             return Task.CompletedTask;
         }
 
-        AuthenticationServiceInternal InitializeService(CoreRegistry registry)
+        AuthenticationServiceInternal InitializeService(ICoreRegistry registry)
         {
             var settings = new AuthenticationSettings();
             var scheduler = registry.GetServiceComponent<IActionScheduler>();
@@ -69,6 +76,7 @@ namespace Unity.Services.Authentication
             var cache = new AuthenticationCache(projectId, profile);
             var accessToken = new AccessTokenComponent();
             var environmentId = new EnvironmentIdComponent();
+            var targeting = new TargetingComponent();
             var playerId = new PlayerIdComponent(cache);
             var playerName = new PlayerNameComponent(cache);
             var sessionToken = new SessionTokenComponent(cache);
@@ -99,6 +107,7 @@ namespace Unity.Services.Authentication
                 metrics,
                 accessToken,
                 environmentId,
+                targeting,
                 playerId,
                 playerName,
                 sessionToken,
@@ -108,6 +117,8 @@ namespace Unity.Services.Authentication
             registry.RegisterServiceComponent<IAccessToken>(authenticationService.AccessTokenComponent);
             registry.RegisterServiceComponent<IAccessTokenObserver>(authenticationService.AccessTokenComponent);
             registry.RegisterServiceComponent<IEnvironmentId>(authenticationService.EnvironmentIdComponent);
+            registry.RegisterServiceComponent<ITargetingActivation>(authenticationService.Targeting);
+            registry.RegisterServiceComponent<ITargetingContext>(authenticationService.Targeting);
             registry.RegisterServiceComponent<IPlayerId>(authenticationService.PlayerIdComponent);
             registry.RegisterServiceComponent<IPlayerNameComponent>(authenticationService.PlayerNameComponent);
 

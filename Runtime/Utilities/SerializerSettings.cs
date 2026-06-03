@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using UnityEngine;
 
 namespace Unity.Services.Authentication
 {
@@ -21,7 +22,7 @@ namespace Unity.Services.Authentication
             }
         }
 
-        #if UNITY_EDITORs
+        #if UNITY_EDITOR
 
         [RuntimeInitializeOnLoadMethod]
         private static void ResetStaticsOnLoad()

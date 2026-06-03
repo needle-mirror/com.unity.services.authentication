@@ -4,6 +4,17 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [3.7.0] - 2026-06-03
+
+### Added
+- Added Targeting component and enablement
+  - AuthenticationService.Instance.Targeting.SetEnabled(true);
+- Added `IAuthenticationService.GenerateRestrictedTokenAsync(RestrictedTokenOptions)` for issuing a session token with caller-controlled restrictions, returned to the caller rather than applied to the current session.
+
+### Fixed
+- Fixed an issue where enabling Unity Player Accounts on iOS removed other custom URL schemes from the app.
+- Support for 2021 has been dropped
+
 ## [3.6.1] - 2026-03-24
 
 ### Fixed

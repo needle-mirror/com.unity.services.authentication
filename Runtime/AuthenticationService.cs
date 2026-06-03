@@ -32,7 +32,7 @@ namespace Unity.Services.Authentication
             internal set => s_Instance = value;
         }
 
-        //#if UNITY_EDITOR
+        #if UNITY_EDITOR
 
         [RuntimeInitializeOnLoadMethod]
         private static void ResetStaticsOnLoad()
@@ -40,6 +40,6 @@ namespace Unity.Services.Authentication
             s_Instance = null;
         }
 
-        //#endif
+        #endif
     }
 }

@@ -35,5 +35,10 @@ namespace Unity.Services.Authentication
         [JsonProperty("signInOnly")]
         public bool SignInOnly;
 
+        /// <summary>
+        /// Attributes to be considered when determining player variant tags.
+        /// </summary>
+        [JsonProperty("attributes")]
+        public Attributes Attributes;
     }
 }

@@ -27,6 +27,7 @@ PluginImporter:
         Exclude Win64: 1
         Exclude WindowsStoreApps: 1
         Exclude iOS: 0
+        Exclude tvOS: 1
   - first:
       Android: Android
     second:
@@ -34,7 +35,7 @@ PluginImporter:
       settings:
         CPU: ARMv7
   - first:
-      Any: 
+      Any:
     second:
       enabled: 0
       settings: {}
@@ -77,7 +78,7 @@ PluginImporter:
       settings:
         CPU: AnyCPU
         DontProcess: false
-        PlaceholderPath: 
+        PlaceholderPath:
         SDK: AnySDK
         ScriptingBackend: AnyScriptingBackend
   - first:
@@ -87,13 +88,13 @@ PluginImporter:
       settings:
         AddToEmbeddedBinaries: false
         CPU: AnyCPU
-        CompileFlags: 
+        CompileFlags:
         FrameworkDependencies: SafariServices;
   - first:
       tvOS: tvOS
     second:
-      enabled: 1
+      enabled: 0
       settings: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant: 
+  userData:
+  assetBundleName:
+  assetBundleVariant:

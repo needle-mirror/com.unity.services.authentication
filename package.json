@@ -1,12 +1,12 @@
 {
   "name": "com.unity.services.authentication",
   "displayName": "Authentication",
-  "version": "3.6.1",
-  "unity": "2021.3",
+  "version": "3.7.0",
+  "unity": "2022.3",
   "description": "Client SDK offering player identity management for Unity Gaming Services.\n\nIdentity providers can be configured from the editor or the Unity Dashboard.\n\nPlayer management is available in the Unity Dashboard.",
   "dependencies": {
-    "com.unity.nuget.newtonsoft-json": "3.2.1",
-    "com.unity.services.core": "1.15.1",
+    "com.unity.nuget.newtonsoft-json": "3.2.2",
+    "com.unity.services.core": "1.18.0",
     "com.unity.modules.unitywebrequest": "1.0.0",
     "com.unity.ugui": "1.0.0"
   },
@@ -27,7 +27,10 @@
       "Windows 8 Universal",
       "Windows 10 Universal"
     ],
-    "changelog": "### Fixed\n- Fixed Player Accounts handling of deep links that are not part of an active sign-in."
+    "changelog": "### Added\n- Added Targeting component and enablement\n  - AuthenticationService.Instance.Targeting.SetEnabled(true);\n- Added `IAuthenticationService.GenerateRestrictedTokenAsync(RestrictedTokenOptions)` for issuing a session token with caller-controlled restrictions, returned to the caller rather than applied to the current session.\n\n### Fixed\n- Fixed an issue where enabling Unity Player Accounts on iOS removed other custom URL schemes from the app.\n- Support for 2021 has been dropped"
+  },
+  "relatedPackages": {
+    "com.unity.services.authentication.tests": "0.0.0"
   },
   "samples": [
     {
@@ -36,16 +39,13 @@
       "path": "Samples~"
     }
   ],
-  "relatedPackages": {
-    "com.unity.services.authentication.tests": "3.6.1"
-  },
   "upmCi": {
-    "footprint": "bf89dbffdc9296b1eac6d793e339465567c18bc5"
+    "footprint": "fb5dbacc4d439b44057776a796c0dcfc7e00f4f2"
   },
-  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.services.authentication@3.6/manual/index.html",
+  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.services.authentication@3.7/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/operate-services-sdk.git",
     "type": "git",
-    "revision": "53161b768c8a4e7dcb2a609515d5ebf5aa303db9"
+    "revision": "b39f553c4b9bfa51badc1b4b7182881063615a2d"
   }
 }

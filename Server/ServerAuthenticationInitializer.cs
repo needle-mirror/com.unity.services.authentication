@@ -38,18 +38,24 @@ namespace Unity.Services.Authentication.Server
         }
 
         public Task Initialize(CoreRegistry registry)
+            => Initialize(new CoreRegistryAdapter(registry));
+
+        public Task InitializeInstanceAsync(CoreRegistry registry)
+            => InitializeInstanceAsync(new CoreRegistryAdapter(registry));
+
+        internal Task Initialize(ICoreRegistry registry)
         {
             ServerAuthenticationService.Instance = InitializeService(registry);
             return Task.CompletedTask;
         }
 
-        public Task InitializeInstanceAsync(CoreRegistry registry)
+        internal Task InitializeInstanceAsync(ICoreRegistry registry)
         {
             InitializeService(registry);
             return Task.CompletedTask;
         }
 
-        ServerAuthenticationServiceInternal InitializeService(CoreRegistry registry)
+        ServerAuthenticationServiceInternal InitializeService(ICoreRegistry registry)
         {
             var settings = new ServerAuthenticationSettings();
             var serverAccessToken = new ServerAccessTokenComponent();

@@ -1,6 +1,9 @@
 using System;
 using Unity.Services.Core.Editor;
 using UnityEditor;
+#if UNITY_2023_2_OR_NEWER
+using UnityEngine.Analytics;
+#endif
 
 namespace Unity.Services.Authentication.Editor
 {
@@ -22,8 +25,11 @@ namespace Unity.Services.Authentication.Editor
             public const string NetworkError = "Network Error";
         }
 
-        const int k_Version = 1;
         const string k_EventName = "editorgameserviceeditor";
+        const int k_Version = 1;
+#if UNITY_2023_2_OR_NEWER
+        const string k_VendorKey = "unity.services.authentication";
+#endif
 
         static IEditorGameServiceIdentifier s_Identifier;
 
@@ -37,6 +43,38 @@ namespace Unity.Services.Authentication.Editor
                 }
                 return s_Identifier;
             }
+        }
+
+#if UNITY_2023_2_OR_NEWER
+        [AnalyticInfo(eventName: k_EventName, vendorKey: k_VendorKey, version: k_Version)]
+        class AuthenticationAnalyticEvent : IAnalytic
+        {
+            readonly EditorGameServiceEvent m_Event;
+
+            public AuthenticationAnalyticEvent(EditorGameServiceEvent evt)
+            {
+                m_Event = evt;
+            }
+
+            public bool TryGatherData(out IAnalytic.IData data, out Exception error)
+            {
+                error = null;
+                data = m_Event;
+                return data != null;
+            }
+        }
+#endif
+
+        /// <remarks>Lowercase is used here for compatibility with analytics.</remarks>
+        [Serializable]
+        struct EditorGameServiceEvent
+#if UNITY_2023_2_OR_NEWER
+            : IAnalytic.IData
+#endif
+        {
+            public string action;
+            public string component;
+            public string package;
         }
 
         internal static void SendProjectSettingsToolEvent()
@@ -71,21 +109,21 @@ namespace Unity.Services.Authentication.Editor
 
         static void SendEvent(string component, string action)
         {
+#if UNITY_2023_2_OR_NEWER
+            EditorAnalytics.SendAnalytic(new AuthenticationAnalyticEvent(new EditorGameServiceEvent
+            {
+                action = action,
+                component = component,
+                package = Identifier.GetKey()
+            }));
+#else
             EditorAnalytics.SendEventWithLimit(k_EventName, new EditorGameServiceEvent
             {
                 action = action,
                 component = component,
                 package = Identifier.GetKey()
             }, k_Version);
-        }
-
-        /// <remarks>Lowercase is used here for compatibility with analytics.</remarks>
-        [Serializable]
-        struct EditorGameServiceEvent
-        {
-            public string action;
-            public string component;
-            public string package;
+#endif
         }
     }
 }

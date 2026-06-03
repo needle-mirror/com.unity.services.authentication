@@ -77,6 +77,7 @@ namespace Unity.Services.Authentication
         [CanBeNull]
         public string LastNotificationDate { get; private set; }
 
+        public TargetingComponent Targeting { get; }
 
         internal long? ExpirationActionId { get; set; }
         internal long? RefreshActionId { get; set; }
@@ -111,6 +112,7 @@ namespace Unity.Services.Authentication
             IAuthenticationMetrics metrics,
             AccessTokenComponent accessToken,
             EnvironmentIdComponent environmentId,
+            TargetingComponent targeting,
             PlayerIdComponent playerId,
             PlayerNameComponent playerName,
             SessionTokenComponent sessionToken,
@@ -134,6 +136,8 @@ namespace Unity.Services.Authentication
             PlayerNameComponent = playerName;
             SessionTokenComponent = sessionToken;
             EnvironmentComponent = environment;
+            Targeting = targeting;
+            targeting.AuthenticationService = this;
 
             State = AuthenticationState.SignedOut;
             MigrateCache();
@@ -166,6 +170,7 @@ namespace Unity.Services.Authentication
                     Logger.LogVerbose("Continuing existing session with cached token.");
 
                     var request = new SessionTokenRequest{ SessionToken = sessionToken };
+                    request.Attributes = Targeting.Enabled ? Targeting.Attributes : null;
                     return HandleSignInRequestAsync(() => NetworkClient.SignInWithSessionTokenAsync(request));
                 }
 
@@ -173,6 +178,7 @@ namespace Unity.Services.Authentication
                 if (options?.CreateAccount ?? true)
                 {
                     var request = new SignInAnonymouslyRequest();
+                    request.Attributes = Targeting.Enabled ? Targeting.Attributes : null;
                     return HandleSignInRequestAsync(() => NetworkClient.SignInAnonymouslyAsync(request));
                 }
                 else
@@ -342,6 +348,7 @@ namespace Unity.Services.Authentication
                 var request = new SessionTokenRequest
                 {
                     SessionToken = sessionToken,
+                    RetainTargetingClaims = true
                 };
                 var response = await NetworkClient.SignInWithSessionTokenAsync(request);
                 CompleteSignIn(response);
@@ -387,6 +394,7 @@ namespace Unity.Services.Authentication
                 if (accessTokenDecoded.Audience != null)
                 {
                     EnvironmentIdComponent.EnvironmentId = accessTokenDecoded.Audience.FirstOrDefault(s => s.StartsWith("envId:"))?.Substring(6);
+                    Targeting.VariantTags = accessTokenDecoded.Audience.FirstOrDefault(s => s.StartsWith("variantTags:"))?.Substring(12).Split(',');
                 }
 
                 PlayerInfo = user != null ? new PlayerInfo(user) : new PlayerInfo(accessTokenDecoded.Subject);

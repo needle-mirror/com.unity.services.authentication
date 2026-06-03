@@ -21,18 +21,24 @@ namespace Unity.Services.Authentication.PlayerAccounts
         }
 
         public Task Initialize(CoreRegistry registry)
+            => Initialize(new CoreRegistryAdapter(registry));
+
+        public Task InitializeInstanceAsync(CoreRegistry registry)
+            => InitializeInstanceAsync(new CoreRegistryAdapter(registry));
+
+        internal Task Initialize(ICoreRegistry registry)
         {
             PlayerAccountService.Instance = InitializeService(registry);
             return Task.CompletedTask;
         }
 
-        public Task InitializeInstanceAsync(CoreRegistry registry)
+        internal Task InitializeInstanceAsync(ICoreRegistry registry)
         {
             InitializeService(registry);
             return Task.CompletedTask;
         }
 
-        PlayerAccountServiceInternal InitializeService(CoreRegistry registry)
+        PlayerAccountServiceInternal InitializeService(ICoreRegistry registry)
         {
             var settings = UnityPlayerAccountSettings.Load();
             if (settings is null) return null;

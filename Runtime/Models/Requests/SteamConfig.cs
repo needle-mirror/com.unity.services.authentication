@@ -1,3 +1,4 @@
+using System;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -5,6 +6,7 @@ using UnityEngine.Scripting;
 
 namespace Unity.Services.Authentication
 {
+    [Serializable]
     class SteamConfig
     {
         /// <summary>
