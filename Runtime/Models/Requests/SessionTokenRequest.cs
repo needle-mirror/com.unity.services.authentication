@@ -32,7 +32,9 @@ namespace Unity.Services.Authentication
         /// When true, the issued session token may only be used once.
         /// </summary>
         [JsonProperty("singleUse", NullValueHandling = NullValueHandling.Ignore)]
+#pragma warning disable UAC1001
         public bool? SingleUse;
+#pragma warning restore UAC1001
 
         /// <summary>
         /// Service short names to restrict the issued ID token's audience to.
@@ -44,7 +46,9 @@ namespace Unity.Services.Authentication
         /// Requested lifetime of the issued session token in seconds.
         /// </summary>
         [JsonProperty("ttlSeconds", NullValueHandling = NullValueHandling.Ignore)]
+#pragma warning disable UAC1001
         public long? TtlSeconds;
+#pragma warning restore UAC1001
 
         /// <summary>
         /// ISO-3166-1 alpha-2 country code included in the issued token.

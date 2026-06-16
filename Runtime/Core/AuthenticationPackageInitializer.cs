@@ -4,6 +4,7 @@ using Unity.Services.Authentication.Generated;
 using Unity.Services.Authentication.Internal;
 using Unity.Services.Authentication.Shared;
 using Unity.Services.Core.Configuration.Internal;
+using Unity.Services.Core.Device.Internal;
 using Unity.Services.Core.Environments.Internal;
 using Unity.Services.Core.Internal;
 using Unity.Services.Core.Scheduler.Internal;
@@ -33,6 +34,7 @@ namespace Unity.Services.Authentication
                 .DependsOn<IEnvironments>()
                 .DependsOn<IActionScheduler>()
                 .DependsOn<ICloudProjectId>()
+                .DependsOn<IEngineInstallationId>()
                 .DependsOn<IProjectConfiguration>()
                 .DependsOn<IMetricsFactory>()
                 .ProvidesComponent<IPlayerId>()
@@ -68,6 +70,7 @@ namespace Unity.Services.Authentication
             var scheduler = registry.GetServiceComponent<IActionScheduler>();
             var environment = registry.GetServiceComponent<IEnvironments>();
             var projectId = registry.GetServiceComponent<ICloudProjectId>();
+            var engineInstallationId = registry.GetServiceComponent<IEngineInstallationId>();
             var projectConfiguration = registry.GetServiceComponent<IProjectConfiguration>();
             var profile = new ProfileComponent(GetProfile(projectConfiguration));
             var metricsFactory = registry.GetServiceComponent<IMetricsFactory>();
@@ -94,7 +97,8 @@ namespace Unity.Services.Authentication
                 projectId,
                 environment,
                 networkHandler,
-                accessToken
+                accessToken,
+                engineInstallationId
                         );
             var authenticationService = new AuthenticationServiceInternal(
                 settings,

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Unity.Services.Core.Configuration.Internal;
+using Unity.Services.Core.Device.Internal;
 using Unity.Services.Core.Environments.Internal;
 using UnityEngine;
 
@@ -26,9 +27,12 @@ namespace Unity.Services.Authentication
         const string k_CodeSignInUrlStem = "/v1/authentication/code-link/sign-in";
         const string k_GetNotificationsStem = "/v1/users/{PlayerId}/notifications";
 
+        const string k_InstallationIdHeader = "Unity-Installation-Id";
+
 
         internal AccessTokenComponent AccessTokenComponent { get; }
         internal ICloudProjectId CloudProjectIdComponent { get; }
+        internal IEngineInstallationId EngineInstallationIdComponent { get; }
         internal IEnvironments EnvironmentComponent { get; }
         internal INetworkHandler NetworkHandler { get; }
 
@@ -57,11 +61,13 @@ namespace Unity.Services.Authentication
                                              ICloudProjectId cloudProjectId,
                                              IEnvironments environment,
                                              INetworkHandler networkHandler,
-                                             AccessTokenComponent accessToken
+                                             AccessTokenComponent accessToken,
+                                             IEngineInstallationId engineInstallationId
                                                      )
         {
             AccessTokenComponent = accessToken;
             CloudProjectIdComponent = cloudProjectId;
+            EngineInstallationIdComponent = engineInstallationId;
             EnvironmentComponent = environment;
             NetworkHandler = networkHandler;
 
@@ -102,7 +108,7 @@ namespace Unity.Services.Authentication
         {
             // Same endpoint as refresh; distinct method so the response is returned to the caller
             // rather than updating the cached session.
-            return NetworkHandler.PostAsync<SignInResponse>(m_SessionTokenUrl, request, WithEnvironmentAndRelease(GetCommonHeaders()));
+            return NetworkHandler.PostAsync<SignInResponse>(m_SessionTokenUrl, request, WithInstallationId(WithEnvironmentAndRelease(GetCommonHeaders())));
         }
 
         public Task<SignInResponse> SignInWithExternalTokenAsync(string idProvider, SignInWithExternalTokenRequest externalToken)
@@ -187,6 +193,20 @@ namespace Unity.Services.Authentication
         Dictionary<string, string> WithAccessToken(Dictionary<string, string> headers)
         {
             headers["Authorization"] = $"Bearer {AccessToken}";
+            return headers;
+        }
+
+        Dictionary<string, string> WithInstallationId(Dictionary<string, string> headers)
+        {
+            // Backend only reads this on the session-token endpoint; omit when empty so we never
+            // send a blank header.
+            var installationId = EngineInstallationIdComponent?.GetOrCreateIdentifier();
+
+            if (!string.IsNullOrEmpty(installationId))
+            {
+                headers[k_InstallationIdHeader] = installationId;
+            }
+
             return headers;
         }
 

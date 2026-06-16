@@ -1,7 +1,7 @@
 {
   "name": "com.unity.services.authentication",
   "displayName": "Authentication",
-  "version": "3.7.0",
+  "version": "3.7.1",
   "unity": "2022.3",
   "description": "Client SDK offering player identity management for Unity Gaming Services.\n\nIdentity providers can be configured from the editor or the Unity Dashboard.\n\nPlayer management is available in the Unity Dashboard.",
   "dependencies": {
@@ -27,7 +27,7 @@
       "Windows 8 Universal",
       "Windows 10 Universal"
     ],
-    "changelog": "### Added\n- Added Targeting component and enablement\n  - AuthenticationService.Instance.Targeting.SetEnabled(true);\n- Added `IAuthenticationService.GenerateRestrictedTokenAsync(RestrictedTokenOptions)` for issuing a session token with caller-controlled restrictions, returned to the caller rather than applied to the current session.\n\n### Fixed\n- Fixed an issue where enabling Unity Player Accounts on iOS removed other custom URL schemes from the app.\n- Support for 2021 has been dropped"
+    "changelog": "### Added\n- Restricted session token requests now include the installation ID."
   },
   "relatedPackages": {
     "com.unity.services.authentication.tests": "0.0.0"
@@ -40,12 +40,12 @@
     }
   ],
   "upmCi": {
-    "footprint": "fb5dbacc4d439b44057776a796c0dcfc7e00f4f2"
+    "footprint": "d98a885fab335a3ff45e0d5f4df46d9a7feb516d"
   },
   "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.services.authentication@3.7/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/operate-services-sdk.git",
     "type": "git",
-    "revision": "b39f553c4b9bfa51badc1b4b7182881063615a2d"
+    "revision": "0b3712b01095499e256548b09a95e3cf1209affe"
   }
 }
