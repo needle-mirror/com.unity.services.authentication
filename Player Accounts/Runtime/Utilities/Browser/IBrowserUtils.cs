@@ -20,11 +20,6 @@ namespace Unity.Services.Authentication.PlayerAccounts
         bool Bind();
 
         /// <summary>
-        /// Dismisses the browser.
-        /// </summary>
-        void Dismiss();
-
-        /// <summary>
         /// Gets the redirect uri
         /// </summary>
         /// <returns>The uri</returns>

@@ -5,7 +5,7 @@ namespace Unity.Services.Authentication.PlayerAccounts
 {
     internal static class BrowserUtils
     {
-        internal static IBrowserUtils CreateBrowserUtils(ICloudProjectId cloudProjectId, UnityPlayerAccountSettings settings, Action<string> onAuthCodeReceived)
+        internal static IBrowserUtils CreateBrowserUtils(ICloudProjectId cloudProjectId, UnityPlayerAccountSettings settings, Action<string> onAuthCodeReceived, PlayerAccountServiceInternal accountService)
         {
 #if UNITY_EDITOR || UNITY_STANDALONE
             var standaloneBrowserUtils = new StandaloneBrowserUtils();
@@ -14,7 +14,10 @@ namespace Unity.Services.Authentication.PlayerAccounts
 #elif UNITY_ANDROID
             return new AndroidBrowserUtils(cloudProjectId, settings);
 #elif UNITY_IOS
-            return new IOSBrowserUtils(cloudProjectId, settings);
+            // iOS delivers the OAuth redirect through the ASWebAuthenticationSession completion
+            // handler (callbackUrl + error), which OnWebAuthSessionCompleted routes into the
+            // existing deep-link handling.
+            return new IOSBrowserUtils(cloudProjectId, settings, accountService);
 #else
             return null;
 #endif

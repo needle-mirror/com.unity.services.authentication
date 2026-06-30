@@ -4,6 +4,11 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [3.7.2] - 2026-06-30
+
+### Fixed
+- Fixed an issue on iOS where the Unity Player Accounts sign-in window stayed open after sign-in without returning to the app, thereby failing to complete the sign-in process. The fix comes with some changes to the authentication flow on iOS: on calling `PlayerAccountService.Instance.StartSignInAsync()`, users will now see a pop-up '<app name> wants to use "unity3d.com" to sign in' with 'Cancel' and 'Continue' buttons. If the user presses 'Continue', they will then proceed to the sign-in page via web view as before, and will be returned to the app on successful sign-in. Pressing 'Cancel' will abort the sign-in attempt and return the user to the app immediately.
+
 ## [3.7.1] - 2026-06-16
 
 ### Added

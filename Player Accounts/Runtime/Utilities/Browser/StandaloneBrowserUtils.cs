@@ -82,10 +82,6 @@ namespace Unity.Services.Authentication.PlayerAccounts
             AuthCodeReceivedEvent?.Invoke(code);
         }
 
-        public void Dismiss()
-        {
-        }
-
         static void SendBrowserResponse(HttpListenerResponse response, HttpListener http)
         {
             var responseString = "<html><body><b>DONE!</b><br>(You can return to your app and close this tab/window now)";

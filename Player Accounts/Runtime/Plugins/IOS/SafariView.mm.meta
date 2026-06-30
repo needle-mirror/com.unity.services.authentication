@@ -35,7 +35,7 @@ PluginImporter:
       settings:
         CPU: ARMv7
   - first:
-      Any:
+      Any: 
     second:
       enabled: 0
       settings: {}
@@ -78,7 +78,7 @@ PluginImporter:
       settings:
         CPU: AnyCPU
         DontProcess: false
-        PlaceholderPath:
+        PlaceholderPath: 
         SDK: AnySDK
         ScriptingBackend: AnyScriptingBackend
   - first:
@@ -88,13 +88,13 @@ PluginImporter:
       settings:
         AddToEmbeddedBinaries: false
         CPU: AnyCPU
-        CompileFlags:
-        FrameworkDependencies: SafariServices;
+        CompileFlags: 
+        FrameworkDependencies: AuthenticationServices;
   - first:
       tvOS: tvOS
     second:
       enabled: 0
       settings: {}
-  userData:
-  assetBundleName:
-  assetBundleVariant:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

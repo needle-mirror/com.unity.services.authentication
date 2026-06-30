@@ -31,10 +31,6 @@ namespace Unity.Services.Authentication.PlayerAccounts
             return true;
         }
 
-        public void Dismiss()
-        {
-        }
-
         public string GetRedirectUri()
         {
             if (m_Settings == null)

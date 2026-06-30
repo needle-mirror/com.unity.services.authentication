@@ -44,7 +44,7 @@ namespace Unity.Services.Authentication.PlayerAccounts
         {
             m_Settings = settings;
             m_CloudProjectId = cloudProjectId;
-            m_BrowserUtils = BrowserUtils.CreateBrowserUtils(m_CloudProjectId, m_Settings, OnAuthCodeReceived);
+            m_BrowserUtils = BrowserUtils.CreateBrowserUtils(m_CloudProjectId, m_Settings, OnAuthCodeReceived, this);
             m_JwtDecoder = jwtDecoder;
             m_NetworkingClient = networkingClient;
 
@@ -204,9 +204,6 @@ namespace Unity.Services.Authentication.PlayerAccounts
                 return;
             }
 
-#if UNITY_IOS
-            m_BrowserUtils.Dismiss();
-#endif
             OnAuthCodeReceived(code);
         }
 
