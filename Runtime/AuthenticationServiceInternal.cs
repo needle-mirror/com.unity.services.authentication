@@ -326,7 +326,17 @@ namespace Unity.Services.Authentication
             }
             catch (WebRequestException e)
             {
-                var authException = ExceptionHandler.ConvertException(e);
+                RequestFailedException authException;
+
+                try
+                {
+                    authException = ExceptionHandler.ConvertException(e);
+                }
+                catch (Exception convertException)
+                {
+                    authException = AuthenticationException.Create(CommonErrorCodes.Unknown,
+                        $"Failed to convert a network exception during sign-in: {convertException.Message}", e);
+                }
 
                 if (authException.ErrorCode == AuthenticationErrorCodes.InvalidSessionToken)
                 {
@@ -334,6 +344,13 @@ namespace Unity.Services.Authentication
                     Logger.Log($"The session token is invalid and has been cleared. The associated account is no longer accessible through this login method.");
                 }
 
+                SendSignInFailedEvent(authException, true);
+                throw authException;
+            }
+            catch (Exception e)
+            {
+                // Defensive catch-all so no low-level exception escapes the sign-in contract.
+                var authException = AuthenticationException.Create(CommonErrorCodes.Unknown, $"An unexpected error occurred during sign-in: {e.Message}", e);
                 SendSignInFailedEvent(authException, true);
                 throw authException;
             }
@@ -351,6 +368,14 @@ namespace Unity.Services.Authentication
                     RetainTargetingClaims = true
                 };
                 var response = await NetworkClient.SignInWithSessionTokenAsync(request);
+
+                if (response == null)
+                {
+                    // A null response is a transient network condition, not a bad token — retry.
+                    ScheduleRefreshRetry();
+                    return;
+                }
+
                 CompleteSignIn(response);
             }
             catch (RequestFailedException)
@@ -365,17 +390,29 @@ namespace Unity.Services.Authentication
             }
             catch (WebRequestException)
             {
-                if (State == AuthenticationState.Refreshing)
-                {
-                    Logger.LogWarning("Failed to refresh access token due to network error or internal server error, will retry later.");
-                    ChangeState(AuthenticationState.Authorized);
-                    ScheduleRefresh(Settings.RefreshAttemptFrequency);
-                }
+                ScheduleRefreshRetry();
+            }
+        }
+
+        void ScheduleRefreshRetry()
+        {
+            if (State == AuthenticationState.Refreshing)
+            {
+                Logger.LogWarning("Failed to refresh access token due to network error or internal server error, will retry later.");
+                ChangeState(AuthenticationState.Authorized);
+                ScheduleRefresh(Settings.RefreshAttemptFrequency);
             }
         }
 
         internal void CompleteSignIn(SignInResponse response, bool enableRefresh = true)
         {
+            if (response == null)
+            {
+                // A null response (blocked/failed request) must not leak a NullReferenceException.
+                throw AuthenticationException.Create(CommonErrorCodes.TransportError,
+                    "The sign-in request returned an empty response, likely due to a network connectivity issue.");
+            }
+
             CompleteSignIn(response.IdToken, response.SessionToken, enableRefresh, response.User, response.LastNotificationDate);
         }
 

@@ -1,7 +1,7 @@
 {
   "name": "com.unity.services.authentication",
   "displayName": "Authentication",
-  "version": "3.7.2",
+  "version": "3.7.3",
   "unity": "2022.3",
   "description": "Client SDK offering player identity management for Unity Gaming Services.\n\nIdentity providers can be configured from the editor or the Unity Dashboard.\n\nPlayer management is available in the Unity Dashboard.",
   "dependencies": {
@@ -27,7 +27,7 @@
       "Windows 8 Universal",
       "Windows 10 Universal"
     ],
-    "changelog": "### Fixed\n- Fixed an issue on iOS where the Unity Player Accounts sign-in window stayed open after sign-in without returning to the app, thereby failing to complete the sign-in process. The fix comes with some changes to the authentication flow on iOS: on calling `PlayerAccountService.Instance.StartSignInAsync()`, users will now see a pop-up '<app name> wants to use \"unity3d.com\" to sign in' with 'Cancel' and 'Continue' buttons. If the user presses 'Continue', they will then proceed to the sign-in page via web view as before, and will be returned to the app on successful sign-in. Pressing 'Cancel' will abort the sign-in attempt and return the user to the app immediately."
+    "changelog": "### Fixed\n- Fixed the Authentication SDK leaking low-level exceptions (such as `NullReferenceException`) instead of `RequestFailedException` under hostile or blocked network conditions. Sign-in failures now consistently surface as a `RequestFailedException`; a null or empty response is reported as `CommonErrorCodes.TransportError`.\n- Fixed UI samples to use the new input system"
   },
   "relatedPackages": {
     "com.unity.services.authentication.tests": "0.0.0"
@@ -40,12 +40,12 @@
     }
   ],
   "upmCi": {
-    "footprint": "dd35462cac536f4797330ad42979e8b6438f023a"
+    "footprint": "fdb801a650f6276d9960568398f303b887bc55c4"
   },
   "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.services.authentication@3.7/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/operate-services-sdk.git",
     "type": "git",
-    "revision": "7206fcf215fa53e16ed213300986c1a10f4288d0"
+    "revision": "71b9186dd9e19e3818cb51788b8a8162743dee4e"
   }
 }

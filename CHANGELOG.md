@@ -4,6 +4,12 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [3.7.3] - 2026-07-06
+
+### Fixed
+- Fixed the Authentication SDK leaking low-level exceptions (such as `NullReferenceException`) instead of `RequestFailedException` under hostile or blocked network conditions. Sign-in failures now consistently surface as a `RequestFailedException`; a null or empty response is reported as `CommonErrorCodes.TransportError`.
+- Fixed UI samples to use the new input system
+
 ## [3.7.2] - 2026-06-30
 
 ### Fixed
