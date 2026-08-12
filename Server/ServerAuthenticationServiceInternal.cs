@@ -44,6 +44,18 @@ namespace Unity.Services.Authentication.Server
         readonly IJwtDecoder m_JwtDecoder;
         readonly IServerConfiguration m_Configuration;
 
+        /// <summary>
+        /// The scopes requested during sign-in, kept so that a refreshed token is granted the same scopes.
+        /// </summary>
+        List<string> m_Scopes;
+
+        /// <summary>
+        /// Identifies the current authorization session. A refresh captures it before requesting a token and
+        /// discards the response if the session ended while the request was in flight.
+        /// Incremented by <see cref="Reset"/> and <see cref="Expire"/>, the only two ways a session ends.
+        /// </summary>
+        int m_SessionGeneration;
+
         internal ServerAuthenticationServiceInternal(
             IServerAuthenticationSettings settings,
             ICloudProjectId cloudProjectId,
@@ -83,93 +95,121 @@ namespace Unity.Services.Authentication.Server
 
         public async Task SignInWithServiceAccountAsync(string apiKeyIdentifier, string apiKeySecret, List<string> scopes)
         {
-            if (State == ServerAuthenticationState.Unauthorized || State == ServerAuthenticationState.Expired)
+            ValidateSignInState();
+
+            try
             {
-                try
-                {
-                    State = ServerAuthenticationState.SigningIn;
-                    AuthType = AuthType.ServiceAccount;
+                State = ServerAuthenticationState.SigningIn;
+                AuthType = AuthType.ServiceAccount;
 
-                    if (string.IsNullOrEmpty(apiKeyIdentifier) || string.IsNullOrEmpty(apiKeySecret))
-                        throw ServerAuthenticationException.Create(ServerAuthenticationErrorCodes.InvalidParameters, $"Invalid parameters.");
-
-                    SetServiceAccount(apiKeyIdentifier, apiKeySecret);
-
-                    if (string.IsNullOrEmpty(ServerEnvironmentIdComponent.EnvironmentId))
-                    {
-                        var environments = await m_EnvironmentApi.GetEnvironmentsAsync(m_CloudProjectId.GetCloudProjectId());
-
-                        var environmentResponse = environments.Data.Results.FirstOrDefault(x => x.Name == m_Environment.Current);
-
-                        if (environmentResponse == null)
-                        {
-                            throw new Exception($"No environment id found for environment '{m_Environment.Current}'");
-                        }
-
-                        ServerEnvironmentIdComponent.EnvironmentId = environmentResponse.Id.ToString();
-                    }
-
-                    var request = new ExchangeRequest(scopes);
-                    var response = await m_ServiceAuthApi.ExchangeToStatelessAsync(m_CloudProjectId.GetCloudProjectId(), ServerEnvironmentIdComponent.EnvironmentId, request);
-
-                    ProcessResponse(response.Data.AccessToken);
-                }
-                catch (ApiException apiException)
-                {
-                    var exception = ServerAuthenticationExceptionFactory.Create(apiException);
-                    OnAuthorizationFailed(exception);
-                    Reset();
-                    throw exception;
-                }
-                catch (Exception unknownException)
-                {
-                    var exception = ServerAuthenticationExceptionFactory.Create(unknownException);
-                    OnAuthorizationFailed(exception);
-                    Reset();
-                    throw exception;
-                }
+                var accessToken = await RequestServiceAccountTokenAsync(apiKeyIdentifier, apiKeySecret, scopes);
+                ProcessResponse(accessToken);
             }
-            else
+            catch (ApiException apiException)
             {
-                var exception = ServerAuthenticationExceptionFactory.CreateClientInvalidState(State);
-                OnAuthorizationFailed(exception);
-                throw exception;
+                throw HandleSignInException(ServerAuthenticationExceptionFactory.Create(apiException));
+            }
+            catch (Exception unknownException)
+            {
+                throw HandleSignInException(ServerAuthenticationExceptionFactory.Create(unknownException));
             }
         }
 
         public async Task SignInFromServerAsync()
         {
-            if (State == ServerAuthenticationState.Unauthorized || State == ServerAuthenticationState.Expired)
-            {
-                try
-                {
-                    State = ServerAuthenticationState.SigningIn;
-                    AuthType = AuthType.Proxy;
+            ValidateSignInState();
 
-                    var tokenResponse = await m_ProxyApi.GetTokenAsync();
-                    ProcessResponse(tokenResponse.Data.Token);
-                }
-                catch (ApiException apiException)
-                {
-                    var exception = ServerAuthenticationExceptionFactory.Create(apiException);
-                    OnAuthorizationFailed(exception);
-                    Reset();
-                    throw exception;
-                }
-                catch (Exception unknownException)
-                {
-                    var exception = ServerAuthenticationExceptionFactory.Create(unknownException);
-                    OnAuthorizationFailed(exception);
-                    Reset();
-                    throw exception;
-                }
-            }
-            else
+            try
             {
-                var exception = ServerAuthenticationExceptionFactory.CreateClientInvalidState(State);
-                OnAuthorizationFailed(exception);
-                throw exception;
+                State = ServerAuthenticationState.SigningIn;
+                AuthType = AuthType.Proxy;
+
+                var accessToken = await RequestProxyTokenAsync();
+                ProcessResponse(accessToken);
             }
+            catch (ApiException apiException)
+            {
+                throw HandleSignInException(ServerAuthenticationExceptionFactory.Create(apiException));
+            }
+            catch (Exception unknownException)
+            {
+                throw HandleSignInException(ServerAuthenticationExceptionFactory.Create(unknownException));
+            }
+        }
+
+        /// <summary>
+        /// Throws when the service is not in a state that allows starting a new sign-in.
+        /// </summary>
+        void ValidateSignInState()
+        {
+            if (State == ServerAuthenticationState.Unauthorized || State == ServerAuthenticationState.Expired)
+                return;
+
+            var exception = ServerAuthenticationExceptionFactory.CreateClientInvalidState(State);
+            OnAuthorizationFailed(exception);
+            throw exception;
+        }
+
+        /// <summary>
+        /// Reports a failed sign-in attempt and clears the authorization state.
+        /// </summary>
+        /// <param name="exception">The exception describing the failure.</param>
+        /// <returns>The exception to throw to the caller.</returns>
+        ServerAuthenticationException HandleSignInException(ServerAuthenticationException exception)
+        {
+            OnAuthorizationFailed(exception);
+            Reset();
+            return exception;
+        }
+
+        /// <summary>
+        /// Requests a stateless access token for the service account.
+        /// Used both for sign-in and for refreshing an existing token, so it does not apply the token itself:
+        /// the caller decides whether the result is still wanted and how a failure is handled.
+        /// </summary>
+        async Task<string> RequestServiceAccountTokenAsync(string apiKeyIdentifier, string apiKeySecret, List<string> scopes)
+        {
+            if (string.IsNullOrEmpty(apiKeyIdentifier) || string.IsNullOrEmpty(apiKeySecret))
+                throw ServerAuthenticationException.Create(ServerAuthenticationErrorCodes.InvalidParameters, $"Invalid parameters.");
+
+            SetServiceAccount(apiKeyIdentifier, apiKeySecret);
+
+            // Copied so that a caller mutating its own list cannot change the scopes of an active session.
+            m_Scopes = scopes == null ? null : new List<string>(scopes);
+
+            await FulfillEnvironmentIdAsync();
+
+            var request = new ExchangeRequest(m_Scopes);
+            var response = await m_ServiceAuthApi.ExchangeToStatelessAsync(m_CloudProjectId.GetCloudProjectId(), ServerEnvironmentIdComponent.EnvironmentId, request);
+
+            return response.Data.AccessToken;
+        }
+
+        /// <summary>
+        /// Requests an access token from the local server proxy.
+        /// Used both for sign-in and for refreshing an existing token.
+        /// </summary>
+        async Task<string> RequestProxyTokenAsync()
+        {
+            var tokenResponse = await m_ProxyApi.GetTokenAsync();
+            return tokenResponse.Data.Token;
+        }
+
+        async Task FulfillEnvironmentIdAsync()
+        {
+            if (!string.IsNullOrEmpty(ServerEnvironmentIdComponent.EnvironmentId))
+                return;
+
+            var environments = await m_EnvironmentApi.GetEnvironmentsAsync(m_CloudProjectId.GetCloudProjectId());
+
+            var environmentResponse = environments.Data.Results.FirstOrDefault(x => x.Name == m_Environment.Current);
+
+            if (environmentResponse == null)
+            {
+                throw new Exception($"No environment id found for environment '{m_Environment.Current}'");
+            }
+
+            ServerEnvironmentIdComponent.EnvironmentId = environmentResponse.Id.ToString();
         }
 
         public void ClearCredentials()
@@ -182,6 +222,7 @@ namespace Unity.Services.Authentication.Server
             ServerAccessTokenComponent.Clear();
             CancelScheduledRefresh();
             CancelScheduledExpiration();
+            m_SessionGeneration++;
             ChangeState(ServerAuthenticationState.Unauthorized);
         }
 
@@ -230,7 +271,10 @@ namespace Unity.Services.Authentication.Server
         {
             Logger.LogVerbose($"Executing scheduled refresh.");
             RefreshActionId = null;
-            StartRefreshAsync().GetAwaiter().GetResult();
+
+            // The action scheduler runs this on the player loop, which is also what completes the web request:
+            // waiting for the refresh to finish here would deadlock. Faults are logged instead of being swallowed.
+            StartRefreshAsync().ContinueWith(task => Logger.LogException(task.Exception), TaskContinuationOptions.OnlyOnFaulted);
         }
 
         internal void ExecuteScheduledExpiration()
@@ -263,37 +307,60 @@ namespace Unity.Services.Authentication.Server
             ServerAccessTokenComponent.Clear();
             CancelScheduledRefresh();
             CancelScheduledExpiration();
+            m_SessionGeneration++;
             ChangeState(ServerAuthenticationState.Expired);
         }
 
         internal async Task StartRefreshAsync()
         {
-            if (IsAuthorized)
-            {
-                ChangeState(ServerAuthenticationState.Refreshing);
+            if (!IsAuthorized)
+                return;
 
-                try
+            ChangeState(ServerAuthenticationState.Refreshing);
+
+            var session = m_SessionGeneration;
+
+            try
+            {
+                string accessToken;
+
+                switch (AuthType)
                 {
-                    switch (AuthType)
-                    {
-                        case AuthType.Proxy:
-                            await SignInFromServerAsync();
-                            break;
-                        case AuthType.ServiceAccount:
-                            await SignInWithServiceAccountAsync(m_ServiceAuthApi.Configuration.Username, m_ServiceAuthApi.Configuration.Password);
-                            break;
-                    }
+                    case AuthType.Proxy:
+                        accessToken = await RequestProxyTokenAsync();
+                        break;
+                    case AuthType.ServiceAccount:
+                        accessToken = await RequestServiceAccountTokenAsync(m_ServiceAuthApi.Configuration.Username, m_ServiceAuthApi.Configuration.Password, m_Scopes);
+                        break;
+                    default:
+                        return;
                 }
-                catch (Exception)
+
+                if (session != m_SessionGeneration)
                 {
-                    if (State == ServerAuthenticationState.Refreshing)
-                    {
-                        Logger.LogWarning("Failed to refresh access token due to network error or internal server error, will retry later.");
-                        ChangeState(ServerAuthenticationState.Authorized);
-                        ScheduleRefresh(Settings.RefreshAttemptFrequency);
-                    }
+                    // Cleared credentials or an expiration ended the session while the request was in flight.
+                    // Applying the token now would undo that, or overwrite a newer sign-in.
+                    Logger.LogVerbose($"Discarding a refreshed access token for an authorization session that has ended.");
+                    return;
                 }
+
+                ProcessResponse(accessToken);
             }
+            catch (Exception)
+            {
+                // The current token is still valid until its expiration is reached, so keep it and try again.
+                ScheduleRefreshRetry();
+            }
+        }
+
+        void ScheduleRefreshRetry()
+        {
+            if (State != ServerAuthenticationState.Refreshing)
+                return;
+
+            Logger.LogWarning("Failed to refresh access token due to network error or internal server error, will retry later.");
+            ChangeState(ServerAuthenticationState.Authorized);
+            ScheduleRefresh(Settings.RefreshAttemptFrequency);
         }
 
         internal void ChangeState(ServerAuthenticationState newState)

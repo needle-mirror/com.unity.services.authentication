@@ -4,6 +4,11 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [3.7.4] - 2026-08-12
+
+### Fixed
+- Fixed server access tokens never being refreshed. The scheduled refresh re-entered the sign-in methods, which rejected the `Refreshing` state with `ClientInvalidUserState`, logged `Failed to refresh access token due to network error or internal server error, will retry later.` and eventually moved the server to `Expired`. This affected both `SignInWithServiceAccountAsync` and `SignInFromServerAsync`. A refreshed service account token is now also granted the scopes requested at sign-in, and a refresh that fails keeps the current access token instead of reporting an `AuthorizationFailed` event.
+
 ## [3.7.3] - 2026-07-06
 
 ### Fixed
