@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Unity.Services.Authentication.Generated;
 using Unity.Services.Core;
 
 namespace Unity.Services.Authentication
@@ -58,6 +57,12 @@ namespace Unity.Services.Authentication
         /// Invoked when the PlayerInfo is set. The new PlayerInfo is passed as the parameter.
         /// </summary>
         event Action<PlayerInfo> PlayerInfoChanged;
+
+        /// <summary>
+        /// The current <see cref="AuthenticationState"/> of the authentication service for the player,
+        /// reflecting the lifecycle of their session and access token.
+        /// </summary>
+        AuthenticationState State { get; }
 
         /// <summary>
         /// Checks whether the player is signed in or not.
@@ -633,7 +638,7 @@ namespace Unity.Services.Authentication
         /// <item><description>Throws with <c>ErrorCode</c> <see cref="CommonErrorCodes.Unknown"/> if the API call failed due to unexpected response from the server. Check Unity logs for more debugging information.</description></item>
         /// </list>
         /// </exception>
-        public Task LinkWithSteamAsync(string sessionTicket, string identity, string appId , LinkOptions options = null);
+        public Task LinkWithSteamAsync(string sessionTicket, string identity, string appId, LinkOptions options = null);
 
         /// <summary>
         /// Unlinks the Steam account from the current player account.

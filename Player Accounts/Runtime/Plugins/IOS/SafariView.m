@@ -1,8 +1,10 @@
 #import <AuthenticationServices/AuthenticationServices.h>
 
-// The Swift Xcode project type removes UnityGetGLViewController(); use the UnityPlayer singleton instead.
+// The Swift Xcode project type removes UnityGetGLViewController(); use the UnityPlayer singleton
+// instead. Unity 6000.6.0b7 and newer expose it through the UnityAPI framework; the experimental
+// project type shipped with Unity 6.5 exposed it through UnityFramework and is not supported.
 #if UNITY_XCODE_PROJECT_TYPE_SWIFT
-#import <UnityFramework/UnityFramework-Swift.h>
+#import <UnityAPI/UnityAPI-Swift.h>
 #else
 extern UIViewController* UnityGetGLViewController();
 #endif
@@ -32,7 +34,7 @@ API_AVAILABLE(ios(13.0))
 static UnityPlayerAccountPresentationContext *s_PresentationContext = nil;
 
 // C-linkage entry points invoked from C# via DllImport("__Internal"). This file must stay .m
-// (not .mm) so the Swift project type's UnityFramework-Swift.h, which uses @import, compiles.
+// (not .mm) so the Swift project type's generated Swift header, which uses @import, compiles.
 
 // Registers the C# function pointer that the auth session completion handler invokes.
 void setUnityPlayerAccountAuthCallback(UnityPlayerAccountAuthCallback callback)

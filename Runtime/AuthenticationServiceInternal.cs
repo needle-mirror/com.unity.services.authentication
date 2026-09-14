@@ -79,6 +79,8 @@ namespace Unity.Services.Authentication
 
         public TargetingComponent Targeting { get; }
 
+        public AuthenticationState State { get; set; }
+
         internal long? ExpirationActionId { get; set; }
         internal long? RefreshActionId { get; set; }
 
@@ -88,7 +90,6 @@ namespace Unity.Services.Authentication
         internal PlayerNameComponent PlayerNameComponent { get; }
         internal SessionTokenComponent SessionTokenComponent { get; }
         internal IEnvironments EnvironmentComponent { get; }
-        internal AuthenticationState State { get; set; }
         internal IAuthenticationSettings Settings { get; }
         internal IAuthenticationNetworkClient NetworkClient { get; set; }
         internal IPlayerNamesApi PlayerNamesApi { get; set; }

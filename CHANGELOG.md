@@ -4,6 +4,15 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [3.8.0] - 2026-09-14
+
+### Added
+- Added `IAuthenticationService.State`, exposing the current `AuthenticationState` (`SignedOut`, `SigningIn`, `Authorized`, `Refreshing`, `Expired`) that reflects the lifecycle of the player's session and access token.
+- Added support for the Apple Swift Xcode project type on iOS. Requires Unity 6000.6.0b7 or newer, which exposes the project type's public symbols through the `UnityAPI` framework.
+
+### Changed
+- Now always enabling the server assembly in editor mode to enable authoring assets. This assembly remains unavailable on non dedicated server builds. (Condition: `UNITY_EDITOR || UNITY_SERVER || ENABLE_UCS_SERVER`)
+
 ## [3.7.4] - 2026-08-12
 
 ### Fixed
