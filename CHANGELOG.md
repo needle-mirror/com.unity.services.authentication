@@ -4,6 +4,11 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [3.8.1] - 2026-10-21
+
+### Fixed
+- Fixed targeting sending no attributes on sign-in, so no variant tags resolved, in players built with Managed Stripping Level `Low` or higher.
+
 ## [3.8.0] - 2026-09-14
 
 ### Added

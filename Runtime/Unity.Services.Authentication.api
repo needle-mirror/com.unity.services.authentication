@@ -3,6 +3,13 @@
 // make sure the XML doc file is present and located next to the scraped dll
 namespace Unity.Services.Authentication
 {
+    public class Attributes
+    {
+        [Newtonsoft.Json.JsonProperty(@"app")] [UnityEngine.Scripting.Preserve] public object App { get; }
+        [Newtonsoft.Json.JsonProperty(@"user")] [UnityEngine.Scripting.Preserve] public object User { get; }
+        public Attributes() {}
+    }
+
     public static class AuthenticationErrorCodes
     {
         public static readonly int AccountAlreadyLinked = 10003;
@@ -35,6 +42,15 @@ namespace Unity.Services.Authentication
         public static IAuthenticationService Instance { get; }
     }
 
+    public enum AuthenticationState
+    {
+        SignedOut = 0,
+        SigningIn = 1,
+        Authorized = 2,
+        Refreshing = 3,
+        Expired = 4,
+    }
+
     public interface IAuthenticationService
     {
         public event System.Action Expired;
@@ -58,10 +74,13 @@ namespace Unity.Services.Authentication
         public string Profile { get; }
         public string SessionToken { get; }
         public bool SessionTokenExists { get; }
+        public AuthenticationState State { get; }
+        public TargetingComponent Targeting { get; }
         public System.Threading.Tasks.Task AddUsernamePasswordAsync(string username, string password);
         public void ClearSessionToken();
         public System.Threading.Tasks.Task ConfirmCodeAsync(string code, string idProvider = default(string), string externalToken = default(string));
         public System.Threading.Tasks.Task DeleteAccountAsync();
+        public System.Threading.Tasks.Task<RestrictedTokenResponse> GenerateRestrictedTokenAsync(RestrictedTokenOptions options);
         public System.Threading.Tasks.Task<SignInCodeInfo> GenerateSignInCodeAsync(string identifier = default(string));
         public System.Threading.Tasks.Task<System.Collections.Generic.List<Notification>> GetNotificationsAsync();
         public System.Threading.Tasks.Task<PlayerInfo> GetPlayerInfoAsync();
@@ -159,6 +178,23 @@ namespace Unity.Services.Authentication
         public string GetUnityId();
     }
 
+    public class RestrictedTokenOptions
+    {
+        public System.Collections.Generic.List<string> Services { get; set; }
+        public bool SingleUse { get; set; }
+        public System.Nullable<long> TtlSeconds { get; set; }
+        public RestrictedTokenOptions() {}
+    }
+
+    public sealed class RestrictedTokenResponse
+    {
+        public int ExpiresIn { get; }
+        public string IdToken { get; }
+        public string SessionToken { get; }
+        public string UserId { get; }
+        public RestrictedTokenResponse() {}
+    }
+
     public sealed class SignInCodeInfo
     {
         public string Expiration { get; }
@@ -171,6 +207,20 @@ namespace Unity.Services.Authentication
     {
         public bool CreateAccount { get; set; }
         public SignInOptions() {}
+    }
+
+    public class TargetingComponent : Internal.ITargetingActivation, Internal.ITargetingContext, Unity.Services.Core.Internal.IServiceComponent
+    {
+        public Attributes Attributes { get; }
+        public bool Enabled { get; }
+        public string[] VariantTags { get; }
+        public void ClearAppAttributes();
+        public void ClearEnabled();
+        public void ClearUserAttributes();
+        public System.Threading.Tasks.Task RefreshAsync();
+        public void SetAppAttributes(object appAttributes);
+        public void SetEnabled(bool enabled);
+        public void SetUserAttributes(object userAttributes);
     }
 }
 
@@ -200,6 +250,14 @@ namespace Unity.Services.Authentication.Components
         [UnityEngine.SerializeField] public UnityEngine.Events.UnityEvent<SignInCodeInfo> SignInCodeReceived = new();
         [UnityEngine.SerializeField] public UnityEngine.Events.UnityEvent<System.Exception> SignInFailed = new();
         public PlayerAuthenticationEvents() {}
+    }
+}
+
+namespace Unity.Services.Authentication.Internal
+{
+    public static class RestrictedTokenOptionsExtensions
+    {
+        public static void SetCountry(this RestrictedTokenOptions options, string country);
     }
 }
 

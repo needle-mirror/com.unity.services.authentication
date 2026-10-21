@@ -1,9 +1,12 @@
 using System;
 using Newtonsoft.Json;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace Unity.Services.Authentication
 {
+    // Read by the serializer only: stripping removes getters nothing calls, so these are fields; a property here needs [Preserve].
+
     /// <summary>
     /// Contextual attributes attached to an authentication request, such as user-defined
     /// and application-defined metadata.
@@ -12,19 +15,21 @@ namespace Unity.Services.Authentication
     public class Attributes
     {
         [JsonProperty("unity")]
-        internal UnityAttributes Unity { get; } = new();
+        internal readonly UnityAttributes Unity = new UnityAttributes();
         [JsonProperty("device")]
-        internal DeviceAttributes Device { get; } = new();
+        internal readonly DeviceAttributes Device = new DeviceAttributes();
         [JsonProperty("os")]
-        internal OsAttributes Os { get; } = new();
+        internal readonly OsAttributes Os = new OsAttributes();
         /// <summary>
         /// User-defined attributes to include with the authentication request.
         /// </summary>
+        [Preserve]
         [JsonProperty("user")]
         public object User { get; internal set; }
         /// <summary>
         /// Application-defined attributes to include with the authentication request.
         /// </summary>
+        [Preserve]
         [JsonProperty("app")]
         public object App { get; internal set; }
     }
@@ -33,9 +38,11 @@ namespace Unity.Services.Authentication
     internal class UnityAttributes
     {
         [JsonProperty("app")]
-        public UnityAppAttributes App { get; } = new();
+        public readonly UnityAppAttributes App = new UnityAppAttributes();
         [JsonProperty("runtime_platform")]
-        public string RuntimePlatform { get; }
+        public readonly string RuntimePlatform;
+        // Stays a property: read at serialization time, not construction time.
+        [Preserve]
         [JsonProperty("time_since_start")]
         public double TimeSinceStart => Time.realtimeSinceStartupAsDouble * 1000;
 
@@ -49,15 +56,15 @@ namespace Unity.Services.Authentication
     internal class UnityAppAttributes
     {
         [JsonProperty("bundle_id")]
-        public string BundleId { get; }
+        public readonly string BundleId;
         [JsonProperty("name")]
-        public string Name { get; }
+        public readonly string Name;
         [JsonProperty("install_mode")]
-        public string InstallMode { get; }
+        public readonly string InstallMode;
         [JsonProperty("installer")]
-        public string Installer { get; }
+        public readonly string Installer;
         [JsonProperty("version")]
-        public string Version { get; }
+        public readonly string Version;
 
         public UnityAppAttributes()
         {
@@ -81,19 +88,19 @@ namespace Unity.Services.Authentication
     internal class DeviceAttributes
     {
         [JsonProperty("cpu")]
-        public DeviceCpuAttributes Cpu { get; } = new();
+        public readonly DeviceCpuAttributes Cpu = new DeviceCpuAttributes();
         [JsonProperty("gpu")]
-        public DeviceGpuAttributes Gpu { get; } = new();
+        public readonly DeviceGpuAttributes Gpu = new DeviceGpuAttributes();
         [JsonProperty("memory")]
-        public DeviceMemoryAttributes Memory { get; } = new();
+        public readonly DeviceMemoryAttributes Memory = new DeviceMemoryAttributes();
         [JsonProperty("screen")]
-        public DeviceScreenAttributes Screen { get; } = new();
+        public readonly DeviceScreenAttributes Screen = new DeviceScreenAttributes();
         [JsonProperty("max_texture_size")]
-        public int MaxTextureSize { get; }
+        public readonly int MaxTextureSize;
         [JsonProperty("model")]
-        public string Model { get; }
+        public readonly string Model;
         [JsonProperty("rooted_or_jailbroken")]
-        public bool RootedOrJailbroken { get; }
+        public readonly bool RootedOrJailbroken;
 
         public DeviceAttributes()
         {
@@ -107,13 +114,13 @@ namespace Unity.Services.Authentication
     internal class DeviceCpuAttributes
     {
         [JsonProperty("count")]
-        public int Count { get; }
+        public readonly int Count;
         [JsonProperty("frequency_mhz")]
-        public int FrequencyMhz { get; }
+        public readonly int FrequencyMhz;
         [JsonProperty("model")]
-        public string Model { get; }
+        public readonly string Model;
         [JsonProperty("type")]
-        public string Type { get; }
+        public readonly string Type;
 
         public DeviceCpuAttributes()
         {
@@ -132,19 +139,19 @@ namespace Unity.Services.Authentication
     internal class DeviceGpuAttributes
     {
         [JsonProperty("id")]
-        public int Id { get; }
+        public readonly int Id;
         [JsonProperty("memory_size_mb")]
-        public int MemorySizeMb { get; }
+        public readonly int MemorySizeMb;
         [JsonProperty("model")]
-        public string Model { get; }
+        public readonly string Model;
         [JsonProperty("vendor")]
-        public string Vendor { get; }
+        public readonly string Vendor;
         [JsonProperty("vendor_id")]
-        public int VendorId { get; }
+        public readonly int VendorId;
         [JsonProperty("version")]
-        public string Version { get; }
+        public readonly string Version;
         [JsonProperty("shader_level")]
-        public int ShaderLevel { get; }
+        public readonly int ShaderLevel;
 
         public DeviceGpuAttributes()
         {
@@ -162,7 +169,7 @@ namespace Unity.Services.Authentication
     internal class DeviceMemoryAttributes
     {
         [JsonProperty("total_size_mb")]
-        public int TotalSizeMb { get; }
+        public readonly int TotalSizeMb;
 
         public DeviceMemoryAttributes()
         {
@@ -174,13 +181,13 @@ namespace Unity.Services.Authentication
     internal class DeviceScreenAttributes
     {
         [JsonProperty("dpi")]
-        public int Dpi { get; }
+        public readonly int Dpi;
         [JsonProperty("fullscreen")]
-        public int Fullscreen { get; }
+        public readonly int Fullscreen;
         [JsonProperty("refresh_rate_hz")]
-        public double RefreshRateHz { get; }
+        public readonly double RefreshRateHz;
         [JsonProperty("size")]
-        public string Size { get; }
+        public readonly string Size;
 
         public DeviceScreenAttributes()
         {
@@ -199,9 +206,9 @@ namespace Unity.Services.Authentication
     internal class OsAttributes
     {
         [JsonProperty("language")]
-        public string Language { get; }
+        public readonly string Language;
         [JsonProperty("version")]
-        public string Version { get; }
+        public readonly string Version;
 
         public OsAttributes()
         {

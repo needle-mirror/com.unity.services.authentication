@@ -14,6 +14,7 @@ namespace Unity.Services.Authentication.Server
         public void ClearCredentials();
         public System.Threading.Tasks.Task SignInFromServerAsync();
         public System.Threading.Tasks.Task SignInWithServiceAccountAsync(string apiKeyIdentifier, string apiKeySecret);
+        public System.Threading.Tasks.Task SignInWithServiceAccountAsync(string apiKeyIdentifier, string apiKeySecret, System.Collections.Generic.List<string> scopes);
     }
 
     public static class ServerAuthenticationErrorCodes
@@ -35,9 +36,9 @@ namespace Unity.Services.Authentication.Server
     public enum ServerAuthenticationState
     {
         Authorized = 0,
+        SigningIn = 1,
         Expired = 2,
         Refreshing = 3,
-        SigningIn = 1,
         Unauthorized = 4,
     }
 }
