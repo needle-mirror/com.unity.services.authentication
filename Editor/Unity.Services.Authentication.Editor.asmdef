@@ -4,6 +4,7 @@
     "references": [
         "Unity.Services.Core.Editor",
         "Unity.Services.Core.Environments.Editor",
+        "Unity.Services.Core.Releases.Editor",
         "Unity.Services.Core",
         "Unity.Services.Core.Internal",
         "Unity.Settings.Editor",
@@ -20,6 +21,12 @@
     "precompiledReferences": [],
     "autoReferenced": false,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.services.core",
+            "expression": "1.19.0",
+            "define": "FEATURE_LIVE_RELEASES"
+        }
+    ],
     "noEngineReferences": false
 }

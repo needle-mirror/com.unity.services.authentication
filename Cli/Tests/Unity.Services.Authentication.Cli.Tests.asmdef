@@ -1,0 +1,36 @@
+{
+    "name": "Unity.Services.Authentication.Cli.Tests",
+    "rootNamespace": "Unity.Services.Authentication.Cli.Tests",
+    "references": [
+        "Unity.Services.Authentication.Cli",
+        "Unity.Services.Authentication",
+        "Unity.Services.Authentication.Editor",
+        "Unity.Pipeline",
+        "Unity.Pipeline.Editor",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll",
+        "Newtonsoft.Json.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS",
+        "UNITY_PIPELINE_AVAILABLE"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.pipeline",
+            "expression": "0.9.0-exp.1",
+            "define": "UNITY_PIPELINE_AVAILABLE"
+        }
+    ],
+    "noEngineReferences": false
+}

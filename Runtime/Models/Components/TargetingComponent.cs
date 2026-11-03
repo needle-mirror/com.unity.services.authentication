@@ -15,6 +15,9 @@ namespace Unity.Services.Authentication
     /// by calling <see cref="SetEnabled"/> and restored by calling <see cref="ClearEnabled"/>.
     /// </remarks>
     public class TargetingComponent : ITargetingContext, ITargetingActivation
+#if FEATURE_LIVE_RELEASES
+    , IReleaseContext
+#endif
     {
         bool? _developerOverride;
         readonly HashSet<string> _consumers = new HashSet<string>();
@@ -35,6 +38,17 @@ namespace Unity.Services.Authentication
         /// The targeting attributes that will be sent with the next sign-in or refresh request.
         /// </summary>
         public Attributes Attributes => _attributes;
+#if FEATURE_LIVE_RELEASES
+        /// <summary>
+        /// The name of the release resolved by the server for this session, or <c>null</c> if no release has been resolved.
+        /// </summary>
+        public string ReleaseName { get; internal set; }
+
+        /// <summary>
+        /// The unique identifier of the release resolved by the server for this session, or <c>null</c> if no release has been resolved.
+        /// </summary>
+        public string ReleaseId { get; internal set; }
+#endif
 
         /// <summary>
         /// The variant tags assigned to this session by the server, or <c>null</c> if no release has been resolved.

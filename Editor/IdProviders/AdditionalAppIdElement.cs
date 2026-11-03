@@ -101,32 +101,21 @@ namespace Unity.Services.Authentication.Editor
                 InvokeDeleted(SavedValue.New);
                 return;
             }
-            var option = DisplayDialogComplex("Delete Request", "Do you want to delete this AppId?", "Delete", "Cancel", "");
-            switch (option)
+
+            if (DisplayConfirmationDialog("Delete Request", "Do you want to delete this AppId?", "Delete", "Cancel"))
             {
-                // Delete
-                case 0:
-                    InvokeDeleted(SavedValue.New);
-                    break;
-
-                // Cancel
-                case 1:
-                    break;
-
-                default:
-                    Debug.LogError("Unrecognized option.");
-                    break;
+                InvokeDeleted(SavedValue.New);
             }
         }
 
-        int DisplayDialogComplex(string title, string message, string ok, string cancel, string alt)
+        bool DisplayConfirmationDialog(string title, string message, string ok, string cancel)
         {
             if (Application.isBatchMode || m_SkipConfirmation)
             {
-                return 0;
+                return true;
             }
 
-            return EditorUtility.DisplayDialogComplex(title, message, ok, cancel, alt);
+            return EditorUtility.DisplayDialog(title, message, ok, cancel);
         }
 
         void InvokeDeleted(bool isNew)

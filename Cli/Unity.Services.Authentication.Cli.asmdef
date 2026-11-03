@@ -1,0 +1,29 @@
+{
+    "name": "Unity.Services.Authentication.Cli",
+    "rootNamespace": "Unity.Services.Authentication.Cli",
+    "references": [
+        "Unity.Services.Authentication",
+        "Unity.Services.Authentication.Editor",
+        "Unity.Services.Core",
+        "Unity.Services.Core.Components",
+        "Unity.Pipeline",
+        "Unity.Pipeline.Attributes"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_PIPELINE_AVAILABLE"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.pipeline",
+            "expression": "0.9.0-exp.1",
+            "define": "UNITY_PIPELINE_AVAILABLE"
+        }
+    ],
+    "noEngineReferences": false
+}

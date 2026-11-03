@@ -23,6 +23,23 @@ namespace Unity.Services.Authentication.Editor
             return new AuthenticationAdminClient(networkClient, new GenesisTokenProvider());
         }
 
+        /// <summary>
+        /// Creates a client that manages Unity Player Accounts for the linked project, or returns null when the project
+        /// is not linked to a Unity Cloud project.
+        /// </summary>
+        internal static IPlayerAccountsAdminClient CreatePlayerAccountsAdminClient()
+        {
+            if (!IsConfigured())
+            {
+                return null;
+            }
+
+            var host = GetHost(GetCloudEnvironment(Environment.GetCommandLineArgs()));
+            var networkHandler = new NetworkHandler(new NetworkConfiguration());
+            var authenticationAdmin = new AuthenticationAdminNetworkClient(host, GetProjectId(), networkHandler);
+            return new PlayerAccountsAdminClient(host, GetProjectId(), networkHandler, authenticationAdmin, new GenesisTokenProvider());
+        }
+
         internal static bool IsConfigured()
         {
             return !string.IsNullOrEmpty(GetOrganizationId()) && !string.IsNullOrEmpty(GetProjectId());

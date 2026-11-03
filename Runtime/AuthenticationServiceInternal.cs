@@ -7,6 +7,9 @@ using Unity.Services.Authentication.Generated;
 using Unity.Services.Authentication.Internal;
 using Unity.Services.Core;
 using Unity.Services.Core.Environments.Internal;
+#if FEATURE_LIVE_RELEASES
+using Unity.Services.Core.Releases.Internal;
+#endif
 using Unity.Services.Core.Scheduler.Internal;
 using UnityEngine;
 using Task = System.Threading.Tasks.Task;
@@ -432,6 +435,10 @@ namespace Unity.Services.Authentication
                 if (accessTokenDecoded.Audience != null)
                 {
                     EnvironmentIdComponent.EnvironmentId = accessTokenDecoded.Audience.FirstOrDefault(s => s.StartsWith("envId:"))?.Substring(6);
+#if FEATURE_LIVE_RELEASES
+                    Targeting.ReleaseId = accessTokenDecoded.Audience.FirstOrDefault(s => s.StartsWith("releaseId:"))?.Substring(10);
+                    Targeting.ReleaseName = accessTokenDecoded.Audience.FirstOrDefault(s => s.StartsWith("releaseName:"))?.Substring(12);
+#endif
                     Targeting.VariantTags = accessTokenDecoded.Audience.FirstOrDefault(s => s.StartsWith("variantTags:"))?.Substring(12).Split(',');
                 }
 

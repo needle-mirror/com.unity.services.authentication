@@ -1,12 +1,12 @@
 {
   "name": "com.unity.services.authentication",
   "displayName": "Authentication",
-  "version": "3.8.1",
+  "version": "3.9.0",
   "unity": "2022.3",
   "description": "Client SDK offering player identity management for Unity Gaming Services.\n\nIdentity providers can be configured from the editor or the Unity Dashboard.\n\nPlayer management is available in the Unity Dashboard.",
   "dependencies": {
     "com.unity.nuget.newtonsoft-json": "3.2.2",
-    "com.unity.services.core": "1.18.0",
+    "com.unity.services.core": "1.19.0",
     "com.unity.modules.unitywebrequest": "1.0.0",
     "com.unity.ugui": "1.0.0"
   },
@@ -27,7 +27,7 @@
       "Windows 8 Universal",
       "Windows 10 Universal"
     ],
-    "changelog": "### Fixed\n- Fixed targeting sending no attributes on sign-in, so no variant tags resolved, in players built with Managed Stripping Level `Low` or higher."
+    "changelog": "### Added\n- Added Unity services CLI commands for Authentication, available when `com.unity.pipeline` is installed.\n- Added `services.authentication.player_accounts` CLI commands (compiled only when `com.unity.pipeline` is installed) to set up Unity Player Accounts for the linked project without the Dashboard: `enable`, `get` and `update` for the project's Player Accounts client, and `list_identity_providers`, `create_identity_provider`, `enable_identity_provider`, `disable_identity_provider` and `delete_identity_provider` for the game's own Apple, Google and Facebook apps.\n- Live Releases: sign-in requests now include the release pointer configured in Core, so the server resolves the player's session to that release. The resolved release is available from `AuthenticationService.Instance.Targeting.ReleaseId` and `ReleaseName`, and is shared with other Unity Gaming Services packages through Core.\n- Live Releases: in Play Mode in the Editor, sign-in uses the release selected for the active environment in Project Settings > Services > Environments, unless a release pointer is set in code.\n\n### Changed\n- Requires `com.unity.services.core` 1.19.0 or newer.\n- Player Accounts `IsSignedIn` now stays `true` during a token refresh, and `SignInFailed` is now raised after the player is signed out.\n\n### Fixed\n- Fixed the Authentication project settings reporting that it finished waiting twice when saving or deleting an ID provider failed.\n- Fixed Player Accounts sign-in on Android and iOS not validating the OAuth `state` parameter. A custom redirect page or proxy must pass `state` through unchanged.\n- Fixed Player Accounts `SignOut()` not cancelling a sign-in or token refresh in progress.\n- Fixed Player Accounts sign-in and token refresh failures not being reported, or leaving the player in an inconsistent state.\n- Fixed the ID provider save and delete confirmation dialogs in Project Settings showing an extra \"No\" button that logged an \"Unrecognized option\" error."
   },
   "relatedPackages": {
     "com.unity.services.authentication.tests": "0.0.0"
@@ -40,12 +40,12 @@
     }
   ],
   "upmCi": {
-    "footprint": "6c512c190f2f2407f5a21ec1865ea00260871030"
+    "footprint": "74739a9453f40e5936ff38d84ab5d994cd3350f1"
   },
-  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.services.authentication@3.8/manual/index.html",
+  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.services.authentication@3.9/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/operate-services-sdk.git",
     "type": "git",
-    "revision": "2130ae07fe406a1643ed10b7c2b2be390ba6c7a6"
+    "revision": "97d7c1150212b616e64b8015f6dfed728e950a70"
   }
 }

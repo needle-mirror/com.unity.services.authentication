@@ -7,6 +7,9 @@ using Unity.Services.Core.Configuration.Internal;
 using Unity.Services.Core.Device.Internal;
 using Unity.Services.Core.Environments.Internal;
 using Unity.Services.Core.Internal;
+#if FEATURE_LIVE_RELEASES
+using Unity.Services.Core.Releases.Internal;
+#endif
 using Unity.Services.Core.Scheduler.Internal;
 using Unity.Services.Core.Telemetry.Internal;
 using UnityEngine;
@@ -37,13 +40,20 @@ namespace Unity.Services.Authentication
                 .DependsOn<IEngineInstallationId>()
                 .DependsOn<IProjectConfiguration>()
                 .DependsOn<IMetricsFactory>()
+#if FEATURE_LIVE_RELEASES
+                .DependsOn<IReleases>()
+#endif
                 .ProvidesComponent<IPlayerId>()
                 .ProvidesComponent<IPlayerNameComponent>()
                 .ProvidesComponent<IAccessToken>()
                 .ProvidesComponent<IAccessTokenObserver>()
                 .ProvidesComponent<IEnvironmentId>()
                 .ProvidesComponent<ITargetingActivation>()
-                .ProvidesComponent<ITargetingContext>();
+                .ProvidesComponent<ITargetingContext>()
+#if FEATURE_LIVE_RELEASES
+                .ProvidesComponent<IReleaseContext>()
+#endif
+                ;
         }
 
         public Task Initialize(CoreRegistry registry)
@@ -69,6 +79,9 @@ namespace Unity.Services.Authentication
             var settings = new AuthenticationSettings();
             var scheduler = registry.GetServiceComponent<IActionScheduler>();
             var environment = registry.GetServiceComponent<IEnvironments>();
+#if FEATURE_LIVE_RELEASES
+            var releases = registry.GetServiceComponent<IReleases>();
+#endif
             var projectId = registry.GetServiceComponent<ICloudProjectId>();
             var engineInstallationId = registry.GetServiceComponent<IEngineInstallationId>();
             var projectConfiguration = registry.GetServiceComponent<IProjectConfiguration>();
@@ -99,7 +112,10 @@ namespace Unity.Services.Authentication
                 networkHandler,
                 accessToken,
                 engineInstallationId
-                        );
+            #if FEATURE_LIVE_RELEASES
+                , releases
+#endif
+            );
             var authenticationService = new AuthenticationServiceInternal(
                 settings,
                 networkClient,
@@ -123,6 +139,10 @@ namespace Unity.Services.Authentication
             registry.RegisterServiceComponent<IEnvironmentId>(authenticationService.EnvironmentIdComponent);
             registry.RegisterServiceComponent<ITargetingActivation>(authenticationService.Targeting);
             registry.RegisterServiceComponent<ITargetingContext>(authenticationService.Targeting);
+#if FEATURE_LIVE_RELEASES
+            //TODO: revise naming before releasing releases
+            registry.RegisterServiceComponent<IReleaseContext>(authenticationService.Targeting);
+#endif
             registry.RegisterServiceComponent<IPlayerId>(authenticationService.PlayerIdComponent);
             registry.RegisterServiceComponent<IPlayerNameComponent>(authenticationService.PlayerNameComponent);
 

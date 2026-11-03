@@ -420,20 +420,10 @@ namespace Unity.Services.Authentication.Editor
                 return;
             }
 
-            var option = DisplayDialogComplex("Save your changes", "Do you want to save the ID provider changes?", "Save", "Cancel", "");
-            switch (option)
+            if (DisplayConfirmationDialog("Save your changes", "Do you want to save the ID provider changes?", "Save", "Cancel"))
             {
-                case 0:
-                    AuthenticationEditorAnalytics.SendSaveProviderEvent();
-                    Save();
-                    break;
-
-                case 1:
-                    break;
-
-                default:
-                    Logger.LogError("Unrecognized option.");
-                    break;
+                AuthenticationEditorAnalytics.SendSaveProviderEvent();
+                Save();
             }
         }
 
@@ -570,21 +560,9 @@ namespace Unity.Services.Authentication.Editor
 
         void OnDeleteButtonClicked()
         {
-            var option = DisplayDialogComplex("Delete Request", "Do you want to delete the ID Provider?", "Delete", "Cancel", "");
-            switch (option)
+            if (DisplayConfirmationDialog("Delete Request", "Do you want to delete the ID Provider?", "Delete", "Cancel"))
             {
-                // Delete
-                case 0:
-                    Delete();
-                    break;
-
-                // Cancel
-                case 1:
-                    break;
-
-                default:
-                    Logger.LogError("Unrecognized option.");
-                    break;
+                Delete();
             }
         }
 
@@ -606,14 +584,14 @@ namespace Unity.Services.Authentication.Editor
             InvokeWaiting(false);
         }
 
-        int DisplayDialogComplex(string title, string message, string ok, string cancel, string alt)
+        bool DisplayConfirmationDialog(string title, string message, string ok, string cancel)
         {
             if (Application.isBatchMode || m_SkipConfirmation)
             {
-                return 0;
+                return true;
             }
 
-            return EditorUtility.DisplayDialogComplex(title, message, ok, cancel, alt);
+            return EditorUtility.DisplayDialog(title, message, ok, cancel);
         }
 
         void OnAdditionalElementWaiting(IdProviderCustomSettingsElement sender, bool waiting)

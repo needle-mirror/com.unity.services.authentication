@@ -4,6 +4,25 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [3.9.0] - 2026-11-03
+
+### Added
+- Added Unity services CLI commands for Authentication, available when `com.unity.pipeline` is installed.
+- Added `services.authentication.player_accounts` CLI commands (compiled only when `com.unity.pipeline` is installed) to set up Unity Player Accounts for the linked project without the Dashboard: `enable`, `get` and `update` for the project's Player Accounts client, and `list_identity_providers`, `create_identity_provider`, `enable_identity_provider`, `disable_identity_provider` and `delete_identity_provider` for the game's own Apple, Google and Facebook apps.
+- Live Releases: sign-in requests now include the release pointer configured in Core, so the server resolves the player's session to that release. The resolved release is available from `AuthenticationService.Instance.Targeting.ReleaseId` and `ReleaseName`, and is shared with other Unity Gaming Services packages through Core.
+- Live Releases: in Play Mode in the Editor, sign-in uses the release selected for the active environment in Project Settings > Services > Environments, unless a release pointer is set in code.
+
+### Changed
+- Requires `com.unity.services.core` 1.19.0 or newer.
+- Player Accounts `IsSignedIn` now stays `true` during a token refresh, and `SignInFailed` is now raised after the player is signed out.
+
+### Fixed
+- Fixed the Authentication project settings reporting that it finished waiting twice when saving or deleting an ID provider failed.
+- Fixed Player Accounts sign-in on Android and iOS not validating the OAuth `state` parameter. A custom redirect page or proxy must pass `state` through unchanged.
+- Fixed Player Accounts `SignOut()` not cancelling a sign-in or token refresh in progress.
+- Fixed Player Accounts sign-in and token refresh failures not being reported, or leaving the player in an inconsistent state.
+- Fixed the ID provider save and delete confirmation dialogs in Project Settings showing an extra "No" button that logged an "Unrecognized option" error.
+
 ## [3.8.1] - 2026-10-21
 
 ### Fixed

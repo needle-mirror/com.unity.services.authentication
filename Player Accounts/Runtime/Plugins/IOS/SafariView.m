@@ -30,6 +30,9 @@ API_AVAILABLE(ios(13.0))
 
 static UnityPlayerAccountAuthCallback s_AuthCallback = NULL;
 static ASWebAuthenticationSession *s_Session = nil;
+// Bumped for every launch and cancel, so a completion from an earlier session is dropped instead of
+// being reported as the current sign-in's result.
+static NSUInteger s_SessionId = 0;
 API_AVAILABLE(ios(13.0))
 static UnityPlayerAccountPresentationContext *s_PresentationContext = nil;
 
@@ -42,8 +45,24 @@ void setUnityPlayerAccountAuthCallback(UnityPlayerAccountAuthCallback callback)
     s_AuthCallback = callback;
 }
 
+// Dismisses the session in progress, if any. Its completion handler is then ignored.
+void cancelUnityPlayerAccountSession(void)
+{
+    s_SessionId++;
+    ASWebAuthenticationSession *session = s_Session;
+    s_Session = nil;
+    if (@available(iOS 13.0, *))
+    {
+        s_PresentationContext = nil;
+    }
+    [session cancel];
+}
+
 void launchUnityPlayerAccountUrl(const char *url, const char *callbackScheme)
 {
+    cancelUnityPlayerAccountSession();
+    NSUInteger sessionId = s_SessionId;
+
     NSURL *authURL = [NSURL URLWithString:[NSString stringWithUTF8String:url]];
     NSString *scheme = callbackScheme != NULL ? [NSString stringWithUTF8String:callbackScheme] : nil;
 
@@ -54,6 +73,11 @@ void launchUnityPlayerAccountUrl(const char *url, const char *callbackScheme)
         initWithURL:authURL
         callbackURLScheme:scheme
         completionHandler:^(NSURL *callbackURL, NSError *error) {
+            if (sessionId != s_SessionId)
+            {
+                return;
+            }
+
             if (s_AuthCallback != NULL)
             {
                 // NOTE: it may look odd that we are holding onto these static variables only to null them,

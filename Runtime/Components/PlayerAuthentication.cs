@@ -21,20 +21,29 @@ namespace Unity.Services.Authentication.Components
 
         /// <summary>
         /// Option to set a custom profile with <see cref="IAuthenticationService.SwitchProfile(string)"/>.
-        /// The profile is a local scope for persisted player credentials that you can use to get different players.
+        /// A profile is an independent store of saved credentials on this device.
         /// </summary>
+        /// <remarks>
+        /// Each profile stores its own session token. Signing in anonymously with an empty profile creates a new player, and signing in anonymously with a profile that already has saved credentials continues that player.
+        /// Signing in with a username and password, an external identity provider, or a sign-in code identifies the same player in every profile.
+        /// Use profiles to test with multiple anonymous players on one machine.
+        /// </remarks>
         [Header("On Initialization")]
         [SerializeField]
-        [Tooltip("Option to set a custom profile to scope persisted credentials and get different players.")]
+        [Tooltip("Use a custom profile to keep separate saved credentials on this device.")]
         public bool SetCustomProfile;
 
         /// <summary>
-        /// The profile value to use if <see cref="SetCustomProfile"/> is true.
-        /// The profile is a local scope for persisted player credentials that you can use to get different players.
+        /// The name of the profile to use if <see cref="SetCustomProfile"/> is true.
+        /// Each profile is an independent store of saved credentials on this device.
         /// </summary>
+        /// <remarks>
+        /// Signing in anonymously with an empty profile creates a new player.
+        /// Signing in with a username and password, an external identity provider, or a sign-in code identifies the same player in every profile.
+        /// </remarks>
         [SerializeField]
         [Visibility(nameof(SetCustomProfile), true)]
-        [Tooltip("The profile is a local scope for persisted player credentials that you can use to get different players.")]
+        [Tooltip("The name of the profile to use. Each profile stores its own saved credentials.")]
         public string Profile;
 
         /// <summary>

@@ -4,7 +4,12 @@ using System.Threading.Tasks;
 using Unity.Services.Core.Configuration.Internal;
 using Unity.Services.Core.Device.Internal;
 using Unity.Services.Core.Environments.Internal;
-using UnityEngine;
+#if FEATURE_LIVE_RELEASES
+using Unity.Services.Core.Releases.Internal;
+#if UNITY_EDITOR
+using Unity.Services.Authentication.Internal;
+#endif
+#endif
 
 namespace Unity.Services.Authentication
 {
@@ -14,6 +19,10 @@ namespace Unity.Services.Authentication
 
         const string k_AnonymousUrlStem = "/v1/authentication/anonymous";
         const string k_SessionTokenUrlStem = "/v1/authentication/session-token";
+#if FEATURE_LIVE_RELEASES
+        const string k_AnonymousImpersonatedUrlStem = "/editor/v1/authentication/anonymous-impersonated";
+        const string k_SessionTokenImpersonatedUrlStem = "/editor/v1/authentication/session-token-impersonated";
+#endif
         const string k_ExternalTokenUrlStem = "/v1/authentication/external-token";
         const string k_LinkExternalTokenUrlStem = "/v1/authentication/link";
         const string k_UnlinkExternalTokenUrlStem = "/v1/authentication/unlink";
@@ -34,13 +43,26 @@ namespace Unity.Services.Authentication
         internal ICloudProjectId CloudProjectIdComponent { get; }
         internal IEngineInstallationId EngineInstallationIdComponent { get; }
         internal IEnvironments EnvironmentComponent { get; }
+#if FEATURE_LIVE_RELEASES
+        internal IReleases ReleaseComponent { get; }
+#endif
         internal INetworkHandler NetworkHandler { get; }
 
         string AccessToken => AccessTokenComponent.AccessToken;
         string EnvironmentName => EnvironmentComponent.Current;
+#if FEATURE_LIVE_RELEASES
+        string ReleasePointer => ReleaseComponent?.Pointer;
+        string ReleaseName => ReleaseComponent?.ReleaseName;
+#endif
 
         readonly string m_AnonymousUrl;
         readonly string m_SessionTokenUrl;
+#if FEATURE_LIVE_RELEASES
+#if UNITY_EDITOR
+        readonly string m_AnonymousImpersonatedUrl;
+        readonly string m_SessionTokenImpersonatedUrl;
+#endif
+#endif
         readonly string m_ExternalTokenUrl;
         readonly string m_LinkExternalTokenUrl;
         readonly string m_UnlinkExternalTokenUrl;
@@ -63,16 +85,28 @@ namespace Unity.Services.Authentication
                                              INetworkHandler networkHandler,
                                              AccessTokenComponent accessToken,
                                              IEngineInstallationId engineInstallationId
-                                                     )
+                                             #if FEATURE_LIVE_RELEASES
+                                             , IReleases release = null
+#endif
+        )
         {
             AccessTokenComponent = accessToken;
             CloudProjectIdComponent = cloudProjectId;
             EngineInstallationIdComponent = engineInstallationId;
             EnvironmentComponent = environment;
+#if FEATURE_LIVE_RELEASES
+            ReleaseComponent = release;
+#endif
             NetworkHandler = networkHandler;
 
             m_AnonymousUrl = host + k_AnonymousUrlStem;
             m_SessionTokenUrl = host + k_SessionTokenUrlStem;
+#if FEATURE_LIVE_RELEASES
+#if UNITY_EDITOR
+            m_AnonymousImpersonatedUrl = host + k_AnonymousImpersonatedUrlStem;
+            m_SessionTokenImpersonatedUrl = host + k_SessionTokenImpersonatedUrlStem;
+#endif
+#endif
             m_ExternalTokenUrl = host + k_ExternalTokenUrlStem;
             m_LinkExternalTokenUrl = host + k_LinkExternalTokenUrlStem;
             m_UnlinkExternalTokenUrl = host + k_UnlinkExternalTokenUrlStem;
@@ -94,39 +128,65 @@ namespace Unity.Services.Authentication
             };
         }
 
-        public Task<SignInResponse> SignInAnonymouslyAsync(SignInAnonymouslyRequest request)
+        public async Task<SignInResponse> SignInAnonymouslyAsync(SignInAnonymouslyRequest request)
         {
-            return NetworkHandler.PostAsync<SignInResponse>(m_AnonymousUrl, request, WithEnvironmentAndRelease(GetCommonHeaders()));
+            var headers = WithEnvironmentAndRelease(GetCommonHeaders());
+#if FEATURE_LIVE_RELEASES
+#if UNITY_EDITOR
+            if (ShouldImpersonate())
+            {
+                var impersonatedHeaders = await TryBuildImpersonationHeadersAsync(headers);
+                if (impersonatedHeaders != null)
+                {
+                    return await NetworkHandler.PostAsync<SignInResponse>(m_AnonymousImpersonatedUrl, request, impersonatedHeaders);
+                }
+            }
+#endif
+#endif
+            return await NetworkHandler.PostAsync<SignInResponse>(m_AnonymousUrl, request, headers);
         }
 
-        public Task<SignInResponse> SignInWithSessionTokenAsync(SessionTokenRequest request)
+        public async Task<SignInResponse> SignInWithSessionTokenAsync(SessionTokenRequest request)
         {
-            return NetworkHandler.PostAsync<SignInResponse>(m_SessionTokenUrl, request, WithEnvironmentAndRelease(GetCommonHeaders()));
+            var headers = WithEnvironmentAndRelease(GetCommonHeaders());
+#if FEATURE_LIVE_RELEASES
+#if UNITY_EDITOR
+            if (ShouldImpersonate())
+            {
+                var impersonatedHeaders = await TryBuildImpersonationHeadersAsync(headers);
+                if (impersonatedHeaders != null)
+                {
+                    return await NetworkHandler.PostAsync<SignInResponse>(m_SessionTokenImpersonatedUrl, request, impersonatedHeaders);
+                }
+            }
+#endif
+#endif
+            return await NetworkHandler.PostAsync<SignInResponse>(m_SessionTokenUrl, request, headers);
         }
 
-        public Task<SignInResponse> GenerateRestrictedTokenAsync(SessionTokenRequest request)
+        public async Task<SignInResponse> GenerateRestrictedTokenAsync(SessionTokenRequest request)
         {
             // Same endpoint as refresh; distinct method so the response is returned to the caller
             // rather than updating the cached session.
-            return NetworkHandler.PostAsync<SignInResponse>(m_SessionTokenUrl, request, WithInstallationId(WithEnvironmentAndRelease(GetCommonHeaders())));
+            return await NetworkHandler.PostAsync<SignInResponse>(m_SessionTokenUrl, request, WithInstallationId(WithEnvironmentAndRelease(GetCommonHeaders())));
         }
 
-        public Task<SignInResponse> SignInWithExternalTokenAsync(string idProvider, SignInWithExternalTokenRequest externalToken)
+        public async Task<SignInResponse> SignInWithExternalTokenAsync(string idProvider, SignInWithExternalTokenRequest externalToken)
         {
             var url = $"{m_ExternalTokenUrl}/{idProvider}";
-            return NetworkHandler.PostAsync<SignInResponse>(url, externalToken, WithEnvironmentAndRelease(GetCommonHeaders()));
+            return await NetworkHandler.PostAsync<SignInResponse>(url, externalToken, WithEnvironmentAndRelease(GetCommonHeaders()));
         }
 
-        public Task<LinkResponse> LinkWithExternalTokenAsync(string idProvider, LinkWithExternalTokenRequest externalToken)
+        public async Task<LinkResponse> LinkWithExternalTokenAsync(string idProvider, LinkWithExternalTokenRequest externalToken)
         {
             var url = $"{m_LinkExternalTokenUrl}/{idProvider}";
-            return NetworkHandler.PostAsync<LinkResponse>(url, externalToken, WithEnvironmentAndRelease(WithAccessToken(GetCommonHeaders())));
+            return await NetworkHandler.PostAsync<LinkResponse>(url, externalToken, WithEnvironmentAndRelease(WithAccessToken(GetCommonHeaders())));
         }
 
-        public Task<UnlinkResponse> UnlinkExternalTokenAsync(string idProvider, UnlinkRequest request)
+        public async Task<UnlinkResponse> UnlinkExternalTokenAsync(string idProvider, UnlinkRequest request)
         {
             var url = $"{m_UnlinkExternalTokenUrl}/{idProvider}";
-            return NetworkHandler.PostAsync<UnlinkResponse>(url, request, WithEnvironmentAndRelease(WithAccessToken(GetCommonHeaders())));
+            return await NetworkHandler.PostAsync<UnlinkResponse>(url, request, WithEnvironmentAndRelease(WithAccessToken(GetCommonHeaders())));
         }
 
         public Task<PlayerInfoResponse> GetPlayerInfoAsync(string playerId)
@@ -134,55 +194,55 @@ namespace Unity.Services.Authentication
             return NetworkHandler.GetAsync<PlayerInfoResponse>(CreateUserRequestUrl(playerId), WithAccessToken(GetCommonHeaders()));
         }
 
-        public Task DeleteAccountAsync(string playerId)
+        public async Task DeleteAccountAsync(string playerId)
         {
-            return NetworkHandler.DeleteAsync(CreateUserRequestUrl(playerId), WithEnvironmentAndRelease(WithAccessToken(GetCommonHeaders())));
+            await NetworkHandler.DeleteAsync(CreateUserRequestUrl(playerId), WithEnvironmentAndRelease(WithAccessToken(GetCommonHeaders())));
         }
 
-        public Task<SignInResponse> SignInWithUsernamePasswordAsync(UsernamePasswordRequest credentials)
+        public async Task<SignInResponse> SignInWithUsernamePasswordAsync(UsernamePasswordRequest credentials)
         {
-            return NetworkHandler.PostAsync<SignInResponse>(m_UsernamePasswordSignInUrl, credentials, WithEnvironmentAndRelease(GetCommonHeaders()));
+            return await NetworkHandler.PostAsync<SignInResponse>(m_UsernamePasswordSignInUrl, credentials, WithEnvironmentAndRelease(GetCommonHeaders()));
         }
 
-        public Task<SignInResponse> SignUpWithUsernamePasswordAsync(UsernamePasswordRequest credentials)
+        public async Task<SignInResponse> SignUpWithUsernamePasswordAsync(UsernamePasswordRequest credentials)
         {
-            return NetworkHandler.PostAsync<SignInResponse>(m_UsernamePasswordSignUpUrl, credentials, WithEnvironmentAndRelease(GetCommonHeaders()));
+            return await NetworkHandler.PostAsync<SignInResponse>(m_UsernamePasswordSignUpUrl, credentials, WithEnvironmentAndRelease(GetCommonHeaders()));
         }
 
-        public Task<SignInResponse> AddUsernamePasswordAsync(UsernamePasswordRequest credentials)
+        public async Task<SignInResponse> AddUsernamePasswordAsync(UsernamePasswordRequest credentials)
         {
-            return NetworkHandler.PostAsync<SignInResponse>(m_UsernamePasswordSignUpUrl, credentials, WithEnvironmentAndRelease(WithAccessToken(GetCommonHeaders())));
+            return await NetworkHandler.PostAsync<SignInResponse>(m_UsernamePasswordSignUpUrl, credentials, WithEnvironmentAndRelease(WithAccessToken(GetCommonHeaders())));
         }
 
-        public Task<SignInResponse> UpdatePasswordAsync(UpdatePasswordRequest credentials)
+        public async Task<SignInResponse> UpdatePasswordAsync(UpdatePasswordRequest credentials)
         {
-            return NetworkHandler.PostAsync<SignInResponse>(m_UpdatePasswordUrl, credentials, WithEnvironmentAndRelease(WithAccessToken(GetCommonHeaders())));
+            return await NetworkHandler.PostAsync<SignInResponse>(m_UpdatePasswordUrl, credentials, WithEnvironmentAndRelease(WithAccessToken(GetCommonHeaders())));
         }
 
-        public Task<GenerateCodeResponse> GenerateSignInCodeAsync(GenerateSignInCodeRequest request)
+        public async Task<GenerateCodeResponse> GenerateSignInCodeAsync(GenerateSignInCodeRequest request)
         {
-            return NetworkHandler.PostAsync<GenerateCodeResponse>(m_GenerateSignInCodeUrl, request, WithEnvironmentAndRelease(GetCommonHeaders()));
+            return await NetworkHandler.PostAsync<GenerateCodeResponse>(m_GenerateSignInCodeUrl, request, WithEnvironmentAndRelease(GetCommonHeaders()));
         }
 
-        public Task<CodeLinkConfirmResponse> ConfirmCodeAsync(ConfirmSignInCodeRequest request)
+        public async Task<CodeLinkConfirmResponse> ConfirmCodeAsync(ConfirmSignInCodeRequest request)
         {
-            return NetworkHandler.PostAsync<CodeLinkConfirmResponse>(m_ConfirmSignInCodeUrl, request, WithEnvironmentAndRelease(WithAccessToken(GetCommonHeaders())));
+            return await NetworkHandler.PostAsync<CodeLinkConfirmResponse>(m_ConfirmSignInCodeUrl, request, WithEnvironmentAndRelease(WithAccessToken(GetCommonHeaders())));
         }
 
-        public Task<SignInResponse> SignInWithCodeAsync(SignInWithCodeRequest request)
+        public async Task<SignInResponse> SignInWithCodeAsync(SignInWithCodeRequest request)
         {
             var url = $"{m_CodeSignInUrl}/{request.CodeLinkSessionId}";
-            return NetworkHandler.PostAsync<SignInResponse>(url, request, WithEnvironmentAndRelease(GetCommonHeaders()));
+            return await NetworkHandler.PostAsync<SignInResponse>(url, request, WithEnvironmentAndRelease(GetCommonHeaders()));
         }
 
-        public Task<CodeLinkInfoResponse> GetCodeIdentifierAsync(CodeLinkInfoRequest request)
+        public async Task<CodeLinkInfoResponse> GetCodeIdentifierAsync(CodeLinkInfoRequest request)
         {
-            return NetworkHandler.PostAsync<CodeLinkInfoResponse>(m_GetCodeIdentifierUrl, request, WithEnvironmentAndRelease(WithAccessToken(GetCommonHeaders())));
+            return await NetworkHandler.PostAsync<CodeLinkInfoResponse>(m_GetCodeIdentifierUrl, request, WithEnvironmentAndRelease(WithAccessToken(GetCommonHeaders())));
         }
 
-        public Task<GetNotificationsResponse> GetNotificationsAsync(string playerId)
+        public async Task<GetNotificationsResponse> GetNotificationsAsync(string playerId)
         {
-            return NetworkHandler.GetAsync<GetNotificationsResponse>(m_GetNotificationsUrl.Replace(k_PlayerIdReplacement, playerId), WithEnvironmentAndRelease(WithAccessToken(GetCommonHeaders())));
+            return await NetworkHandler.GetAsync<GetNotificationsResponse>(m_GetNotificationsUrl.Replace(k_PlayerIdReplacement, playerId), WithEnvironmentAndRelease(WithAccessToken(GetCommonHeaders())));
         }
 
         string CreateUserRequestUrl(string user)
@@ -219,9 +279,51 @@ namespace Unity.Services.Authentication
                 headers["UnityEnvironment"] = environmentName;
             }
 
+#if FEATURE_LIVE_RELEASES
+            var releasePointer = ReleasePointer;
+
+            if (!string.IsNullOrEmpty(releasePointer))
+            {
+                // Code-set pointer takes precedence over Project Settings release.
+                headers["UnityLiveReleasePointer"] = releasePointer;
+            }
+#endif
 
             return headers;
         }
+
+#if FEATURE_LIVE_RELEASES
+#if UNITY_EDITOR
+        bool ShouldImpersonate()
+        {
+            return !string.IsNullOrEmpty(ReleaseName) &&
+                   string.IsNullOrEmpty(ReleasePointer) &&
+                   PlayModeImpersonationBridge.GenesisTokenProvider != null;
+        }
+
+        async Task<Dictionary<string, string>> TryBuildImpersonationHeadersAsync(Dictionary<string, string> headers)
+        {
+            string genesisToken;
+            try
+            {
+                genesisToken = await PlayModeImpersonationBridge.GenesisTokenProvider();
+            }
+            catch (Exception e)
+            {
+                Logger.LogWarning($"Play mode impersonation could not obtain a gateway token; " +
+                    $"signing in without release override. ({e.Message})");
+                return null;
+            }
+            if (string.IsNullOrEmpty(genesisToken))
+            {
+                return null;
+            }
+            headers["Authorization"] = $"Bearer {genesisToken}";
+            headers["unity-live-release-name"] = ReleaseName;
+            return headers;
+        }
+#endif
+#endif
 
         Dictionary<string, string> GetCommonHeaders()
         {

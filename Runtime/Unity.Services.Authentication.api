@@ -232,8 +232,8 @@ namespace Unity.Services.Authentication.Components
         [UnityEngine.Header(@"On Sign In")] [UnityEngine.SerializeField] [UnityEngine.Tooltip(@"Fetches the player info upon sign in. This provides the player creation time, username, etc.")] public bool FetchPlayerInfo;
         [UnityEngine.SerializeField] [UnityEngine.Tooltip(@"Fetches the player name upon sign in.")] public bool FetchPlayerName;
         [Unity.Services.Core.Internal.Visibility(@"FetchPlayerName", true)] [UnityEngine.SerializeField] [UnityEngine.Tooltip(@"Pass in the option to autogenerate the name if none exist.")] public bool GenerateName;
-        [Unity.Services.Core.Internal.Visibility(@"SetCustomProfile", true)] [UnityEngine.SerializeField] [UnityEngine.Tooltip(@"The profile is a local scope for persisted player credentials that you can use to get different players.")] public string Profile;
-        [UnityEngine.Header(@"On Initialization")] [UnityEngine.SerializeField] [UnityEngine.Tooltip(@"Option to set a custom profile to scope persisted credentials and get different players.")] public bool SetCustomProfile;
+        [Unity.Services.Core.Internal.Visibility(@"SetCustomProfile", true)] [UnityEngine.SerializeField] [UnityEngine.Tooltip(@"The name of the profile to use. Each profile stores its own saved credentials.")] public string Profile;
+        [UnityEngine.Header(@"On Initialization")] [UnityEngine.SerializeField] [UnityEngine.Tooltip(@"Use a custom profile to keep separate saved credentials on this device.")] public bool SetCustomProfile;
         [UnityEngine.SerializeField] [UnityEngine.Tooltip(@"Option to sign in anonymously automatically after services initialization.")] public bool SignInAnonymously;
         public IAuthenticationService AuthenticationService { get; }
         protected override void Cleanup();

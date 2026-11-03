@@ -58,6 +58,7 @@ namespace Unity.Services.Authentication.Editor
         IAuthenticationAdminClient AdminClient { get; set; }
         string ProjectId => CloudProjectSettings.projectId;
         bool SkipConfirmation { get; set; }
+        bool IsWaiting { get; set; }
 
         /// <summary>
         /// Event triggered when the <cref="AuthenticationSettingsElement"/> starts or finishes waiting for a task.
@@ -284,12 +285,21 @@ namespace Unity.Services.Authentication.Editor
 
             WaitingTextElement.style.display = DisplayStyle.Flex;
             SetEnabled(false);
+            IsWaiting = true;
 
             Waiting?.Invoke(this, true);
         }
 
         void HideWaiting()
         {
+            // An ID provider's failed save or delete reports the error, which hides the waiting
+            // state, and then finishes waiting itself; only the first one should end the wait.
+            if (!IsWaiting)
+            {
+                return;
+            }
+
+            IsWaiting = false;
             WaitingTextElement.style.display = DisplayStyle.None;
             SetEnabled(true);
             Waiting?.Invoke(this, false);

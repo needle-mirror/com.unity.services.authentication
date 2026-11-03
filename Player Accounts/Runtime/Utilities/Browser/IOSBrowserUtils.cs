@@ -21,6 +21,8 @@ namespace Unity.Services.Authentication.PlayerAccounts
         static extern void launchUnityPlayerAccountUrl(string url, string callbackScheme);
         [DllImport("__Internal")]
         static extern void setUnityPlayerAccountAuthCallback(AuthSessionCallback callback);
+        [DllImport("__Internal")]
+        static extern void cancelUnityPlayerAccountSession();
 
         // The active instance the static (AOT) trampoline routes the native callback to.
         static IOSBrowserUtils s_Active;
@@ -67,6 +69,11 @@ namespace Unity.Services.Authentication.PlayerAccounts
         public bool Bind()
         {
             return true;
+        }
+
+        public void Cancel()
+        {
+            cancelUnityPlayerAccountSession();
         }
 
         private void OnWebAuthSessionCompleted(string callbackUrl, string error)

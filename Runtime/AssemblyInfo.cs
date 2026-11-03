@@ -11,6 +11,7 @@ using UnityEngine.Scripting;
 [assembly: InternalsVisibleTo("Unity.Services.Authentication.Unity")]
 [assembly: InternalsVisibleTo("Unity.Services.Authentication.Tests")]
 [assembly: InternalsVisibleTo("Unity.Services.Authentication.EditorTests")]
+[assembly: InternalsVisibleTo("Unity.Services.Authentication.Cli.Tests")]
 [assembly: InternalsVisibleTo("Unity.Services.Authentication.TestUtils")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")] // For Moq
 

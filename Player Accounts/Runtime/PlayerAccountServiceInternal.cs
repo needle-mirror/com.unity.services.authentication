@@ -28,6 +28,7 @@ namespace Unity.Services.Authentication.PlayerAccounts
         internal PlayerAccountState SignInState { get; set; }
         internal string RedirectUri { get; set; }
         internal string CodeVerifier { get; set; }
+        internal string OAuthState { get; set; }
         internal string ClientId => m_Settings?.ClientId;
 
         readonly ICloudProjectId m_CloudProjectId;
@@ -35,6 +36,12 @@ namespace Unity.Services.Authentication.PlayerAccounts
         readonly IJwtDecoder m_JwtDecoder;
         readonly INetworkHandler m_NetworkingClient;
         readonly UnityPlayerAccountSettings m_Settings;
+
+        // Bumped by every sign-in attempt and every sign-out, so work started by an abandoned attempt can tell it is stale.
+        int m_SignInAttempt;
+
+        // Concurrent RefreshTokenAsync calls share one request: refresh tokens may be single-use, so a second request could fail and sign out the session the first one refreshed.
+        Task m_PendingRefresh;
 
         internal PlayerAccountServiceInternal(
             UnityPlayerAccountSettings settings,
@@ -65,6 +72,7 @@ namespace Unity.Services.Authentication.PlayerAccounts
                 throw PlayerAccountsException.Create(PlayerAccountsErrorCodes.MissingClientId, "The Client Id is not configured.");
             }
 
+            var attempt = ++m_SignInAttempt;
             SignInState = PlayerAccountState.SigningIn;
 
             try
@@ -75,6 +83,10 @@ namespace Unity.Services.Authentication.PlayerAccounts
                 }
 
                 await m_BrowserUtils.LaunchUrlAsync(BuildAuthorizationRequestUrl(isSigningUp));
+            }
+            catch (RequestFailedException) when (attempt != m_SignInAttempt)
+            {
+                // The player signed out or restarted sign-in; this attempt's failure no longer matters.
             }
             catch (PlayerAccountsException exception)
             {
@@ -96,6 +108,11 @@ namespace Unity.Services.Authentication.PlayerAccounts
                 throw PlayerAccountsException.Create(PlayerAccountsErrorCodes.InvalidState, "Player is not signed in.");
             }
 
+            if (SignInState == PlayerAccountState.Refreshing && m_PendingRefresh != null)
+            {
+                return m_PendingRefresh;
+            }
+
             var refreshToken = RefreshToken;
 
             if (string.IsNullOrEmpty(refreshToken))
@@ -114,12 +131,17 @@ namespace Unity.Services.Authentication.PlayerAccounts
                 refreshRequest += $"&scope={m_Settings.Scope}";
             }
 
-            return HandleSignInRequestAsync(() => m_NetworkingClient.PostAsync<SignInResponse>(k_TokenUrl, refreshRequest));
+            m_PendingRefresh = HandleSignInRequestAsync(() => m_NetworkingClient.PostAsync<SignInResponse>(k_TokenUrl, refreshRequest), true);
+            return m_PendingRefresh;
         }
 
         public void SignOut()
         {
+            m_SignInAttempt++;
             AccessToken = null;
+            CodeVerifier = null;
+            OAuthState = null;
+            m_BrowserUtils?.Cancel();
             var oldState = SignInState;
             SignInState = PlayerAccountState.SignedOut;
 
@@ -134,7 +156,7 @@ namespace Unity.Services.Authentication.PlayerAccounts
             // Generate OAuth 2.0 request parameters
             var challengeGenerator = new CodeChallengeGenerator();
             CodeVerifier = challengeGenerator.GenerateCode();
-            var state = challengeGenerator.GenerateStateString();
+            OAuthState = challengeGenerator.GenerateStateString();
             var codeChallenge = CodeChallengeGenerator.S256EncodeChallenge(CodeVerifier);
 
             RedirectUri = m_BrowserUtils?.GetRedirectUri();
@@ -145,7 +167,7 @@ namespace Unity.Services.Authentication.PlayerAccounts
                 $"redirect_uri={Uri.EscapeDataString(RedirectUri)}&" +
                 "response_mode=query&" +
                 $"client_id={ClientId}&" +
-                $"state={state}&" +
+                $"state={OAuthState}&" +
                 $"code_challenge={codeChallenge}&" +
                 $"code_challenge_method={k_CodeChallengeMethod}";
 
@@ -204,12 +226,37 @@ namespace Unity.Services.Authentication.PlayerAccounts
                 return;
             }
 
+            if (!queryParameters.TryGetValue("state", out var state) || string.IsNullOrEmpty(state))
+            {
+                fragmentParameters.TryGetValue("state", out state);
+            }
+
+            if (string.IsNullOrEmpty(OAuthState) || state != OAuthState)
+            {
+                // Ignore rather than fail the sign-in: any app can send this scheme, so a forged callback must not
+                // cancel the attempt or clear OAuthState while the legitimate callback may still arrive.
+                // Standalone does the same: its loopback listener ignores mismatched callbacks and keeps waiting.
+                Logger.LogWarning("Ignoring deep-link callback with invalid state.");
+                return;
+            }
+
+            OAuthState = null;
             OnAuthCodeReceived(code);
         }
 
-        void OnAuthCodeReceived(string code)
+        internal void OnAuthCodeReceived(string code)
         {
-            SignInRequestAsync(code, CodeVerifier, RedirectUri);
+            var codeVerifier = CodeVerifier;
+
+            if (SignInState != PlayerAccountState.SigningIn || string.IsNullOrEmpty(codeVerifier))
+            {
+                Logger.Log("Ignoring authorization code: no sign-in in progress.");
+                return;
+            }
+
+            // Codes are single-use, so a repeated deep link must not start a second exchange that fails and signs the player out.
+            CodeVerifier = null;
+            SignInRequestAsync(code, codeVerifier, RedirectUri);
         }
 
         Task SignInRequestAsync(string code, string codeVerifier, string redirectUri)
@@ -221,39 +268,100 @@ namespace Unity.Services.Authentication.PlayerAccounts
                 $"code_verifier={codeVerifier}&" +
                 $"grant_type=authorization_code";
 
-            return HandleSignInRequestAsync(() => m_NetworkingClient.PostAsync<SignInResponse>(k_TokenUrl, signInRequestBody));
+            return HandleSignInRequestAsync(() => m_NetworkingClient.PostAsync<SignInResponse>(k_TokenUrl, signInRequestBody), false);
         }
 
-        async Task HandleSignInRequestAsync(Func<Task<SignInResponse>> signInRequest)
+        async Task HandleSignInRequestAsync(Func<Task<SignInResponse>> signInRequest, bool isRefresh)
         {
+            var attempt = m_SignInAttempt;
+            SignInResponse response = null;
+
             try
             {
-                SignInState = PlayerAccountState.SigningIn;
-                var response = await signInRequest();
-                CompleteSignIn(response);
+                if (!isRefresh)
+                {
+                    SignInState = PlayerAccountState.SigningIn;
+                }
+
+                response = await signInRequest();
             }
-            catch (RequestFailedException exception)
+            catch (Exception) when (attempt != m_SignInAttempt)
             {
-                SendSignInFailedEvent(exception, true);
-                throw;
+                // The player signed out or restarted sign-in while the request was in flight; handled below.
             }
             catch (WebRequestException exception)
             {
-                var errorResponse = JsonConvert.DeserializeObject<PlayerAccountsErrorResponse>(exception.Message);
-                var playerAccountsException = PlayerAccountsExceptionHandler.HandleError(errorResponse?.Error, errorResponse?.Description, exception);
-
+                var playerAccountsException = ToPlayerAccountsException(exception);
                 Logger.LogException(playerAccountsException);
-                throw playerAccountsException;
+
+                if (isRefresh)
+                {
+                    if (playerAccountsException.ErrorCode == PlayerAccountsErrorCodes.InvalidGrant)
+                    {
+                        // The refresh token is revoked or expired, so no retry can succeed.
+                        SignOut();
+                    }
+                    else
+                    {
+                        // Transient failure: the tokens are still held, so the caller can retry.
+                        SignInState = PlayerAccountState.Authorized;
+                    }
+
+                    throw playerAccountsException;
+                }
+
+                // The code exchange runs fire-and-forget, so the event is the only way a caller hears about it.
+                SendSignInFailedEvent(playerAccountsException, true);
+                return;
             }
+
+            if (attempt != m_SignInAttempt)
+            {
+                Logger.Log("Discarding token request result: the player signed out while it was in flight.");
+
+                if (isRefresh)
+                {
+                    throw PlayerAccountsException.Create(PlayerAccountsErrorCodes.InvalidState, "Token refresh was cancelled by a sign-out or a new sign-in.");
+                }
+
+                return;
+            }
+
+            CompleteSignIn(response);
+        }
+
+        static PlayerAccountsException ToPlayerAccountsException(WebRequestException exception)
+        {
+            PlayerAccountsErrorResponse errorResponse = null;
+
+            try
+            {
+                errorResponse = JsonConvert.DeserializeObject<PlayerAccountsErrorResponse>(exception.Message);
+            }
+            catch (JsonException)
+            {
+                // Network errors, proxy HTML pages and deserialization failures aren't Player Accounts error bodies.
+            }
+
+            if (string.IsNullOrEmpty(errorResponse?.Error))
+            {
+                // A server error body here is likely a proxy page; the raw body stays on the inner exception.
+                var message = exception.ServerError ? $"Token request failed (HTTP {exception.ResponseCode})." : exception.Message;
+                return PlayerAccountsException.Create(PlayerAccountsErrorCodes.UnknownError, message, exception);
+            }
+
+            return PlayerAccountsExceptionHandler.HandleError(errorResponse.Error, errorResponse.Description, exception);
         }
 
         void SendSignInFailedEvent(RequestFailedException exception, bool forceSignOut)
         {
-            SignInFailed?.Invoke(exception);
+            // Sign out first so a retry started from a SignInFailed handler isn't torn down afterwards.
             if (forceSignOut)
             {
                 SignOut();
             }
+
+            SignInFailed?.Invoke(exception);
         }
 
         internal void CompleteSignIn(SignInResponse signInResponse)

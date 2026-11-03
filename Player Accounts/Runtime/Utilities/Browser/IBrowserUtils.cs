@@ -24,5 +24,10 @@ namespace Unity.Services.Authentication.PlayerAccounts
         /// </summary>
         /// <returns>The uri</returns>
         string GetRedirectUri();
+
+        /// <summary>
+        /// Stops waiting for the redirect of the sign-in in progress, if any.
+        /// </summary>
+        void Cancel();
     }
 }
